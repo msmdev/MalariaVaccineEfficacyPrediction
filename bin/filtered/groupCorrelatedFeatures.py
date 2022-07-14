@@ -218,7 +218,7 @@ if __name__ == "__main__":
         '--timepoint', dest='timepoint', required=True, type=str,
         help=(
             "Time point for which the analysis shall be performed. "
-            "Either 'III14', 'C-1', 'C28', or 'all'." 
+            "Either 'III14', 'C-1', 'C28', or 'all'."
         )
     )
     parser.add_argument(
