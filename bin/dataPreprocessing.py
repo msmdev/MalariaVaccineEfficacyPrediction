@@ -39,9 +39,14 @@ def main(
     data = pd.read_csv(fn)
     preprocessed_data = preprocessing(data)
     preprocessed_data.to_csv(
-        os.path.join(data_dir, f'preprocessed_{identifier}_data.csv'),
+        os.path.join(data_dir, f'preprocessed_{identifier}_data_all.csv'),
         index=False,
     )
+    for t, time in zip([2, 3, 4], ['III14', 'C-1', 'C28']):
+        preprocessed_data.loc[preprocessed_data["TimePointOrder"] == t, :].to_csv(
+            os.path.join(data_dir, f'preprocessed_{identifier}_data_{time}.csv'),
+            index=False,
+        )
 
 
 if __name__ == "__main__":

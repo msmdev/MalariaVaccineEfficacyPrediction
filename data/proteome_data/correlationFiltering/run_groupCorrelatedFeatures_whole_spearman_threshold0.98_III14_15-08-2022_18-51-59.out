@@ -1,0 +1,17 @@
+pandas version: 1.3.5
+numpy version: 1.21.2
+scipy version: 1.7.3
+Grouping features based on spearman correlation with threshold 0.98:
+
+Shape of dataframe loaded from /home/breuter/MalariaVaccineEfficacyPrediction/data/proteome_data/preprocessed_whole_data_III14.csv at timepoint=III14: (40, 7459)
+
+Shape of intensities dataframe: (40, 7455)
+# of variants: 7455
+
+correlation matrix shape: (7455, 7455)
+correlation matrix memory usage (kB): 445512.702
+
+# of (key-)variants to keep: 5877
+
+Shape of kept preprocessed_whole_data proteome data at time III14: (40, 5881)
+
