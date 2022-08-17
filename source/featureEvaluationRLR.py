@@ -137,8 +137,6 @@ def featureEvaluationRLR(
 
     if all(isinstance(x, float) for x in params.values()):
 
-        print("Start feature evaluation with dose as auxillary feature:")
-
         _, coefs = RLR_model(
             X=X,
             y=y,

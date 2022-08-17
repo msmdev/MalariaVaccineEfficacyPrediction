@@ -28,16 +28,17 @@
 
 # This is intended to run in the bin folder of the MalariaVaccineEfficacyPrediction package.
 # The MalariaVaccineEfficacyPrediction package should be situated in the users home directory.
+threshold='0.95'
 topdir="${HOME}/MalariaVaccineEfficacyPrediction"
 if [ ! -d "$topdir" ]; then
     { echo "${topdir} doesn't exists."; exit 1; }
 fi
-maindir="${topdir}/results/filtered/multitaskSVM"
+maindir="${topdir}/results/filtered/threshold${threshold}/multitaskSVM"
 if [ ! -d "$maindir" ]; then
-    mkdir "$maindir"
+    mkdir "$maindir" || { echo "mkdir ${maindir} failed"; exit 1; }
 fi
-data_dir="${topdir}/data/proteome_data"
-kernel_dir="${topdir}/data/precomputed_multitask_kernels"
+data_dir="${topdir}/data/proteome_data/correlationFiltering"
+kernel_dir="${topdir}/data/precomputed_multitask_kernels/filtered/threshold${threshold}"
 
 for dataset in 'whole' 'selective'; do
 
@@ -72,7 +73,7 @@ for dataset in 'whole' 'selective'; do
         fi
         cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
         cp "${topdir}/bin/filtered/ESPY.py" . || { echo "cp ${topdir}/bin/filtered/ESPY.py . failed"; exit 1; }
-        python -u ESPY.py --data-dir "$data_dir" --out-dir "$ana_dir" --identifier "$dataset" --lower-percentile 25 --upper-percentile 75 --kernel-dir "$kernel_dir" --kernel-identifier "$kernel_identifier" --rgscv-path "$rgscv_path" --timepoint "$timepoint" 1> "${out}" 2> "${err}"
+        python -u ESPY.py --data-dir "$data_dir" --out-dir "$ana_dir" --identifier "$dataset" --lower-percentile 25 --upper-percentile 75 --data-file-id "preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}" --kernel-dir "$kernel_dir" --kernel-identifier "$kernel_identifier" --rgscv-path "$rgscv_path" --timepoint "$timepoint" 1> "${out}" 2> "${err}"
 
     done
 

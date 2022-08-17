@@ -235,9 +235,9 @@ def compute_distance_hyper(
         SVC model.
     labels : list
         List of feature labels.
-    data : pd.DataFrame
+    data : pd.DataFrame, default=None
         Full dataset (n x n_features) combined from all timepoints (n = n_times x n_samples).
-    kernel_parameters : dict
+    kernel_parameters : dict, default=None
         Combination of kernel parameters.
     simulated: bool, default=False
         If True, the ESPY measurement is performed on simulated data.
@@ -312,7 +312,9 @@ def compute_distance_hyper(
                 # TODO: Implement function to only calculate the single actually needed row of
                 # the kernel matrix instead of calculating the full matrix every single time.
                 gram_matrix = make_kernel_matrix(
-                    data=data,
+                    AB_signals=data.drop(columns=['TimePointOrder', 'Dose']),
+                    time_series=data['TimePointOrder'],
+                    dose=data['Dose'],
                     model=params,
                     kernel_time_series=kernel_time_series,
                     kernel_dosage=kernel_dosage,
@@ -335,7 +337,9 @@ def compute_distance_hyper(
                 # TODO: Implement function to only calculate the single actually needed row of
                 # the kernel matrix instead of calculating the full matrix every single time.
                 gram_matrix = make_kernel_matrix(
-                    data=data,
+                    AB_signals=data.drop(columns=['TimePointOrder', 'Dose']),
+                    time_series=data['TimePointOrder'],
+                    dose=data['Dose'],
                     model=params,
                     kernel_time_series=kernel_time_series,
                     kernel_dosage=kernel_dosage,
@@ -358,7 +362,9 @@ def compute_distance_hyper(
                 # TODO: Implement function to only calculate the single actually needed row of
                 # the kernel matrix instead of calculating the full matrix every single time.
                 gram_matrix = make_kernel_matrix(
-                    data=data,
+                    dAB_signals=data.drop(columns=['TimePointOrder', 'Dose']),
+                    time_series=data['TimePointOrder'],
+                    dose=data['Dose'],
                     model=params,
                     kernel_time_series=kernel_time_series,
                     kernel_dosage=kernel_dosage,
@@ -507,8 +513,9 @@ def ESPY_measurement(
         A str that defines, if the input data is real ('whole', 'selective')
         proteome data or simulated ('simulated') data.
     single_timepoint_data : pd.Dataframe
-        Input data from single timepoint used to calculate
+        Input data from a single timepoint used to calculate
         the upper and lower percentile and median.
+        Must (only!) contain timepoint and dose series plus the antibody signals.
     model : sklearn.svm.SVC
         SVC model.
     lq : int
@@ -517,6 +524,7 @@ def ESPY_measurement(
         Upper percentile value.
     all_timepoints_data : pd.DataFrame, default=None
         Full dataset (n x n_features) combined from all timepoints (n = n_times x n_samples).
+        Must (only!) contain timepoint and dose series plus the antibody signals.
     kernel_parameters : pd.DataFrame, default=None
         Kernel parameters for real data.
     Returns

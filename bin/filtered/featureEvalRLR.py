@@ -37,8 +37,9 @@ from source.featureEvaluationRLR import featureEvaluationRLR
 
 
 def main(
-    data_path: str,
-    identifier: str,
+    *,
+    data_dir: str,
+    data_file_id: str,
     rgscv_path: str,
     out_dir: str,
     timepoint: str,
@@ -47,36 +48,26 @@ def main(
     Evaluation of informative features from RLR.
     """
 
-    if timepoint == 'III14':
-        t = 2
-    elif timepoint == 'C-1':
-        t = 3
-    elif timepoint == 'C28':
-        t = 4
-    else:
-        raise ValueError(
-            "The string given via the '--timepoint' argument must "
-            "be one of 'III14', 'C-1', or 'C28'."
-        )
+    if timepoint not in ['III14', 'C-1', 'C28']:
+        raise ValueError("timepoint must be one of 'III14', 'C-1' or 'C28'.")
 
-    data = pd.read_csv(data_path, sep=',', header=0, index_col=0)
-    # Move dose column to the rightmost metadata columns:
-    dose = data['Dose']
-    data.drop(columns=['Dose'], inplace=True)
-    data.insert(loc=3, column='Dose', value=dose)
+    data_at_timePoint = pd.read_csv(
+        os.path.join(data_dir, f'{data_file_id}_{timepoint}.csv'),
+        header=0,
+    )
     rgscv_results = pd.read_csv(rgscv_path, sep="\t", header=0, index_col=0)
 
-    data_at_timePoint = data.loc[data["TimePointOrder"] == t, :]
-
     coefs = featureEvaluationRLR(
-        X=data_at_timePoint.iloc[:, 3:],  # including dose
+        X=data_at_timePoint.drop(
+            columns=['Patient', 'group', 'Protection', 'TimePointOrder']
+        ).to_numpy(),  # including dose,
         y=data_at_timePoint.loc[:, 'Protection'].to_numpy(),
         feature_labels=data_at_timePoint.iloc[:, 3:].columns.to_list(),
         rgscv_results=rgscv_results,
         timepoint=timepoint,
     )
 
-    fn = os.path.join(out_dir, f"RLR_informative_features_{identifier}_data_{timepoint}.tsv")
+    fn = os.path.join(out_dir, f"RLR_informative_features_{timepoint}.tsv")
     pd.DataFrame(data=coefs).to_csv(fn, sep='\t', na_rep='nan')
 
     print(f"Results are saved in: {fn}")
@@ -93,12 +84,16 @@ if __name__ == "__main__":
         description=('Function to run an analysis of informative features from RLR.')
     )
     parser.add_argument(
-        '--data-path', dest='data_path', metavar='FILE', required=True,
-        help='Path to the proteome data file.'
+        '--data-dir', dest='data_dir', metavar='DIR', required=True,
+        help='Path to the directory were the data is located.'
     )
     parser.add_argument(
-        '--identifier', dest='identifier', required=True,
-        help=('Prefix to identify the proteome dataset.')
+        '--data-file-id', dest='data_file_id', required=True,
+        help=(
+            "String identifying the data file (located in the directory given via --data-dir)."
+            "This string will be appended by the time point and '.csv'. If you pass, for example, "
+            "'--timepoint III14' and '--data-file-id preprocessed_whole_data', the resulting file "
+            "name will be 'preprocessed_whole_data_III14.csv'.")
     )
     parser.add_argument(
         '--rgscv-path', dest='rgscv_path', metavar='FILE', required=True,
@@ -110,14 +105,16 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--timepoint', dest='timepoint', required=True, type=str,
-        help='Time point for which the analysis shall be performed.'
+        help=(
+            "Time point for which the analysis shall be performed. "
+            "Must be one of 'III14', 'C-1' or 'C28'.")
     )
     args = parser.parse_args()
 
     main(
-        args.data_path,
-        args.identifier,
-        args.rgscv_path,
-        args.out_dir,
-        args.timepoint,
+        data_dir=args.data_dir,
+        data_file_id=args.data_file_id,
+        rgscv_path=args.rgscv_path,
+        out_dir=args.out_dir,
+        timepoint=args.timepoint,
     )

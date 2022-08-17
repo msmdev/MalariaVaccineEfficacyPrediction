@@ -28,13 +28,14 @@
 
 # This is intended to run in the bin folder of the MalariaVaccineEfficacyPrediction package.
 # The MalariaVaccineEfficacyPrediction package should be situated in the users home directory.
+threshold='0.95'
 topdir="${HOME}/MalariaVaccineEfficacyPrediction"
 if [ ! -d "$topdir" ]; then
     { echo "${topdir} doesn't exists."; exit 1; }
 fi
-maindir="${topdir}/results/filtered/RLR"
+maindir="${topdir}/results/filtered/threshold${threshold}/RLR"
 if [ ! -d "$maindir" ]; then
-    mkdir "$maindir"
+    mkdir "$maindir" || { echo "mkdir ${maindir} failed"; exit 1; }
 fi
 data_dir="${topdir}/data/proteome_data"
 

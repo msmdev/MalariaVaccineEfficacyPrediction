@@ -28,7 +28,6 @@ multitask-SVM model and compares the change of the distance with a consensus sam
 """
 
 import argparse
-from datetime import datetime
 import os
 import pandas as pd
 import numpy as np
@@ -40,11 +39,13 @@ from source.utils import select_timepoint
 
 
 def main(
+    *,
     data_dir: str,
     out_dir: str,
     identifier: str,
     uq: int,
     lq: int,
+    data_file_id: Optional[str] = None,
     rgscv_path: Optional[str] = None,
     kernel_dir: Optional[str] = None,
     kernel_identifier: Optional[str] = None,
@@ -110,33 +111,21 @@ def main(
         assert isinstance(kernel_identifier, str) and isinstance(timepoint, str), \
             ("`kernel_identifier` and `timepoint` must be of type str, "
              "if `identifier` is 'whole' or 'selective'")
+        if timepoint not in ['III14', 'C-1', 'C28']:
+            raise ValueError("timepoint must be one of 'III14', 'C-1' or 'C28'.")
 
-        if timepoint == 'III14':
-            t = 2
-        elif timepoint == 'C-1':
-            t = 3
-        elif timepoint == 'C28':
-            t = 4
-        else:
-            raise ValueError(
-                "The string given via the '--timepoint' argument must "
-                "be one of 'III14', 'C-1', or 'C28'."
-            )
-
-        input_filename = f'preprocessed_{identifier}_data.csv'
         data = pd.read_csv(
-            os.path.join(data_dir, input_filename),
+            os.path.join(data_dir, f'{data_file_id}_all.csv'),
             header=0,
-            index_col=0
         )
+        y = data.loc[:, 'Protection'].to_numpy()
+
         rgscv_results = pd.read_csv(rgscv_path, delimiter="\t", header=0, index_col=0)
 
         output_filename = f"ESPY_values_on_{identifier}_data_{timepoint}"
 
         timepoint_results = select_timepoint(rgscv_results, timepoint)
         params = get_parameters(timepoint_results, "multitask")
-
-        y = data.loc[:, 'Protection'].to_numpy()
 
         # initialize running index array for DataSelector
         assert y.size * y.size < np.iinfo(np.uint32).max, \
@@ -164,20 +153,31 @@ def main(
             y_label=y,
         )
 
-        if not np.all(np.isin(data.dtypes.to_list()[4:], ['float64'])):
+        data_at_timePoint = pd.read_csv(
+            os.path.join(data_dir, f'{data_file_id}_{timepoint}.csv'),
+            header=0,
+        )
+        if not np.all(
+            np.isin(data_at_timePoint.drop(
+                columns=['Patient', 'group', 'Protection', 'TimePointOrder', 'Dose']
+            ).dtypes.to_list(), ['float64'])
+        ):
             raise ValueError(
-                f"Not all antibody intensities read from {input_filename} are of type float64."
+                f"Not all antibody intensities read from {data_file_id}_{timepoint}.csv "
+                "are of type float64."
             )
-
-        data_at_timePoint = data.loc[data["TimePointOrder"] == t, :]
 
         distance_result = ESPY_measurement(
             identifier=identifier,
-            single_timepoint_data=data_at_timePoint.iloc[:, 2:],  # including dose AND timepoint
+            single_timepoint_data=data_at_timePoint.drop(
+                columns=['Patient', 'group', 'Protection']
+            ),  # including dose AND timepoint
             model=multitask_classifier,
             lq=lq,
             up=uq,
-            all_timepoints_data=data,
+            all_timepoints_data=data.drop(
+                columns=['Patient', 'group', 'Protection']
+            ),  # including dose AND timepoint,
             kernel_parameters=params,
         )
 
@@ -251,6 +251,14 @@ if __name__ == "__main__":
         help='Upper percentile given as int, by default 75%.',
     )
     parser.add_argument(
+        '--data-file-id', dest='data_file_id', required=True,
+        help=(
+            "String identifying the data file (located in the directory given via --data-dir)."
+            "This string will be appended by the time point and '.csv'. If you pass, for example, "
+            "'--timepoint III14' and '--data-file-id preprocessed_whole_data', the resulting file "
+            "name will be 'preprocessed_whole_data_III14.csv'.")
+    )
+    parser.add_argument(
         '--kernel-dir',
         dest='kernel_dir',
         metavar='DIR',
@@ -293,6 +301,7 @@ if __name__ == "__main__":
             identifier=args.identifier,
             uq=args.uq,
             lq=args.lq,
+            data_file_id=args.data_file_id,
             rgscv_path=args.rgscv_path,
             kernel_dir=args.kernel_dir,
             kernel_identifier=args.kernel_identifier,
