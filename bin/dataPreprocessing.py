@@ -42,8 +42,25 @@ def main(
         os.path.join(data_dir, f'preprocessed_{identifier}_data_all.csv'),
         index=False,
     )
-    for t, time in zip([2, 3, 4], ['III14', 'C-1', 'C28']):
-        preprocessed_data.loc[preprocessed_data["TimePointOrder"] == t, :].to_csv(
+    TimePointOrder = [2, 3, 4]
+    times = ['III14', 'C-1', 'C28']
+    timepointwise_data = []
+    for t, time in zip(TimePointOrder, times):
+        temp = preprocessed_data.loc[preprocessed_data["TimePointOrder"] == t, :]
+        timepointwise_data.append(temp)
+    reconstruction = timepointwise_data[0].append(
+        timepointwise_data[1:],
+        ignore_index=True,
+        verify_integrity=False,
+        sort=False
+    )
+    if not preprocessed_data.equals(reconstruction):
+        raise ValueError(
+            "The original DataFrame and the DataFrame reconstructed "
+            "from the timepoint-wise DataFrames aren't equal."
+        )
+    for timepoint_data, time in zip(timepointwise_data, times):
+        timepoint_data.to_csv(
             os.path.join(data_dir, f'preprocessed_{identifier}_data_{time}.csv'),
             index=False,
         )

@@ -151,4 +151,12 @@ def preprocessing(
     data = substract_preimmunization_baseline(data)
     sort_proteome_data(data)
     normalization(data)
+    # Move dose column to the rightmost metadata column:
+    if data.columns.to_list()[:5] != ['Patient', 'group', 'Protection', 'Dose', 'TimePointOrder']:
+        raise ValueError("Wrong order of metadata columns detected before reordering.")
+    dose = data['Dose']
+    data.drop(columns=['Dose'], inplace=True)
+    data.insert(loc=4, column='Dose', value=dose)
+    if data.columns.to_list()[:5] != ['Patient', 'group', 'Protection', 'TimePointOrder', 'Dose']:
+        raise ValueError("Wrong order of metadata columns detected after reordering.")
     return data

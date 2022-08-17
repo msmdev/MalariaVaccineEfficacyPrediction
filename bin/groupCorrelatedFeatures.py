@@ -38,11 +38,12 @@ import matplotlib.pyplot as plt
 
 
 def main(
+    *,
     data_dir: str,
     identifier: str,
     out_dir: str,
     timepoint: str,
-    correlation_threshold: str,
+    correlation_threshold: float,
     correlation_method: str,
 ):
 
@@ -58,7 +59,7 @@ def main(
           f"with threshold {correlation_threshold}:\n")
 
     fn = os.path.join(data_dir, f'{identifier}_{timepoint}.csv')
-    data = pd.read_csv(fn, sep=',', index_col=0)
+    data = pd.read_csv(fn, sep=',')
 
     print(f'Shape of dataframe loaded from {fn} at timepoint={timepoint}: {data.shape}\n')
 
@@ -66,7 +67,7 @@ def main(
     if data.isna().sum().sum() != 0:
         raise ValueError(f"{fn} contains NaN entries.")
 
-    intensities = data.drop(columns=['group', 'Protection', 'Dose', 'TimePointOrder'])
+    intensities = data.drop(columns=['Patient', 'group', 'Protection', 'TimePointOrder', 'Dose'])
     print(f'Shape of intensities dataframe: {intensities.shape}')
     print(f'# of variants: {intensities.shape[1]}\n')
 
@@ -150,7 +151,7 @@ def main(
     plt.close()
     print(f'# of (key-)variants to keep: {len(keep)}\n')
     intensities = intensities.loc[:, keep]
-    metadata = data[['group', 'Protection', 'TimePointOrder', 'Dose']]
+    metadata = data[['Patient', 'group', 'Protection', 'TimePointOrder', 'Dose']]
     if intensities.index.to_list() != metadata.index.to_list():
         raise ValueError("intensities.index != data.index")
     if set(intensities.columns.to_list()) & set(metadata.columns.to_list()):
@@ -169,10 +170,10 @@ def main(
     # save reduced DF:
     fn = os.path.join(
         out_dir,
-        (f'{identifier}_{correlation_method}_decorrelated'
+        (f'{identifier}_{correlation_method}_filtered'
          f'_threshold{correlation_threshold}_{timepoint}.csv'),
     )
-    data.to_csv(fn, sep=',')
+    data.to_csv(fn, sep=',', index=False)
 
     print(f"Shape of kept {identifier} proteome data at time {timepoint}: {data.shape}")
     print('')
@@ -193,10 +194,10 @@ if __name__ == "__main__":
     parser.add_argument(
         '--data-file-id', dest='data_file_id', required=True,
         help=(
-            "String identifying the data file (located in the directory given via --data-dir), "
-            "e.g. 'preprocessed_whole_data'. Will be appended by the time point and '.csv', "
-            "If you passed, for example, '--timepoint III14', the resulting file name will be "
-            "'preprocessed_whole_data_III14.csv'.")
+            "String identifying the data file (located in the directory given via --data-dir)."
+            "This string will be appended by the time point and '.csv'. If you pass, for example, "
+            "'--timepoint III14' and '--data-file-id preprocessed_whole_data', the resulting file "
+            "name will be 'preprocessed_whole_data_III14.csv'.")
     )
     parser.add_argument(
         '--out-dir', dest='out_dir', metavar='DIR', required=True,
@@ -228,10 +229,10 @@ if __name__ == "__main__":
     pathlib.Path(args.out_dir).mkdir(parents=True, exist_ok=True)
 
     main(
-        args.data_dir,
-        args.data_file_id,
-        args.out_dir,
-        args.timepoint,
-        args.correlation_threshold,
-        args.correlation_method,
+        data_dir=args.data_dir,
+        identifier=args.data_file_id,
+        out_dir=args.out_dir,
+        timepoint=args.timepoint,
+        correlation_threshold=args.correlation_threshold,
+        correlation_method=args.correlation_method,
     )

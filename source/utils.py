@@ -688,7 +688,9 @@ def multitask(
 
 
 def make_kernel_matrix(
-    data: pd.DataFrame,
+    AB_signals: pd.DataFrame,
+    time_series: pd.Series,
+    dose: pd.Series,
     model: Tuple[Union[float, str], Union[float, str], Union[float, str],
                  Union[float, str], Union[float, str], Union[float, str],
                  Union[float, str]],
@@ -705,8 +707,12 @@ def make_kernel_matrix(
 
     Parameters
     ----------
-    data : pd.Dataframe
-        Pre-processed proteome data.
+    AB_signals : pd.Dataframe
+        Pre-processed proteome-microarray-based antibody signal intensities.
+    time_series : pd.Series
+        Series of time points at which the antibody signal intensities were recorded.
+    dose : pd.Series
+        Series of dosages administered.
     model : dict
         Combination of kernel parameters.
     kernel_time_series : str
@@ -731,16 +737,6 @@ def make_kernel_matrix(
         is smaller than `epsilon`, i.e. `c < epsilon = epsilon_factor * np.finfo(X.dtype).eps`,
         a str '_epsilon' will be appended resulting in 'negative_epsilon' or 'imaginary_epsilon'.
     """
-
-    # get start point of antibody reactivity signals in data (n_p)
-    AB_signal_start = data.columns.get_loc("TimePointOrder") + 1
-    AB_signals = data[data.columns[AB_signal_start:]]
-
-    # extract time points to vector (y_t)
-    time_series = data["TimePointOrder"]
-
-    # extract dosage to vector (y_d)
-    dose = data["Dose"]
 
     # pre-computed kernel matrix of time points K(n_t,n_t')
     if kernel_time_series == 'sigmoid_kernel':
