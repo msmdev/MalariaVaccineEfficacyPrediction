@@ -32,24 +32,27 @@ topdir="${HOME}/MalariaVaccineEfficacyPrediction"
 if [ ! -d "$topdir" ]; then
     { echo "${topdir} doesn't exists."; exit 1; }
 fi
-data_dir="${topdir}/data/proteome_data"
+data_dir="${topdir}/data/proteome_data/correlationFiltering"
 
-for method in 'RF' 'RLR'; do
-    maindir="${topdir}/results/unfiltered/${method}"
-    if [ ! -d "$maindir" ]; then
-        mkdir "$maindir" || { echo "mkdir ${maindir} failed"; exit 1; }
-    fi
+for threshold in '0.95' '0.98'; do
 
-    for dataset in 'whole' 'selective'; do
+    for method in 'RF' 'RLR' 'SVM'; do
+        maindir="${topdir}/results/filtered/threshold${threshold}/${method}"
+        if [ ! -d "$maindir" ]; then
+            mkdir "$maindir" || { echo "mkdir ${maindir} failed"; exit 1; }
+        fi
 
-        err="runRGSCV.err"
-        out="runRGSCV.out"
-        ana_dir="${maindir}/${dataset}"
-        mkdir "${ana_dir}"
-        cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
-        cp "${topdir}/bin/rgscv.py" . || { echo "cp ${topdir}/bin/rgscv.py . failed"; exit 1; }
-        cp "${topdir}/bin/${method}_config.py" . || { echo "cp ${topdir}/bin/${method}_config.py . failed"; exit 1; }
-        python -u rgscv.py --analysis-dir "${ana_dir}" --data-dir "${data_dir}" --data-file-id "preprocessed_${dataset}_data" --method "${method}" --Nexp 10 1> "${out}" 2> "${err}"
+        for dataset in 'whole' 'selective'; do
+            err="runRNCV.err"
+            out="runRNCV.out"
+            ana_dir="${maindir}/${dataset}"
+            mkdir "${ana_dir}"
+            cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
+            cp "${topdir}/bin/rncv.py" . || { echo "cp ${topdir}/bin/rncv.py . failed"; exit 1; }
+            cp "${topdir}/bin/${method}_config.py" . || { echo "cp ${topdir}/bin/${method}_config.py . failed"; exit 1; }
+            python -u rncv.py --analysis-dir "${ana_dir}" --data-dir "${data_dir}" --data-file-id "preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}" --method "${method}" --Nexp1 1 --Nexp2 10 1> "${out}" 2> "${err}"
+        done
+
     done
 
 done

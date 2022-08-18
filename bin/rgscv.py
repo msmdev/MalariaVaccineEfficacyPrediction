@@ -69,6 +69,7 @@ def main(
     print('scipy version:', scipy.__version__)
     print(f'estimator: {type(estimator)}')
     print('========================================\n')
+
     print(f'data file identifier: {data_file_id}\n')
     print(f'parameter grid: {param_grid}\n')
     print(f'start time: {timestamp}\n')
@@ -93,9 +94,8 @@ def main(
     scorings = ['mcc', 'precision_recall_auc', 'roc_auc']
     for step, time in enumerate(times):
 
-        print('=================================================================================')
-        print(f'{time} start: {ncv.generate_timestamp()}')
-        print('')
+        print('++++++++++++++++++++++++++++++++++++++++')
+        print(f'{time} start: {ncv.generate_timestamp()}\n')
 
         # define prefix for filenames:
         prefix = f'{time}'
@@ -117,8 +117,8 @@ def main(
 
         # initialize test folds and CV splitters for outer CV
         cv = []
+        print('----------------------------------------')
         print('Predefined CV folds:')
-        print('---------------------------------------------------------------------------------')
         for rep in range(Nexp):
             print(f'CV folds for repetition {rep}:')
             test_fold, train_fold = assign_folds(
@@ -140,8 +140,7 @@ def main(
                     f"TEST (len={len(test_index)}): {test_index}"
                 )
             print('')
-        print('---------------------------------------------------------------------------------')
-        print('')
+        print('----------------------------------------\n')
 
         gs = ncv.RepeatedGridSearchCV(
             estimator,
@@ -177,6 +176,9 @@ def main(
             results['best_params'].append(opt_params[scoring])
             results['best_score'].append(opt_scores[scoring])
 
+        print(f'{time} end: {ncv.generate_timestamp()}')
+        print('++++++++++++++++++++++++++++++++++++++++')
+
     print('results:')
     pprint(results)
     print('')
@@ -188,6 +190,7 @@ def main(
     pd.DataFrame(data=results).to_excel(fn, na_rep='nan')
 
     print(f'end time: {ncv.generate_timestamp()}')
+    print('========================================\n')
 
 
 if __name__ == "__main__":
@@ -208,7 +211,7 @@ if __name__ == "__main__":
     warnings.simplefilter("default")
 
     parser = argparse.ArgumentParser(
-        description=('Function to run repeated cross-validated grid-search for RF models')
+        description=('Function to run repeated grid-search cross-validation.')
     )
     parser.add_argument(
         '--analysis-dir', dest='analysis_dir', metavar='DIR', required=True,
@@ -235,10 +238,11 @@ if __name__ == "__main__":
         dest='Nexp',
         type=int,
         default=10,
-        help='Upper percentile given as int, by default 75%.',
+        help='Number of grid-search cross-validation repetitions.',
     )
     args = parser.parse_args()
 
+    param_grid: Dict[str, List[Any]]
     method = args.method
     if method == 'SVM':
         from SVM_config import estimator, param_grid, n_jobs

@@ -34,22 +34,21 @@ if [ ! -d "$topdir" ]; then
 fi
 data_dir="${topdir}/data/proteome_data"
 
-for method in 'RF' 'RLR'; do
+for method in 'RF' 'RLR' 'SVM'; do
     maindir="${topdir}/results/unfiltered/${method}"
     if [ ! -d "$maindir" ]; then
         mkdir "$maindir" || { echo "mkdir ${maindir} failed"; exit 1; }
     fi
 
     for dataset in 'whole' 'selective'; do
-
-        err="runRGSCV.err"
-        out="runRGSCV.out"
+        err="runRNCV.err"
+        out="runRNCV.out"
         ana_dir="${maindir}/${dataset}"
         mkdir "${ana_dir}"
         cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
-        cp "${topdir}/bin/rgscv.py" . || { echo "cp ${topdir}/bin/rgscv.py . failed"; exit 1; }
+        cp "${topdir}/bin/rncv.py" . || { echo "cp ${topdir}/bin/rncv.py . failed"; exit 1; }
         cp "${topdir}/bin/${method}_config.py" . || { echo "cp ${topdir}/bin/${method}_config.py . failed"; exit 1; }
-        python -u rgscv.py --analysis-dir "${ana_dir}" --data-dir "${data_dir}" --data-file-id "preprocessed_${dataset}_data" --method "${method}" --Nexp 10 1> "${out}" 2> "${err}"
+        python -u rncv.py --analysis-dir "${ana_dir}" --data-dir "${data_dir}" --data-file-id "preprocessed_${dataset}_data" --method "${method}" --Nexp1 1 --Nexp2 10 1> "${out}" 2> "${err}"
     done
 
 done
