@@ -37,7 +37,7 @@ maindir="${topdir}/results/filtered/threshold${threshold}/RLR"
 if [ ! -d "$maindir" ]; then
     mkdir "$maindir" || { echo "mkdir ${maindir} failed"; exit 1; }
 fi
-data_dir="${topdir}/data/proteome_data"
+data_dir="${topdir}/data/proteome_data/correlationFiltering"
 
 for dataset in 'whole' 'selective'; do
 
@@ -50,15 +50,15 @@ for dataset in 'whole' 'selective'; do
 
     for timepoint in 'III14' 'C-1' 'C28'; do
 
-        err="runFeatureEvalRLR_${dataset}_${timepoint}.err"
-        out="runFeatureEvalRLR_${dataset}_${timepoint}.out"
+        err="runFeatureEvalRLR_${timepoint}.err"
+        out="runFeatureEvalRLR_${timepoint}.out"
         ana_dir="${maindir}/${dataset}/featureEvaluation"
         if [ ! -d "$ana_dir" ]; then
             mkdir "$ana_dir"
         fi
         cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
         cp "${topdir}/bin/filtered/featureEvalRLR.py" . || { echo "cp ${topdir}/bin/filtered/featureEvalRLR.py . failed"; exit 1; }
-        python -u featureEvalRLR.py --data-path "${data_dir}/preprocessed_${dataset}_data.csv" --identifier "$dataset" --rgscv-path "$rgscv_path" --out-dir "$ana_dir" --timepoint "$timepoint" 1> "${out}" 2> "${err}"
+        python -u featureEvalRLR.py --data-dir "$data_dir" --data-file-id "preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}" --rgscv-path "$rgscv_path" --out-dir "$ana_dir" --timepoint "$timepoint" 1> "${out}" 2> "${err}"
 
     done
 
