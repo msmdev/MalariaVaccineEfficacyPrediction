@@ -40,9 +40,6 @@ import sklearn
 import sys
 import traceback
 import warnings
-from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import StratifiedGroupKFold
 from typing import Any, Dict, Union, Optional, List
 import nestedcv as ncv
@@ -54,6 +51,7 @@ def main(
     ana_dir: str,
     data_dir: str,
     data_file_id: str,
+    method: str,
     param_grid: Union[Dict[str, List[Any]], List[Dict[str, List[Any]]]],
     estimator,
     n_jobs: Optional[int] = None,
@@ -72,7 +70,7 @@ def main(
     print('scipy version:', scipy.__version__)
     print(f'estimator: {type(estimator)}')
     print('========================================\n')
-    
+
     print(f'data file identifier: {data_file_id}\n')
     print(f'parameter grid: {param_grid}\n')
     print(f'start time: {timestamp}\n')
@@ -120,15 +118,27 @@ def main(
 
         rng = np.random.RandomState(0)
 
-        data_at_timePoint = pd.read_csv(
-            os.path.join(data_dir, f'{data_file_id}_{time}.csv'),
-            header=0,
-        )
-        X = data_at_timePoint.drop(
-            columns=['Patient', 'group', 'Protection', 'TimePointOrder']
-        ).to_numpy()  # including dose
-        groups = data_at_timePoint.loc[:, 'group'].to_numpy()
-        y = data_at_timePoint.loc[:, 'Protection'].to_numpy()
+        if method == 'multitaskSVM':
+            y = y_all
+            groups = groups_all
+            # initialize running index array for DataSelector
+            assert y.size * y.size < np.iinfo(np.uint32).max, \
+                f"y is to large: y.size * y.size >= {np.iinfo(np.uint32).max}"
+            X = np.array(
+                [x for x in range(y.size * y.size)],
+                dtype=np.uint32
+            ).reshape((y.size, y.size))
+            print(f'shape of running index array: {X.shape}/n')
+        else:
+            data_at_timePoint = pd.read_csv(
+                os.path.join(data_dir, f'{data_file_id}_{time}.csv'),
+                header=0,
+            )
+            X = data_at_timePoint.drop(
+                columns=['Patient', 'group', 'Protection', 'TimePointOrder']
+            ).to_numpy()  # including dose
+            groups = data_at_timePoint.loc[:, 'group'].to_numpy()
+            y = data_at_timePoint.loc[:, 'Protection'].to_numpy()
 
         print('shape of binary response array:', y.size)
         print('number of positives:', np.sum(y))
@@ -144,8 +154,9 @@ def main(
             test_fold, train_fold = assign_folds(
                 y_all, groups_all, 40, step, random_state=rep, print_info=False
             )
-            test_fold = test_fold[40 * step: 40 * (step + 1)]
-            train_fold = train_fold[40 * step: 40 * (step + 1)]
+            if method != 'multitaskSVM':
+                test_fold = test_fold[40 * step: 40 * (step + 1)]
+                train_fold = train_fold[40 * step: 40 * (step + 1)]
             assert np.all(test_fold == train_fold), \
                 f"test_fold != train_fold: {test_fold} != {train_fold}"
             outer_cv.append(CustomPredefinedSplit(test_fold, train_fold))
@@ -564,11 +575,36 @@ if __name__ == "__main__":
         default=10,
         help='Number of nested CV repetitions.',
     )
+    parser.add_argument(
+        '--kernel-dir',
+        dest='kernel_dir',
+        metavar='DIR',
+        help='Path to the directory were the precomputed Gram matrices are located.'
+    )
+    parser.add_argument(
+        '--combination',
+        dest='combination',
+        help='Kernel combination. Supply SPP, SPR, SRP, or SRR.'
+    )
+    parser.add_argument(
+        '--identifier',
+        dest='identifier',
+        help=('Prefix to identify the precomputed kernel matrices (stored as .npy files).'
+              'E.g. kernel_matrix_rescale.')
+    )
     args = parser.parse_args()
 
     param_grid: Dict[str, List[Any]]
+    n_jobs: int
     method = args.method
-    if method == 'SVM':
+    if method == 'multitaskSVM':
+        from multitaskSVM_config import configurator
+        param_grid, estimator, n_jobs = configurator(
+            combination=args.combination,
+            identifier=args.identifier,
+            kernel_dir=args.kernel_dir,
+        )
+    elif method == 'SVM':
         from SVM_config import estimator, param_grid, n_jobs
     elif method == 'RLR':
         from RLR_config import estimator, param_grid, n_jobs
@@ -582,6 +618,7 @@ if __name__ == "__main__":
             ana_dir=args.analysis_dir,
             data_dir=args.data_dir,
             data_file_id=args.data_file_id,
+            method=method,
             param_grid=param_grid,
             estimator=estimator,
             n_jobs=n_jobs,

@@ -33,24 +33,54 @@ if [ ! -d "$topdir" ]; then
     { echo "${topdir} doesn't exists."; exit 1; }
 fi
 data_dir="${topdir}/data/proteome_data/correlationFiltering"
+combinations=('RPP' 'RPR' 'RRP' 'RRR' 'SPP' 'SPR' 'SRP' 'SRR')
 
 for threshold in '0.95' '0.98'; do
 
-    for method in 'RF' 'RLR' 'SVM'; do
+    for method in 'multitaskSVM' 'RF' 'RLR' 'SVM'; do
+        kernel_dir="${topdir}/data/precomputed_multitask_kernels/filtered/threshold${threshold}"
+        if [ ! -d "$kernel_dir" ]; then
+            { echo "${kernel_dir} doesn't exist"; exit 1; }
+        fi
         maindir="${topdir}/results/filtered/threshold${threshold}/${method}"
         if [ ! -d "$maindir" ]; then
             mkdir "$maindir" || { echo "mkdir ${maindir} failed"; exit 1; }
         fi
 
         for dataset in 'whole' 'selective'; do
-            err="runRNCV.err"
-            out="runRNCV.out"
-            ana_dir="${maindir}/${dataset}"
-            mkdir "${ana_dir}"
-            cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
-            cp "${topdir}/bin/rncv.py" . || { echo "cp ${topdir}/bin/rncv.py . failed"; exit 1; }
-            cp "${topdir}/bin/${method}_config.py" . || { echo "cp ${topdir}/bin/${method}_config.py . failed"; exit 1; }
-            python -u rncv.py --analysis-dir "${ana_dir}" --data-dir "${data_dir}" --data-file-id "preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}" --method "${method}" --Nexp1 1 --Nexp2 10 1> "${out}" 2> "${err}"
+
+            if [ "$method" = 'multitaskSVM' ]; then
+
+                if [ "$dataset" = 'whole' ]; then
+                    identifier='kernel_matrix'
+                elif [ "$dataset" = 'selective' ]; then
+                    identifier='kernel_matrix_SelectiveSet'
+                fi
+
+                for combination in "${combinations[@]}"; do
+                    mkdir "${maindir}/${dataset}/${combination}"
+                    err="runRNCV.err"
+                    out="runRNCV.out"
+                    ana_dir="${maindir}/${dataset}/${combination}"
+                    mkdir "${ana_dir}"
+                    cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
+                    cp "${topdir}/bin/rncv.py" . || { echo "cp ${topdir}/bin/rncv.py . failed"; exit 1; }
+                    cp "${topdir}/bin/${method}_config.py" . || { echo "cp ${topdir}/bin/${method}_config.py . failed"; exit 1; }
+                    python -u rncv.py --analysis-dir "$ana_dir" --data-dir "$data_dir" --data-file-id "preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}" --method "$method" --Nexp1 1 --Nexp2 10 --kernel-dir "$kernel_dir" --combination "$combination" --identifier "$identifier" 1> "${out}" 2> "${err}"
+                done
+
+            else
+
+                err="runRNCV.err"
+                out="runRNCV.out"
+                ana_dir="${maindir}/${dataset}"
+                mkdir "${ana_dir}"
+                cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
+                cp "${topdir}/bin/rncv.py" . || { echo "cp ${topdir}/bin/rncv.py . failed"; exit 1; }
+                cp "${topdir}/bin/${method}_config.py" . || { echo "cp ${topdir}/bin/${method}_config.py . failed"; exit 1; }
+                python -u rncv.py --analysis-dir "${ana_dir}" --data-dir "${data_dir}" --data-file-id "preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}" --method "${method}" --Nexp1 1 --Nexp2 10 1> "${out}" 2> "${err}"
+            fi
+
         done
 
     done

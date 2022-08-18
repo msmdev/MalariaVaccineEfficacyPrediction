@@ -33,8 +33,13 @@ if [ ! -d "$topdir" ]; then
     { echo "${topdir} doesn't exists."; exit 1; }
 fi
 data_dir="${topdir}/data/proteome_data"
+combinations=('RPP' 'RPR' 'RRP' 'RRR' 'SPP' 'SPR' 'SRP' 'SRR')
 
-for method in 'RF' 'RLR'; do
+for method in 'multitaskSVM' 'RF' 'RLR' 'SVM'; do
+    kernel_dir="${topdir}/data/precomputed_multitask_kernels/unfiltered"
+    if [ ! -d "$kernel_dir" ]; then
+        { echo "${kernel_dir} doesn't exist"; exit 1; }
+    fi
     maindir="${topdir}/results/unfiltered/${method}"
     if [ ! -d "$maindir" ]; then
         mkdir "$maindir" || { echo "mkdir ${maindir} failed"; exit 1; }
@@ -42,14 +47,38 @@ for method in 'RF' 'RLR'; do
 
     for dataset in 'whole' 'selective'; do
 
-        err="runRGSCV.err"
-        out="runRGSCV.out"
-        ana_dir="${maindir}/${dataset}"
-        mkdir "${ana_dir}"
-        cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
-        cp "${topdir}/bin/rgscv.py" . || { echo "cp ${topdir}/bin/rgscv.py . failed"; exit 1; }
-        cp "${topdir}/bin/${method}_config.py" . || { echo "cp ${topdir}/bin/${method}_config.py . failed"; exit 1; }
-        python -u rgscv.py --analysis-dir "${ana_dir}" --data-dir "${data_dir}" --data-file-id "preprocessed_${dataset}_data" --method "${method}" --Nexp 10 1> "${out}" 2> "${err}"
+        if [ "$method" = 'multitaskSVM' ]; then
+
+            if [ "$dataset" = 'whole' ]; then
+                identifier='kernel_matrix'
+            elif [ "$dataset" = 'selective' ]; then
+                identifier='kernel_matrix_SelectiveSet'
+            fi
+
+            for combination in "${combinations[@]}"; do
+                mkdir "${maindir}/${dataset}/${combination}"
+                err="runRGSCV.err"
+                out="runRGSCV.out"
+                ana_dir="${maindir}/${dataset}/${combination}"
+                mkdir "${ana_dir}"
+                cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
+                cp "${topdir}/bin/rgscv.py" . || { echo "cp ${topdir}/bin/rgscv.py . failed"; exit 1; }
+                cp "${topdir}/bin/${method}_config.py" . || { echo "cp ${topdir}/bin/${method}_config.py . failed"; exit 1; }
+                python -u rgscv.py --analysis-dir "$ana_dir" --data-dir "$data_dir" --data-file-id "preprocessed_${dataset}_data" --method "$method" --Nexp 10 --kernel-dir "$kernel_dir" --combination "$combination" --identifier "$identifier" 1> "${out}" 2> "${err}"
+            done
+
+        else
+
+            err="runRGSCV.err"
+            out="runRGSCV.out"
+            ana_dir="${maindir}/${dataset}"
+            mkdir "${ana_dir}"
+            cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
+            cp "${topdir}/bin/rgscv.py" . || { echo "cp ${topdir}/bin/rgscv.py . failed"; exit 1; }
+            cp "${topdir}/bin/${method}_config.py" . || { echo "cp ${topdir}/bin/${method}_config.py . failed"; exit 1; }
+            python -u rgscv.py --analysis-dir "${ana_dir}" --data-dir "${data_dir}" --data-file-id "preprocessed_${dataset}_data" --method "${method}" --Nexp 10 1> "${out}" 2> "${err}"
+        fi
+
     done
 
 done

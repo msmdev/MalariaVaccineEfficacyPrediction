@@ -563,7 +563,7 @@ def make_kernel_combinations(
     kernel_time_series: str,
     kernel_dosage: str,
     kernel_abSignal: str
-) -> Dict[str, Union[float, str]]:
+) -> Dict[str, List[Union[float, str]]]:
     """Make dictionary of kernel combination values
 
     For each kernel parameter a range of values is defined.
@@ -587,6 +587,7 @@ def make_kernel_combinations(
         Dictionary of value ranges for each kernel parameter.
 
     """
+    kernel_comb_param: Dict[str, np.ndarray]
     if (kernel_time_series == "sigmoid_kernel" and kernel_dosage == "rbf_kernel"
             and kernel_abSignal == "rbf_kernel"):
         kernel_comb_param = {"SA": np.arange(meta_data[1, 1], 1, meta_data[1, 1]),
@@ -660,7 +661,7 @@ def make_kernel_combinations(
                              "P1": np.array(['X']),
                              "P2": np.arange(meta_data[0, 1], meta_data[0, 2])}
 
-    return kernel_comb_param
+    return {k: v.tolist() for k, v in kernel_comb_param.items()}
 
 
 def multitask(
