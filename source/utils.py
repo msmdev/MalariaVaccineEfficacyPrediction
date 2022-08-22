@@ -33,6 +33,9 @@ from sklearn.metrics.pairwise import rbf_kernel, sigmoid_kernel, polynomial_kern
 import pandas as pd
 import os
 from sklearn.preprocessing import KernelCenterer
+from sklearn.model_selection import GridSearchCV
+from sklearn.svm import SVC
+from sklearn.metrics import roc_auc_score
 
 
 def normalize(
@@ -808,3 +811,76 @@ def make_kernel_matrix(
     print('\n\n')
 
     return multi_AB_signals_time_dose_kernel_matrix, c_list, info_list
+
+
+def svm_model(
+    *,
+    X_train_data: np.ndarray,
+    y_train_data: np.ndarray,
+    X_test_data: np.ndarray,
+    y_test_data: np.ndarray,
+    reproducible: bool = True,
+) -> SVC:
+    """ Initialize SVM model on simulated data.
+
+    Initialize SVM model with a RBF kernel on simulated data and
+    perform a grid-search for kernel parameter evaluation.
+    Returns the SVM model with the best parameters based on the highest mean AUC score.
+    CAUTION: All calls to functions with randomization are seeded to ensure reproducible behaviour.
+
+    Parameters
+    ----------
+    X_train_data : np.ndarray
+        Training data.
+    y_train_data : np.ndarray
+        y labels for training.
+    X_test_data : np.ndarray
+        Test data.
+    y_test_data : np.ndarray
+        y labels for testing.
+
+    Returns
+    -------
+    model : sklearn.svm.SVC object
+        Trained SVM model with best kernel parameters found via GridSearchCV.
+    """
+
+    # Initialize SVM model, rbf kernel
+    param_grid = {
+        'gamma': [1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1., 1e1, 1e2, 1e3, 1e4, 1e5, 1e6],
+        'C': [1.e-3, 1.e-2, 1.e-1, 1.e0, 1.e1, 1.e2, 1.e3],
+    }
+
+    # grid-search on simulated data
+    clf = GridSearchCV(
+        SVC(kernel='rbf', probability=True, random_state=123),
+        param_grid,
+        scoring='roc_auc',
+        refit=True,
+        cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=123),
+    )
+    clf.fit(X_train_data, y_train_data)
+
+    print(
+        f"The best parameters are {clf.best_params_} with a mean AUC score of {clf.best_score_}."
+    )
+
+    # run RBF SVM with best parameters from grid-search,
+    # probability has to be TRUE to evaluate features via SHAP
+    svm = SVC(
+        kernel='rbf',
+        gamma=clf.best_params_.get('gamma'),
+        C=clf.best_params_.get('C'),
+        probability=True,
+        random_state=123,
+    )
+
+    model = svm.fit(X_train_data, y_train_data)
+
+    y_pred = model.predict(X_test_data)
+
+    AUC = roc_auc_score(y_test_data, y_pred)
+
+    print(f"AUC score on unseen data: {AUC}")
+
+    return model

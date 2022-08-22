@@ -29,81 +29,9 @@ import numpy as np
 from sklearn.svm import SVC
 from typing import Dict, List, Optional, Tuple, Union
 import time
-from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import roc_auc_score
 import matplotlib.pyplot as plt
 import os
 from source.utils import make_kernel_matrix
-
-
-def svm_model(
-    *,
-    X_train_data: np.ndarray,
-    y_train_data: np.ndarray,
-    X_test_data: np.ndarray,
-    y_test_data: np.ndarray,
-) -> SVC:
-    """ Initialize SVM model on simulated data
-    Initialize SVM model with a rbf kernel on simulated data and
-    perform a grid search for kernel parameter evaluation
-    Returns the SVM model with the best parameters based on the highest mean AUC score
-    Parameters
-    ----------
-    X_train_data : np.ndarray
-        matrix of trainings data
-    y_train_data : np.ndarray
-        y label for training
-    X_test_data : np.ndarray
-        matrix of test data
-    y_test_data : np.ndarray
-        y label for testing
-    Returns
-    -------
-    model : sklearn.svm.SVC object
-        trained SVM model on evaluated kernel parameter
-    """
-
-    # Initialize SVM model, rbf kernel
-    C_range = np.logspace(-3, 3, 7)
-    gamma_range = np.logspace(-6, 6, 13)
-    param_grid = dict(gamma=gamma_range, C=C_range)
-    scoring = {"AUC": "roc_auc"}
-
-    svm = SVC(kernel="rbf")
-
-    # grid search on simulated data
-    # grid search on simulated data
-    clf = GridSearchCV(
-        SVC(kernel="rbf"),
-        param_grid,
-        scoring=scoring,
-        refit="AUC"
-    )
-    clf.fit(X_train_data, y_train_data)
-
-    print(
-        "The best parameters are %s with a mean AUC score of %0.2f"
-        % (clf.best_params_, clf.best_score_)
-    )
-
-    # run rbf SVM with parameters fromm grid search,
-    # probability has to be TRUE to evaluate features via SHAP
-    svm = SVC(
-        kernel="rbf",
-        gamma=clf.best_params_.get("gamma"),
-        C=clf.best_params_.get("C"),
-        probability=True
-    )
-
-    model = svm.fit(X_train_data, y_train_data)
-
-    y_pred = model.predict(X_test_data)
-
-    AUC = roc_auc_score(y_test_data, y_pred)
-
-    print("AUC score on unseen data:" + " " + str(AUC))
-
-    return model
 
 
 def multitask_model(

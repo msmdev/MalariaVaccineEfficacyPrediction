@@ -31,9 +31,7 @@ import argparse
 import os
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
-from typing import Optional
-from source.featureEvaluationESPY import ESPY_measurement, svm_model, multitask_model, make_plot
+from source.featureEvaluationESPY import ESPY_measurement, multitask_model, make_plot
 from source.utils import DataSelector, get_parameters
 from source.utils import select_timepoint
 
@@ -45,11 +43,11 @@ def main(
     identifier: str,
     uq: int,
     lq: int,
-    data_file_id: Optional[str] = None,
-    rgscv_path: Optional[str] = None,
-    kernel_dir: Optional[str] = None,
-    kernel_identifier: Optional[str] = None,
-    timepoint: Optional[str] = None,
+    data_file_id: str,
+    rgscv_path: str,
+    kernel_dir: str,
+    kernel_identifier: str,
+    timepoint: str,
 ) -> None:
     """
     Call ESPY measurement.
@@ -61,49 +59,7 @@ def main(
     print("at time point                = ", str(timepoint))
     print("\n")
 
-    if identifier == 'simulated':
-
-        data = pd.read_csv(os.path.join(data_dir, 'simulated_data.csv'))
-        output_filename = f"ESPY_values_on_{identifier}_data"
-
-        X_train, X_test, y_train, y_test = train_test_split(
-            data.iloc[:, :1000].to_numpy(),
-            data.iloc[:, 1000].to_numpy(),
-            test_size=0.3,
-            random_state=123,
-        )
-
-        rbf_svm_model = svm_model(
-            X_train_data=X_train,
-            y_train_data=y_train,
-            X_test_data=X_test,
-            y_test_data=y_test,
-        )
-
-        distance_result = ESPY_measurement(
-            identifier=identifier,
-            data=pd.DataFrame(X_test),
-            model=rbf_svm_model,
-            lq=lq,
-            up=uq,
-        )
-        print(distance_result)
-
-        make_plot(
-            data=distance_result.iloc[:, :25],
-            name=output_filename,
-            outputdir=out_dir,
-        )
-
-        distance_result.to_csv(
-            os.path.join(out_dir, f"{output_filename}.tsv"),
-            sep='\t',
-            na_rep='nan',
-        )
-        print("Results were saved in: ", os.path.join(out_dir, f"{output_filename}.tsv"))
-        print('')
-
-    elif identifier in ['whole', 'selective']:
+    if identifier in ['whole', 'selective']:
 
         assert isinstance(rgscv_path, str) and isinstance(kernel_dir, str), \
             ("`rgscv_path` and `kernel_dir` must be of type str, "
@@ -170,14 +126,14 @@ def main(
         distance_result = ESPY_measurement(
             identifier=identifier,
             single_timepoint_data=data_at_timePoint.drop(
-                columns=['Patient', 'group', 'Protection']
-            ),  # including dose AND timepoint
+                columns=['Patient', 'group', 'Protection', 'TimePointOrder']
+            ),  # including dose
             model=multitask_classifier,
             lq=lq,
             up=uq,
             all_timepoints_data=data.drop(
-                columns=['Patient', 'group', 'Protection']
-            ),  # including dose AND timepoint,
+                columns=['Patient', 'group', 'Protection', 'TimePointOrder']
+            ),  # including dose
             kernel_parameters=params,
         )
 
@@ -202,8 +158,8 @@ def main(
     else:
 
         raise ValueError(
-            "The string given via the '--identifier' argument must be "
-            "one of 'whole', 'selective', or 'simulated'."
+            "The string given via the '--identifier' argument "
+            "must be either 'whole' or 'selective'."
         )
 
 
@@ -241,6 +197,7 @@ if __name__ == "__main__":
         dest='lq',
         type=int,
         default=25,
+        required=True,
         help='Lower percentile given as int, by default 25%.',
     )
     parser.add_argument(
@@ -248,10 +205,13 @@ if __name__ == "__main__":
         dest='uq',
         type=int,
         default=75,
+        required=True,
         help='Upper percentile given as int, by default 75%.',
     )
     parser.add_argument(
-        '--data-file-id', dest='data_file_id', required=True,
+        '--data-file-id',
+        dest='data_file_id',
+        required=True,
         help=(
             "String identifying the data file (located in the directory given via --data-dir)."
             "This string will be appended by the time point and '.csv'. If you pass, for example, "
@@ -262,55 +222,41 @@ if __name__ == "__main__":
         '--kernel-dir',
         dest='kernel_dir',
         metavar='DIR',
+        required=True,
         help='Path to the directory were the precomputed kernel matrix is stored.',
     )
     parser.add_argument(
         '--kernel-identifier',
         dest='kernel_identifier',
+        required=True,
         help='Filename prefix of the precomputed kernel matrix.',
     )
     parser.add_argument(
         '--rgscv-path',
         dest='rgscv_path',
         metavar='FILEPATH',
+        required=True,
         help='Path to the File were the RGSCV results are stored.',
     )
     parser.add_argument(
         '--timepoint',
         dest='timepoint',
         choices=['III14', 'C-1', 'C28'],
+        required=True,
         help='Time point for which the analysis shall be performed.',
     )
 
     args = parser.parse_args()
 
-    if args.identifier == 'simulated':
-        main(
-            data_dir=args.data_dir,
-            out_dir=args.out_dir,
-            identifier=args.identifier,
-            uq=args.uq,
-            lq=args.lq,
-        )
-
-    elif args.identifier in ['whole', 'selective']:
-
-        main(
-            data_dir=args.data_dir,
-            out_dir=args.out_dir,
-            identifier=args.identifier,
-            uq=args.uq,
-            lq=args.lq,
-            data_file_id=args.data_file_id,
-            rgscv_path=args.rgscv_path,
-            kernel_dir=args.kernel_dir,
-            kernel_identifier=args.kernel_identifier,
-            timepoint=args.timepoint,
-        )
-
-    else:
-
-        raise ValueError(
-            "The string given via the '--identifier' argument must be "
-            "one of 'whole', 'selective', or 'simulated'."
-        )
+    main(
+        data_dir=args.data_dir,
+        out_dir=args.out_dir,
+        identifier=args.identifier,
+        uq=args.uq,
+        lq=args.lq,
+        data_file_id=args.data_file_id,
+        rgscv_path=args.rgscv_path,
+        kernel_dir=args.kernel_dir,
+        kernel_identifier=args.kernel_identifier,
+        timepoint=args.timepoint,
+    )
