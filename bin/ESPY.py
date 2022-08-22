@@ -126,14 +126,14 @@ def main(
         distance_result = ESPY_measurement(
             identifier=identifier,
             single_timepoint_data=data_at_timePoint.drop(
-                columns=['Patient', 'group', 'Protection', 'TimePointOrder']
-            ),  # including dose
+                columns=['Patient', 'group', 'Protection']
+            ),  # including dose AND timepoint
             model=multitask_classifier,
             lq=lq,
             up=uq,
             all_timepoints_data=data.drop(
-                columns=['Patient', 'group', 'Protection', 'TimePointOrder']
-            ),  # including dose
+                columns=['Patient', 'group', 'Protection']
+            ),  # including dose AND timepoint,
             kernel_parameters=params,
         )
 
