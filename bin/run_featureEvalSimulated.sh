@@ -43,4 +43,4 @@ err="run_ESPY_SHAP_simulated.err"
 out="run_ESPY_SHAP_simulated.out"
         
 cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
-python ESPY_SHAP_simulated.py --data-dir "$data_dir" --data-file "$data_file" --out-dir "$ana_dir" --lower-percentile 25 --upper-percentile 75 1> "${out}" 2> "${err}"
+python featureEvalSimulated.py --data-dir "$data_dir" --data-file "$data_file" --out-dir "$ana_dir" --lower-percentile 25 --upper-percentile 75 1> "${out}" 2> "${err}"
