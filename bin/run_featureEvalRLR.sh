@@ -50,15 +50,15 @@ for dataset in 'whole' 'selective'; do
 
     for timepoint in 'III14' 'C-1' 'C28'; do
 
-        err="runFeatureEvalRLR_${timepoint}.err"
-        out="runFeatureEvalRLR_${timepoint}.out"
+        err="runFeatureEval_${timepoint}.err"
+        out="runFeatureEval_${timepoint}.out"
         ana_dir="${maindir}/${dataset}/featureEvaluation"
         if [ ! -d "$ana_dir" ]; then
             mkdir "$ana_dir"
         fi
         cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
-        cp "${topdir}/bin/filtered/featureEvalRLR.py" . || { echo "cp ${topdir}/bin/filtered/featureEvalRLR.py . failed"; exit 1; }
-        python -u featureEvalRLR.py --data-dir "$data_dir" --data-file-id "preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}" --rgscv-path "$rgscv_path" --out-dir "$ana_dir" --timepoint "$timepoint" 1> "${out}" 2> "${err}"
+        cp "${topdir}/bin/featureEvalRLR.py" . || { echo "cp ${topdir}/bin/featureEvalRLR.py . failed"; exit 1; }
+        python -u featureEvalRLR.py --data-dir "$data_dir" --data-file-id "preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}" --rgscv-path "$rgscv_path" --out-dir "$ana_dir" --timepoint "$timepoint" --method RLR 1> "${out}" 2> "${err}"
 
     done
 

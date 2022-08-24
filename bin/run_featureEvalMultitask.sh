@@ -66,14 +66,14 @@ for dataset in 'whole' 'selective'; do
             fi
         fi
 
-        err="runESPY_${timepoint}.err"
-        out="runESPY_${timepoint}.out"
+        err="runFeatureEval_${timepoint}.err"
+        out="runFeatureEval_${timepoint}.out"
         if [ ! -d "$ana_dir" ]; then
             mkdir "$ana_dir"
         fi
         cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
-        cp "${topdir}/bin/filtered/featureEvalMultitask.py" . || { echo "cp ${topdir}/bin/filtered/featureEvalMultitask.py . failed"; exit 1; }
-        python -u featureEvalMultitask.py --data-dir "$data_dir" --out-dir "$ana_dir" --lower-percentile 25 --upper-percentile 75 --data-file-id "preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}" --kernel-dir "$kernel_dir" --kernel-identifier "$kernel_identifier" --rgscv-path "$rgscv_path" --timepoint "$timepoint" 1> "${out}" 2> "${err}"
+        cp "${topdir}/bin/featureEval.py" . || { echo "cp ${topdir}/bin/featureEval.py . failed"; exit 1; }
+        python -u featureEval.py --data-dir "$data_dir" --data-file-id "preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}" --rgscv-path "$rgscv_path" --out-dir "$ana_dir" --timepoint "$timepoint" --method multitaskSVM --kernel-dir "$kernel_dir" --kernel-identifier "$kernel_identifier" 1> "${out}" 2> "${err}"
 
     done
 
