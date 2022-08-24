@@ -31,7 +31,7 @@ import argparse
 import os
 import pandas as pd
 import numpy as np
-from source.featureEvaluationESPY import featureEvaluationESPY, make_plot
+from source.featureEvaluation import featureEvaluationESPY, make_plot
 from source.utils import DataSelector, get_parameters
 from source.utils import select_timepoint
 from source.multitaskSVM_config import estimator
