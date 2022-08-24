@@ -41,8 +41,6 @@ def main(
     *,
     data_dir: str,
     out_dir: str,
-    uq: int,
-    lq: int,
     data_file_id: str,
     rgscv_path: str,
     kernel_dir: str,
@@ -52,11 +50,7 @@ def main(
     """
     Call ESPY measurement.
     """
-    print("ESPY value measurement started with the following parameters:")
-    print("value of upper percentile      = ", str(uq))
-    print("value of lower percentile      = ", str(lq))
-    print("at time point                = ", str(timepoint))
-    print("\n")
+    print(f"ESPY value measurement started at timepoint {timepoint}.\n")
 
     for i in [rgscv_path, kernel_dir, kernel_identifier, timepoint]:
         if not isinstance(i, str):
@@ -123,8 +117,8 @@ def main(
             columns=['Patient', 'group', 'Protection']
         ),  # including dose AND timepoint
         model=multitask_classifier,
-        lq=lq,
-        up=uq,
+        lq=25,
+        up=75,
         basis_data=data.drop(
             columns=['Patient', 'group', 'Protection']
         ),  # including dose AND timepoint,
@@ -173,22 +167,6 @@ if __name__ == "__main__":
         help='Path to the directory were the results shall be saved.',
     )
     parser.add_argument(
-        '--lower-percentile',
-        dest='lq',
-        type=int,
-        default=25,
-        required=True,
-        help='Lower percentile given as int, by default 25%.',
-    )
-    parser.add_argument(
-        '--upper-percentile',
-        dest='uq',
-        type=int,
-        default=75,
-        required=True,
-        help='Upper percentile given as int, by default 75%.',
-    )
-    parser.add_argument(
         '--data-file-id',
         dest='data_file_id',
         required=True,
@@ -231,8 +209,6 @@ if __name__ == "__main__":
     main(
         data_dir=args.data_dir,
         out_dir=args.out_dir,
-        uq=args.uq,
-        lq=args.lq,
         data_file_id=args.data_file_id,
         rgscv_path=args.rgscv_path,
         kernel_dir=args.kernel_dir,

@@ -494,7 +494,7 @@ def get_parameters(
         DataFrame containing optimal parameters and mean AUROC values
         for a particular time point as found via Repeated Grid-Search CV (RGSCV).
     model : str
-        Model ('multitask' or 'RLR') to select parameters for.
+        Model ('multitaskSVM', 'RF' or 'RLR') to select parameters for.
 
     Returns
     --------
@@ -522,7 +522,7 @@ def get_parameters(
                 f"Expected RF parameters but set(params.keys()) != {keys}: "
                 f"{set(params.keys())} != {keys}"
             )
-    elif model == 'multitask':
+    elif model == 'multitaskSVM':
         keys = param_grid_multitaskSVM.keys()
         if not set(params.keys()) == keys:
             raise ValueError(

@@ -32,10 +32,9 @@ import time
 import matplotlib.pyplot as plt
 import os
 from source.utils import make_kernel_matrix
-from source.utils import select_timepoint, get_parameters
-from source.RLR_config import estimator as estimator_RLR
-from source.RF_config import estimator as estimator_RF
 from sklearn.inspection import permutation_importance
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 
 
 def make_feature_combination(
@@ -481,25 +480,21 @@ def featureEvaluationESPY(
 
 
 def featureEvaluationRF(
-        X: pd.DataFrame,
-        y: np.ndarray,
-        rgscv_results: pd.DataFrame,
-        timepoint: str,
+    model: RandomForestClassifier,
+    X: pd.DataFrame,
+    y: np.ndarray,
 ) -> pd.DataFrame:
-    """Evaluation of informative features from RF.
+    """Evaluation of informative features of a given RF model.
     Feature importances are obtained via permutation importance evaluation.
+    The model will be fitted on X, y before feature evaluation.
 
     Parameter
     ---------
+    model : sklearn.ensemble.RandomForestClassifier
     X : pd.DataFrame
         Feature matrix given as pd.DataFrame.
     y : np.ndarray
         Label vector.
-    rgscv_results : pd.DataFrame
-        DataFrame containing optimal parameters and mean AUROC values
-        per time point as found via Repeated Grid-Search CV (RGSCV).
-    timepoint : str
-        Time point to evaluate informative features for.
 
     Returns
     -------
@@ -508,23 +503,9 @@ def featureEvaluationRF(
 
     """
 
-    print(f"RF parameter combination for best mean AUC at time point {timepoint} :")
-    timepoint_results = select_timepoint(
-        rgscv_results=pd.DataFrame(rgscv_results),
-        timepoint=timepoint)
-
-    params = get_parameters(
-        timepoint_results=timepoint_results,
-        model='RF',
-    )
-    print(f"Parameters: {params}\n")
-
-    # Initialize and fit RF
-    estimator_RF.set_params(**params)
-    estimator_RF.fit(X.to_numpy(), y)
-
+    model.fit(X.to_numpy(), y)
     result = permutation_importance(
-        estimator_RF,
+        model,
         X.to_numpy(),
         y,
         scoring='roc_auc',
@@ -547,24 +528,20 @@ def featureEvaluationRF(
 
 
 def featureEvaluationRLR(
-        X: pd.DataFrame,
-        y: np.ndarray,
-        rgscv_results: pd.DataFrame,
-        timepoint: str,
+    model: LogisticRegression,
+    X: pd.DataFrame,
+    y: np.ndarray,
 ) -> pd.DataFrame:
-    """Evaluation of informative features from RLR.
+    """Evaluation of informative features of a given RLR model.
+    The model will be fitted on X, y before feature evaluation.
 
     Parameter
     ---------
+    model : sklearn.linear_model.LogisticRegression
     X : pd.DataFrame
         Feature matrix given as pd.DataFrame.
     y : np.ndarray
         Label vector.
-    rgscv_results : pd.DataFrame
-        DataFrame containing optimal parameters and mean AUROC values
-        per time point as found via Repeated Grid-Search CV (RGSCV).
-    timepoint : str
-        Time point to evaluate informative features for.
 
     Returns
     -------
@@ -573,23 +550,9 @@ def featureEvaluationRLR(
 
     """
 
-    print(f"RLR parameter combination for best mean AUC at time point {timepoint} :")
-    timepoint_results = select_timepoint(
-        rgscv_results=pd.DataFrame(rgscv_results),
-        timepoint=timepoint)
-
-    params = get_parameters(
-        timepoint_results=timepoint_results,
-        model='RLR',
-    )
-    print(f"Parameters: {params}")
-    print('')
-
-    # Initialize and fit RLR
-    estimator_RLR.set_params(**params)
-    estimator_RLR.fit(X.to_numpy(), y)
-    coefs = estimator_RLR['logisticregression'].coef_
-    if coefs.shape == (1, X.shape[1]):
+    model.fit(X.to_numpy(), y)
+    coefs = model['logisticregression'].coef_
+    if coefs.shape[0] == 1:
         coefs = coefs.flatten()
     else:
         raise ValueError(

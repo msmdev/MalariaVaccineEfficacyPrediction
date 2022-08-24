@@ -120,8 +120,6 @@ def main(
     data_dir: str,
     data_file: str,
     out_dir: str,
-    uq: int,
-    lq: int,
 ):
     pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)
     data = pd.read_csv(os.path.join(data_dir, data_file))
@@ -139,17 +137,16 @@ def main(
         y_test_data=y_test,
     )
 
-    print("ESPY value measurement started on simulated data with the following parameters:")
-    print(f"value of upper percentile: {uq}")
-    print(f"value of lower percentile: {lq}\n")
+    timestamp = datetime.now().strftime("%d.%m.%Y_%H-%M-%S")
+    print(f"ESPY value measurement started at {timestamp}.")
 
     output_filename = "ESPY_values_on_simulated_data"
 
     distance_result = featureEvaluationESPY(
         eval_data=pd.DataFrame(X_test),
         model=rbf_SVM_model,
-        lq=lq,
-        up=uq,
+        lq=25,
+        up=75,
     )
     print(distance_result)
 
@@ -164,11 +161,14 @@ def main(
         sep='\t',
         na_rep='nan',
     )
-    print("ESPY results were saved in: ", os.path.join(out_dir, f"{output_filename}.tsv\n"))
+    timestamp = datetime.now().strftime("%d.%m.%Y_%H-%M-%S")
+    print(
+        f"ESPY evaluation has terminated at {timestamp} and results are saved in {out_dir}\n"
+    )
 
     timestamp = datetime.now().strftime("%d.%m.%Y_%H-%M-%S")
     print(
-        f"Evaluation of informative features based on SHAP values has started at {timestamp}."
+        f"Evaluation of informative features based on SHAP values started at {timestamp}."
     )
 
     explainer = shap.KernelExplainer(rbf_SVM_model.predict_proba, X_train)
@@ -204,8 +204,7 @@ def main(
 
     timestamp = datetime.now().strftime("%d.%m.%Y_%H-%M-%S")
     print(
-        f"SHAP evaluation has terminated at {timestamp} and results are saved in "
-        "../results/SVM/simulated/SHAP as SHAP_value_simulated_data.png."
+        f"SHAP evaluation has terminated at {timestamp} and results are saved in {out_dir}.\n"
     )
 
 
@@ -235,28 +234,10 @@ if __name__ == "__main__":
         required=True,
         help='Path to the directory were the results shall be saved.',
     )
-    parser.add_argument(
-        '--lower-percentile',
-        dest='lq',
-        type=int,
-        default=25,
-        required=True,
-        help='Lower percentile given as int, by default 25%.',
-    )
-    parser.add_argument(
-        '--upper-percentile',
-        dest='uq',
-        type=int,
-        default=75,
-        required=True,
-        help='Upper percentile given as int, by default 75%.',
-    )
     args = parser.parse_args()
 
     main(
         data_dir=args.data_dir,
         data_file=args.data_file,
         out_dir=args.out_dir,
-        uq=args.uq,
-        lq=args.lq,
     )
