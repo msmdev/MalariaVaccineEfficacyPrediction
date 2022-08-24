@@ -60,9 +60,8 @@ def main(
     coefs = featureEvaluationRLR(
         X=data_at_timePoint.drop(
             columns=['Patient', 'group', 'Protection', 'TimePointOrder']
-        ).to_numpy(),  # including dose,
+        ),  # including dose,
         y=data_at_timePoint.loc[:, 'Protection'].to_numpy(),
-        feature_labels=data_at_timePoint.iloc[:, 3:].columns.to_list(),
         rgscv_results=rgscv_results,
         timepoint=timepoint,
     )

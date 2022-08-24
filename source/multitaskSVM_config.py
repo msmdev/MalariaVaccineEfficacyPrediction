@@ -70,6 +70,7 @@ def configurator(
                 kernel_param, "rbf_kernel", "rbf_kernel", "rbf_kernel"
             ).items()
         }
+    param_grid['svc__C'] = [1.e-4, 1.e-3, 1.e-2, 1.e-1, 1.e0, 1.e1, 1.e2, 1.e3, 1.e4]
     n_jobs = 8
 
     estimator = make_pipeline(

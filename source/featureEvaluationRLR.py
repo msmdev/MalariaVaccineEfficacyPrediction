@@ -24,79 +24,13 @@
 
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Tuple
-from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import make_pipeline
 from source.utils import select_timepoint, get_parameters
-
-
-def RLR_model(
-        *,
-        X: np.ndarray,
-        y: np.ndarray,
-        params: Dict[str, float],
-        feature_labels: List[str],
-) -> Tuple[LogisticRegression, pd.DataFrame]:
-    """Fit RLR model on proteome data.
-
-    Fit RLR model with parameters given by `params` on
-    proteome data and find non-zero coefficients.
-
-    Parameters
-    ---------
-    X : np.ndarray
-        Data array.
-    y : np.ndarray
-        Label array
-    params : dict
-        Parameter dictionary used to fit RLR.
-    feature_labels : list
-        List of feature labels.
-
-    Returns
-    -------
-    model : sklearn.linear_model.LogisticRegression object
-        Fitted RLR model with parameters given by `params`.
-    coefs_nonzero : pd.Dataframe
-        Non-zero RLR coefficients.
-
-    """
-
-    # Initialize and fit RLR
-    estimator = make_pipeline(
-        StandardScaler(
-            with_mean=True,
-            with_std=True,
-        ),
-        LogisticRegression(
-            penalty='elasticnet',
-            C=params['logisticregression__C'],
-            solver='saga',
-            l1_ratio=params['logisticregression__l1_ratio'],
-            max_iter=10000,
-        ),
-    )
-    estimator.fit(X, y)
-    print(estimator)
-    model = estimator[1]
-
-    # Extract non-zero coefficients
-    print("Number of non-zero weights:", np.count_nonzero(model.coef_))
-    coefs = pd.concat(
-        [pd.DataFrame(feature_labels), pd.DataFrame(np.transpose(model.coef_))],
-        axis=1
-    )
-    coefs = coefs.set_axis(['Pf_antigen_ID', 'weight'], axis='columns')
-    coefs.sort_values(by=['weight'], ascending=True, inplace=True)
-    coefs_nonzero = coefs[coefs['weight'] != 0]
-    return model, coefs_nonzero
+from source.RLR_config import estimator
 
 
 def featureEvaluationRLR(
-        X: np.ndarray,
+        X: pd.DataFrame,
         y: np.ndarray,
-        feature_labels: List[str],
         rgscv_results: pd.DataFrame,
         timepoint: str,
 ):
@@ -104,12 +38,10 @@ def featureEvaluationRLR(
 
     Parameter
     ---------
-    X : np.ndarray
-        Feature matrix.
+    X : pd.DataFrame
+        Feature matrix given as pd.DataFrame.
     y : np.ndarray
         Label vector.
-    feature labels : list
-        Feature labels.
     rgscv_results : pd.DataFrame
         DataFrame containing optimal parameters and mean AUROC values
         per time point as found via Repeated Grid-Search CV (RGSCV).
@@ -119,11 +51,11 @@ def featureEvaluationRLR(
     Returns
     -------
     coefs : pd.Dataframe
-        Dataframe of non-zero coefficients.
+        Dataframe of non-zero feature importances.
 
     """
 
-    print(f"Parameter combination for best mean AUC at time point {timepoint} :")
+    print(f"RLR parameter combination for best mean AUC at time point {timepoint} :")
     timepoint_results = select_timepoint(
         rgscv_results=pd.DataFrame(rgscv_results),
         timepoint=timepoint)
@@ -135,18 +67,26 @@ def featureEvaluationRLR(
     print(f"Parameters: {params}")
     print('')
 
-    if all(isinstance(x, float) for x in params.values()):
-
-        _, coefs = RLR_model(
-            X=X,
-            y=y,
-            params=params,
-            feature_labels=feature_labels,
-        )
-        print(coefs)
-
+    # Initialize and fit RLR
+    estimator.set_params(**params)
+    estimator.fit(X.to_numpy(), y)
+    coefs = estimator['logisticregression'].coef_
+    if coefs.shape == (1, X.shape[1]):
+        coefs = coefs.flatten()
     else:
+        raise ValueError(
+            "RLR model appears to be a multiclass model, thus, "
+            "coef_ array can't be flattened securely."
+        )
 
-        raise ValueError("All parameter values must be of type float.")
+    sorted_importances_idx = coefs.argsort()
+    importances = pd.DataFrame(
+        coefs[sorted_importances_idx],
+        index=X.columns[sorted_importances_idx],
+        columns=['importance'],
+    )
 
-    return coefs
+    # Extract non-zero coefficients
+    print("Number of non-zero importances (weights):", np.count_nonzero(coefs))
+
+    return importances[importances['importance'] != 0]

@@ -66,14 +66,14 @@ for dataset in 'whole' 'selective'; do
             fi
         fi
 
-        err="runESPY_${dataset}_${timepoint}.err"
-        out="runESPY_${dataset}_${timepoint}.out"
+        err="runESPY_${timepoint}.err"
+        out="runESPY_${timepoint}.out"
         if [ ! -d "$ana_dir" ]; then
             mkdir "$ana_dir"
         fi
         cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
         cp "${topdir}/bin/filtered/featureEvalMultitask.py" . || { echo "cp ${topdir}/bin/filtered/featureEvalMultitask.py . failed"; exit 1; }
-        python -u featureEvalMultitask.py --data-dir "$data_dir" --out-dir "$ana_dir" --identifier "$dataset" --lower-percentile 25 --upper-percentile 75 --data-file-id "preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}" --kernel-dir "$kernel_dir" --kernel-identifier "$kernel_identifier" --rgscv-path "$rgscv_path" --timepoint "$timepoint" 1> "${out}" 2> "${err}"
+        python -u featureEvalMultitask.py --data-dir "$data_dir" --out-dir "$ana_dir" --lower-percentile 25 --upper-percentile 75 --data-file-id "preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}" --kernel-dir "$kernel_dir" --kernel-identifier "$kernel_identifier" --rgscv-path "$rgscv_path" --timepoint "$timepoint" 1> "${out}" 2> "${err}"
 
     done
 

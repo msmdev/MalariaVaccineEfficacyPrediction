@@ -30,12 +30,12 @@ from sklearn.model_selection._split import BaseCrossValidator
 from sklearn.utils.validation import column_or_1d
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics.pairwise import rbf_kernel, sigmoid_kernel, polynomial_kernel
+from sklearn.preprocessing import KernelCenterer
 import pandas as pd
 import os
-from sklearn.preprocessing import KernelCenterer
-from sklearn.model_selection import GridSearchCV
-from sklearn.svm import SVC
-from sklearn.metrics import roc_auc_score
+from source.RLR_config import param_grid as param_grid_RLR
+from source.RF_config import param_grid as param_grid_RF
+from source.multitaskSVM_config import param_grid as param_grid_multitaskSVM
 
 
 def normalize(
@@ -509,30 +509,32 @@ def get_parameters(
         f"type(params_string) != str: {type(params_string)} != str"
     params = eval(params_string)
     if model == 'RLR':
-        keys = {'logisticregression__l1_ratio', 'logisticregression__C'}
-        assert set(params.keys()) == keys, \
-            (f"set(params.keys()) != {keys}:"
-             f"{set(params.keys())} != {keys}")
+        keys = param_grid_RLR.keys()
+        if not set(params.keys()) == keys:
+            raise ValueError(
+                f"Expected RLR parameters but set(params.keys()) != {keys}: "
+                f"{set(params.keys())} != {keys}"
+            )
+    elif model == 'RF':
+        keys = param_grid_RF.keys()
+        if not set(params.keys()) == keys:
+            raise ValueError(
+                f"Expected RF parameters but set(params.keys()) != {keys}: "
+                f"{set(params.keys())} != {keys}"
+            )
     elif model == 'multitask':
-        keys = {
-            'svc__C',
-            'dataselector__SA',
-            'dataselector__SO',
-            'dataselector__R0',
-            'dataselector__R1',
-            'dataselector__R2',
-            'dataselector__P1',
-            'dataselector__P2',
-        }
-        assert set(params.keys()) == keys, \
-            (f"set(params.keys()) != {keys}:"
-             f"{set(params.keys())} != {keys}")
+        keys = param_grid_multitaskSVM.keys()
+        if not set(params.keys()) == keys:
+            raise ValueError(
+                f"Expected multitaskSVM parameters but set(params.keys()) != {keys}: "
+                f"{set(params.keys())} != {keys}"
+            )
         temp = dict()
         for key in keys:
             temp[key.split('__')[1]] = params[key]
         params = temp
     else:
-        raise ValueError("`model` must be set to either 'RLR' or 'multitask'.")
+        raise ValueError("`model` must be either 'RF', 'RLR' or 'multitask'.")
     return params
 
 
@@ -811,76 +813,3 @@ def make_kernel_matrix(
     print('\n\n')
 
     return multi_AB_signals_time_dose_kernel_matrix, c_list, info_list
-
-
-def svm_model(
-    *,
-    X_train_data: np.ndarray,
-    y_train_data: np.ndarray,
-    X_test_data: np.ndarray,
-    y_test_data: np.ndarray,
-    reproducible: bool = True,
-) -> SVC:
-    """ Initialize SVM model on simulated data.
-
-    Initialize SVM model with a RBF kernel on simulated data and
-    perform a grid-search for kernel parameter evaluation.
-    Returns the SVM model with the best parameters based on the highest mean AUC score.
-    CAUTION: All calls to functions with randomization are seeded to ensure reproducible behaviour.
-
-    Parameters
-    ----------
-    X_train_data : np.ndarray
-        Training data.
-    y_train_data : np.ndarray
-        y labels for training.
-    X_test_data : np.ndarray
-        Test data.
-    y_test_data : np.ndarray
-        y labels for testing.
-
-    Returns
-    -------
-    model : sklearn.svm.SVC object
-        Trained SVM model with best kernel parameters found via GridSearchCV.
-    """
-
-    # Initialize SVM model, rbf kernel
-    param_grid = {
-        'gamma': [1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1., 1e1, 1e2, 1e3, 1e4, 1e5, 1e6],
-        'C': [1.e-3, 1.e-2, 1.e-1, 1.e0, 1.e1, 1.e2, 1.e3],
-    }
-
-    # grid-search on simulated data
-    clf = GridSearchCV(
-        SVC(kernel='rbf', probability=True, random_state=123),
-        param_grid,
-        scoring='roc_auc',
-        refit=True,
-        cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=123),
-    )
-    clf.fit(X_train_data, y_train_data)
-
-    print(
-        f"The best parameters are {clf.best_params_} with a mean AUC score of {clf.best_score_}."
-    )
-
-    # run RBF SVM with best parameters from grid-search,
-    # probability has to be TRUE to evaluate features via SHAP
-    svm = SVC(
-        kernel='rbf',
-        gamma=clf.best_params_.get('gamma'),
-        C=clf.best_params_.get('C'),
-        probability=True,
-        random_state=123,
-    )
-
-    model = svm.fit(X_train_data, y_train_data)
-
-    y_pred = model.predict(X_test_data)
-
-    AUC = roc_auc_score(y_test_data, y_pred)
-
-    print(f"AUC score on unseen data: {AUC}")
-
-    return model

@@ -34,45 +34,8 @@ import os
 from source.utils import make_kernel_matrix
 
 
-def multitask_model(
-    *,
-    kernel_matrix: np.ndarray,
-    kernel_parameters: Dict[str, Union[str, float]],
-    y_label: np.ndarray
-) -> SVC:
-    """Initialize multitask-SVM model based on the output of file of the rgscv_multitask.py.
-
-    initialize multitask-SVM model based on evaluated kernel combinations
-
-    Parameter
-    ---------
-    kernel_matrix : np.ndarray,
-        gram matrix
-    kernel_parameters : dict,
-        parameter combination to initialize multitask-SVM model
-    y_label : np.ndarray
-        label vector
-
-    Returns
-    --------
-    multitaskModel: sklearn.svm.SVC object
-        trained multitask-SVM model on evaluated kernel parameter
-    """
-
-    # set up multitask model based on evaluated parameter
-    multitaskModel = SVC(
-        kernel="precomputed",
-        C=kernel_parameters['C'],
-        probability=True,
-        random_state=1337,
-        cache_size=500,
-    )
-    multitaskModel.fit(kernel_matrix, y_label)
-
-    return multitaskModel
-
-
 def make_feature_combination(
+    *,
     X: pd.DataFrame,
     upperValue: int,
     lowerValue: int,
@@ -140,13 +103,14 @@ def make_feature_combination(
 
 
 def compute_distance_hyper(
+    *,
     median: np.ndarray,
     combinations: Dict[str, List[np.ndarray]],
     model: SVC,
     labels: List[str],
     data: Optional[pd.DataFrame] = None,
     kernel_parameters: Optional[Dict[str, Union[float, str]]] = None,
-    simulated: bool = False,
+    multitask: bool = False,
 ) -> pd.DataFrame:
     """Evaluate distance of each single feature to the classification boundary.
 
@@ -164,11 +128,14 @@ def compute_distance_hyper(
     labels : list
         List of feature labels.
     data : pd.DataFrame, default=None
-        Full dataset (n x n_features) combined from all timepoints (n = n_times x n_samples).
+        Dataset from which to compute the multitask Gram matrix. Must be the same dataset
+        that was used to train the multitaskSVM model. Typically, this is the full dataset
+        (n x n_features) combined from all timepoints (n = n_times x n_samples).
     kernel_parameters : dict, default=None
         Combination of kernel parameters.
-    simulated: bool, default=False
-        If True, the ESPY measurement is performed on simulated data.
+    multitask: bool, default=False
+        If True, it will be assumed that the given sklearn.svm.SVC model is
+        based on a precomputed multitask Gram matrix, i.e., SVC(kernel='precomputed').
 
     Returns
     --------
@@ -183,7 +150,7 @@ def compute_distance_hyper(
     # calc distances for all combinations
     for m in range(len(median)):
 
-        if simulated:
+        if not multitask:
 
             get_distance_lower.append(
                 model.decision_function(combinations["lower_combinations"][m].reshape(1, -1))[0]
@@ -421,15 +388,15 @@ def make_plot(
     plt.close()
 
 
-def ESPY_measurement(
+def featureEvaluationESPY(
     *,
-    identifier: str,
-    single_timepoint_data: pd.DataFrame,
+    eval_data: pd.DataFrame,
     model: SVC,
     lq: int,
     up: int,
-    all_timepoints_data: Optional[pd.DataFrame] = None,
+    basis_data: Optional[pd.DataFrame] = None,
     kernel_parameters: Optional[Dict[str, Union[str, float]]] = None,
+    multitask: bool = False,
  ) -> pd.DataFrame:
     """ESPY measurement.
 
@@ -437,24 +404,24 @@ def ESPY_measurement(
 
     Parameter
     -----------
-    identifier : str
-        A str that defines, if the input data is real ('whole', 'selective')
-        proteome data or simulated ('simulated') data.
-    single_timepoint_data : pd.Dataframe
-        Input data from a single timepoint used to calculate
-        the upper and lower percentile and median.
-        Must (only!) contain timepoint and dose series plus the antibody signals.
+    eval_data : pd.Dataframe
+        Input data (typically from a single timepoint) used to calculate
+        the upper and lower percentile and median utilized by ESPY.
     model : sklearn.svm.SVC
         SVC model.
     lq : int
         Lower percentile value.
     up : int
         Upper percentile value.
-    all_timepoints_data : pd.DataFrame, default=None
-        Full dataset (n x n_features) combined from all timepoints (n = n_times x n_samples).
-        Must (only!) contain timepoint and dose series plus the antibody signals.
+    basis_data : pd.DataFrame, default=None
+        Dataset from which to compute the multitask Gram matrix. Must be the same dataset
+        that was used to train the multitaskSVM model. Typically, this is the full dataset
+        (n x n_features) combined from all timepoints (n = n_times x n_samples).
     kernel_parameters : pd.DataFrame, default=None
         Kernel parameters for real data.
+    multitask: bool, default=False
+        If True, it will be assumed that the given sklearn.svm.SVC model is
+        based on a precomputed multitask Gram matrix, i.e., SVC(kernel='precomputed').
     Returns
     --------
     distance_matrix_for_all_feature_comb : pd.Dataframe
@@ -465,7 +432,7 @@ def ESPY_measurement(
     start = time.time()
 
     statistics, median, combinations = make_feature_combination(
-        X=single_timepoint_data,
+        X=eval_data,
         lowerValue=lq,
         upperValue=up
     )
@@ -474,40 +441,34 @@ def ESPY_measurement(
     print(statistics)
     print('')
 
-    if identifier == 'simulated':
+    if not multitask:
 
         distance_matrix_for_all_feature_comb = compute_distance_hyper(
             median=median,
             combinations=combinations,
             model=model,
             labels=statistics.columns.to_list(),
-            simulated=True,
         )
 
-    elif identifier in ['whole', 'selective']:
+    else:
 
-        if isinstance(all_timepoints_data, pd.DataFrame) and isinstance(kernel_parameters, dict):
+        if isinstance(basis_data, pd.DataFrame) and isinstance(kernel_parameters, dict):
 
             distance_matrix_for_all_feature_comb = compute_distance_hyper(
                 median=median,
                 combinations=combinations,
                 model=model,
                 labels=statistics.columns.to_list(),
-                data=all_timepoints_data,
+                data=basis_data,
                 kernel_parameters=kernel_parameters,
+                multitask=True,
             )
 
         else:
 
             raise ValueError(
-                "`proteome_data` and `kernel_parameters` must be supplied."
+                "`basis_data` and `kernel_parameters` must be supplied."
             )
-
-    else:
-
-        raise ValueError(
-            "`identifier` must be one of 'whole', 'selective', or 'simulated'."
-        )
 
     end = time.time()
     print(f"end of computation after: {end - start} seconds.\n")

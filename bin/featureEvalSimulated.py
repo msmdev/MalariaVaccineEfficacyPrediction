@@ -31,12 +31,88 @@ import pandas as pd
 import os
 import pathlib
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import StratifiedKFold
+from sklearn.svm import SVC
+from sklearn.metrics import roc_auc_score
 import matplotlib.pyplot as plt
 import shap
 import warnings
 import argparse
-from source.featureEvaluationESPY import ESPY_measurement, make_plot
-from source.utils import svm_model
+from source.featureEvaluationESPY import featureEvaluationESPY, make_plot
+
+
+def optimize_svm_model(
+    *,
+    X_train_data: np.ndarray,
+    y_train_data: np.ndarray,
+    X_test_data: np.ndarray,
+    y_test_data: np.ndarray,
+    reproducible: bool = True,
+) -> SVC:
+    """ Initialize SVM model on simulated data.
+
+    Initialize SVM model with a RBF kernel on simulated data and
+    perform a grid-search for kernel parameter evaluation.
+    Returns the SVM model with the best parameters based on the highest mean AUC score.
+    CAUTION: All calls to functions with randomization are seeded to ensure reproducible behaviour.
+
+    Parameters
+    ----------
+    X_train_data : np.ndarray
+        Training data.
+    y_train_data : np.ndarray
+        y labels for training.
+    X_test_data : np.ndarray
+        Test data.
+    y_test_data : np.ndarray
+        y labels for testing.
+
+    Returns
+    -------
+    model : sklearn.svm.SVC object
+        Trained SVM model with best kernel parameters found via GridSearchCV.
+    """
+
+    # Initialize SVM model, rbf kernel
+    param_grid = {
+        'gamma': [1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1., 1e1, 1e2, 1e3, 1e4, 1e5, 1e6],
+        'C': [1.e-3, 1.e-2, 1.e-1, 1.e0, 1.e1, 1.e2, 1.e3],
+    }
+
+    # grid-search on simulated data
+    clf = GridSearchCV(
+        SVC(kernel='rbf', probability=True, random_state=123),
+        param_grid,
+        scoring='roc_auc',
+        refit=True,
+        cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=123),
+    )
+    clf.fit(X_train_data, y_train_data)
+
+    print(
+        f"The best parameters are {clf.best_params_} with a mean AUC score of {clf.best_score_}."
+    )
+
+    # run RBF SVM with best parameters from grid-search,
+    # probability has to be TRUE to evaluate features via SHAP
+    svm = SVC(
+        kernel='rbf',
+        gamma=clf.best_params_.get('gamma'),
+        C=clf.best_params_.get('C'),
+        probability=True,
+        random_state=123,
+    )
+
+    model = svm.fit(X_train_data, y_train_data)
+
+    y_pred = model.predict(X_test_data)
+
+    AUC = roc_auc_score(y_test_data, y_pred)
+
+    print(f"AUC score on unseen data: {AUC}")
+
+    return model
 
 
 def main(
@@ -56,7 +132,7 @@ def main(
         test_size=0.3,
         random_state=123,
     )
-    rbf_SVM_model = svm_model(
+    rbf_SVM_model = optimize_svm_model(
         X_train_data=X_train,
         y_train_data=y_train,
         X_test_data=X_test,
@@ -69,9 +145,8 @@ def main(
 
     output_filename = "ESPY_values_on_simulated_data"
 
-    distance_result = ESPY_measurement(
-        identifier='simulated',
-        data=pd.DataFrame(X_test),
+    distance_result = featureEvaluationESPY(
+        eval_data=pd.DataFrame(X_test),
         model=rbf_SVM_model,
         lq=lq,
         up=uq,

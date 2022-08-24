@@ -598,18 +598,18 @@ if __name__ == "__main__":
     n_jobs: int
     method = args.method
     if method == 'multitaskSVM':
-        from multitaskSVM_config import configurator
+        from source.multitaskSVM_config import configurator
         param_grid, estimator, n_jobs = configurator(
             combination=args.combination,
             identifier=args.identifier,
             kernel_dir=args.kernel_dir,
         )
     elif method == 'SVM':
-        from SVM_config import estimator, param_grid, n_jobs
+        from source.SVM_config import estimator, param_grid, n_jobs
     elif method == 'RLR':
-        from RLR_config import estimator, param_grid, n_jobs
+        from source.RLR_config import estimator, param_grid, n_jobs
     elif method == 'RF':
-        from RF_config import estimator, param_grid, n_jobs
+        from source.RF_config import estimator, param_grid, n_jobs
     else:
         raise ValueError(f"Unexpected method '{method}' passed.")
 
