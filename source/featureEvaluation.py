@@ -32,6 +32,10 @@ import time
 import matplotlib.pyplot as plt
 import os
 from source.utils import make_kernel_matrix
+from source.utils import select_timepoint, get_parameters
+from source.RLR_config import estimator as estimator_RLR
+from source.RF_config import estimator as estimator_RF
+from sklearn.inspection import permutation_importance
 
 
 def make_feature_combination(
@@ -424,7 +428,7 @@ def featureEvaluationESPY(
         based on a precomputed multitask Gram matrix, i.e., SVC(kernel='precomputed').
     Returns
     --------
-    distance_matrix_for_all_feature_comb : pd.Dataframe
+    ESPY_importances : pd.Dataframe
         Dataframe of ESPY values |d| for each feature in simulated data.
 
     """
@@ -443,7 +447,7 @@ def featureEvaluationESPY(
 
     if not multitask:
 
-        distance_matrix_for_all_feature_comb = compute_distance_hyper(
+        ESPY_importances = compute_distance_hyper(
             median=median,
             combinations=combinations,
             model=model,
@@ -454,7 +458,7 @@ def featureEvaluationESPY(
 
         if isinstance(basis_data, pd.DataFrame) and isinstance(kernel_parameters, dict):
 
-            distance_matrix_for_all_feature_comb = compute_distance_hyper(
+            ESPY_importances = compute_distance_hyper(
                 median=median,
                 combinations=combinations,
                 model=model,
@@ -473,4 +477,134 @@ def featureEvaluationESPY(
     end = time.time()
     print(f"end of computation after: {end - start} seconds.\n")
 
-    return distance_matrix_for_all_feature_comb
+    return ESPY_importances
+
+
+def featureEvaluationRF(
+        X: pd.DataFrame,
+        y: np.ndarray,
+        rgscv_results: pd.DataFrame,
+        timepoint: str,
+) -> pd.DataFrame:
+    """Evaluation of informative features from RF.
+    Feature importances are obtained via permutation importance evaluation.
+
+    Parameter
+    ---------
+    X : pd.DataFrame
+        Feature matrix given as pd.DataFrame.
+    y : np.ndarray
+        Label vector.
+    rgscv_results : pd.DataFrame
+        DataFrame containing optimal parameters and mean AUROC values
+        per time point as found via Repeated Grid-Search CV (RGSCV).
+    timepoint : str
+        Time point to evaluate informative features for.
+
+    Returns
+    -------
+    importances : pd.Dataframe
+        Dataframe of non-zero feature importances.
+
+    """
+
+    print(f"RF parameter combination for best mean AUC at time point {timepoint} :")
+    timepoint_results = select_timepoint(
+        rgscv_results=pd.DataFrame(rgscv_results),
+        timepoint=timepoint)
+
+    params = get_parameters(
+        timepoint_results=timepoint_results,
+        model='RF',
+    )
+    print(f"Parameters: {params}\n")
+
+    # Initialize and fit RF
+    estimator_RF.set_params(**params)
+    estimator_RF.fit(X.to_numpy(), y)
+
+    result = permutation_importance(
+        estimator_RF,
+        X.to_numpy(),
+        y,
+        scoring='roc_auc',
+        n_repeats=100,
+        n_jobs=-1,
+        random_state=123
+    )
+
+    sorted_importances_idx = result.importances_mean.argsort()
+    importances = pd.DataFrame(
+        result.importances_mean[sorted_importances_idx],
+        index=X.columns[sorted_importances_idx],
+        columns=['importance'],
+    )
+
+    # Extract non-zero importances
+    print("Number of non-zero importances:", np.count_nonzero(result.importances_mean))
+
+    return importances[importances['importance'] != 0]
+
+
+def featureEvaluationRLR(
+        X: pd.DataFrame,
+        y: np.ndarray,
+        rgscv_results: pd.DataFrame,
+        timepoint: str,
+) -> pd.DataFrame:
+    """Evaluation of informative features from RLR.
+
+    Parameter
+    ---------
+    X : pd.DataFrame
+        Feature matrix given as pd.DataFrame.
+    y : np.ndarray
+        Label vector.
+    rgscv_results : pd.DataFrame
+        DataFrame containing optimal parameters and mean AUROC values
+        per time point as found via Repeated Grid-Search CV (RGSCV).
+    timepoint : str
+        Time point to evaluate informative features for.
+
+    Returns
+    -------
+    importances : pd.Dataframe
+        Dataframe of non-zero feature importances.
+
+    """
+
+    print(f"RLR parameter combination for best mean AUC at time point {timepoint} :")
+    timepoint_results = select_timepoint(
+        rgscv_results=pd.DataFrame(rgscv_results),
+        timepoint=timepoint)
+
+    params = get_parameters(
+        timepoint_results=timepoint_results,
+        model='RLR',
+    )
+    print(f"Parameters: {params}")
+    print('')
+
+    # Initialize and fit RLR
+    estimator_RLR.set_params(**params)
+    estimator_RLR.fit(X.to_numpy(), y)
+    coefs = estimator_RLR['logisticregression'].coef_
+    if coefs.shape == (1, X.shape[1]):
+        coefs = coefs.flatten()
+    else:
+        raise ValueError(
+            "RLR model appears to be a multiclass model, thus, "
+            "coef_ array can't be flattened securely."
+        )
+
+    sorted_importances_idx = coefs.argsort()
+    importances = pd.DataFrame(
+        coefs[sorted_importances_idx],
+        index=X.columns[sorted_importances_idx],
+        columns=['importance'],
+    )
+
+    # Extract non-zero coefficients
+    print("Number of non-zero importances (weights):", np.count_nonzero(coefs))
+
+    return importances[importances['importance'] != 0]

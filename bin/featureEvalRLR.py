@@ -33,7 +33,7 @@ import sklearn
 import sys
 import os
 import argparse
-from source.featureEvaluationRLR import featureEvaluationRLR
+from source.featureEvaluation import featureEvaluationRLR
 
 
 def main(
@@ -57,7 +57,7 @@ def main(
     )
     rgscv_results = pd.read_csv(rgscv_path, sep="\t", header=0, index_col=0)
 
-    coefs = featureEvaluationRLR(
+    importances = featureEvaluationRLR(
         X=data_at_timePoint.drop(
             columns=['Patient', 'group', 'Protection', 'TimePointOrder']
         ),  # including dose,
@@ -67,7 +67,7 @@ def main(
     )
 
     fn = os.path.join(out_dir, f"RLR_informative_features_{timepoint}.tsv")
-    pd.DataFrame(data=coefs).to_csv(fn, sep='\t', na_rep='nan')
+    pd.DataFrame(data=importances).to_csv(fn, sep='\t', na_rep='nan')
 
     print(f"Results are saved in: {fn}")
 
