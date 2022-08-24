@@ -67,6 +67,17 @@ def main(
     if data.isna().sum().sum() != 0:
         raise ValueError(f"{fn} contains NaN entries.")
 
+    # assert that 'Dose' isn't strongly correlated with any AB signal:
+    correlation = data.drop(
+        columns=['Patient', 'group', 'Protection', 'TimePointOrder']
+    ).corr(method=correlation_method)
+    if correlation.loc[~correlation.index.isin(['Dose']), 'Dose'].gt(correlation_threshold).any():
+        raise ValueError(
+            f"Dose is strongly correlated (>{correlation_threshold}) "
+            "with at least one antibody signal."
+        )
+    del correlation
+
     intensities = data.drop(columns=['Patient', 'group', 'Protection', 'TimePointOrder', 'Dose'])
     print(f'Shape of intensities dataframe: {intensities.shape}')
     print(f'# of variants: {intensities.shape[1]}\n')
