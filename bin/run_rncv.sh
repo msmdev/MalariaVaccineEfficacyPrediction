@@ -35,14 +35,14 @@ fi
 data_dir="${topdir}/data/proteome_data/correlationFiltering"
 combinations=('RPP' 'RPR' 'RRP' 'RRR' 'SPP' 'SPR' 'SRP' 'SRR')
 
-for threshold in '0.95' '0.98'; do
+for threshold in '0.95' '0.98' '1.0'; do
 
     for method in 'multitaskSVM' 'RF' 'RLR' 'SVM'; do
-        kernel_dir="${topdir}/data/precomputed_multitask_kernels/filtered/threshold${threshold}"
+        kernel_dir="${topdir}/data/precomputed_multitask_kernels/threshold${threshold}"
         if [ ! -d "$kernel_dir" ]; then
             { echo "${kernel_dir} doesn't exist"; exit 1; }
         fi
-        maindir="${topdir}/results/filtered/threshold${threshold}/${method}"
+        maindir="${topdir}/results/threshold${threshold}/${method}"
         if [ ! -d "$maindir" ]; then
             mkdir "$maindir" || { echo "mkdir ${maindir} failed"; exit 1; }
         fi
