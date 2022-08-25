@@ -46,7 +46,7 @@ for dataset in 'whole' 'selective'; do
 
     for timepoint in 'all' 'III14' 'C-1' 'C28'; do
 
-        for threshold in '0.95' '0.98'; do
+        for threshold in '0.95' '0.98' '1.0'; do
 
             timestamp=$(date +%d-%m-%Y_%H-%M-%S)
             err="run_groupCorrelatedFeatures_${dataset}_${method}_threshold${threshold}_${timepoint}_${timestamp}.err"
