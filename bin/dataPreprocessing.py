@@ -18,7 +18,7 @@
 # ------------------------------------------------------------------------------------------------
 
 """
-This module contains the preprocessing of the raw proteome array data
+This script performs the preprocessing of the raw proteome array data.
 
 @Author: Bernhard Reuter and Jacqueline Wistuba-Hamprecht
 
@@ -32,14 +32,15 @@ from source.preprocessing import preprocessing
 
 def main(
     data_dir: str,
-    identifier: str,
+    data_file: str,
+    out_name: str,
 ):
 
-    fn = os.path.join(data_dir, f'{identifier}_proteomearray_rawdata.csv')
+    fn = os.path.join(data_dir, data_file)
     data = pd.read_csv(fn)
     preprocessed_data = preprocessing(data)
     preprocessed_data.to_csv(
-        os.path.join(data_dir, f'preprocessed_{identifier}_data_all.csv'),
+        os.path.join(data_dir, f'{out_name}.csv'),
         index=False,
     )
     TimePointOrder = [2, 3, 4]
@@ -61,7 +62,7 @@ def main(
         )
     for timepoint_data, time in zip(timepointwise_data, times):
         timepoint_data.to_csv(
-            os.path.join(data_dir, f'preprocessed_{identifier}_data_{time}.csv'),
+            os.path.join(data_dir, f'{out_name}_{time}.csv'),
             index=False,
         )
 
@@ -72,22 +73,35 @@ if __name__ == "__main__":
         description=('Script to preprocess the raw proteome data.')
     )
     parser.add_argument(
-        '--data-dir', dest='data_dir', metavar='DIR', required=True,
+        '--data-dir',
+        dest='data_dir',
+        metavar='DIR',
+        required=True,
         help=(
             'Path to the directory were the proteome data is located. '
             'The preprocessed data will be also stored here.'
         )
     )
     parser.add_argument(
-        '--identifier', dest='identifier', required=True,
+        '--data-file',
+        dest='data_file',
+        metavar='FILE',
+        required=True,
+        help=('Name of the file were the raw proteome data is stored.')
+    )
+    parser.add_argument(
+        '--out-name',
+        dest='out_name',
+        required=True,
         help=(
-            "Prefix to identify the proteome data files and name the output files, "
-            "use either 'whole' or 'selective'."
+            "Identifier to use when naming the file were the preprocessed proteome data "
+            "is stored (WITHOUT a file ending like '.csv'!)."
         )
     )
     args = parser.parse_args()
 
     main(
         args.data_dir,
-        args.identifier,
+        args.data_file,
+        args.out_name,
     )
