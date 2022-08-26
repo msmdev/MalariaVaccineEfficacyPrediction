@@ -35,7 +35,6 @@ import pandas as pd
 import os
 from source.RLR_config import param_grid as param_grid_RLR
 from source.RF_config import param_grid as param_grid_RF
-from source.multitaskSVM_config import param_grid as param_grid_multitaskSVM
 
 
 def normalize(
@@ -523,7 +522,7 @@ def get_parameters(
                 f"{set(params.keys())} != {keys}"
             )
     elif model == 'multitaskSVM':
-        keys = param_grid_multitaskSVM.keys()
+        keys = {"SA", "SO", "R0", "R1", "R2", "P1", "P2"}
         if not set(params.keys()) == keys:
             raise ValueError(
                 f"Expected multitaskSVM parameters but set(params.keys()) != {keys}: "

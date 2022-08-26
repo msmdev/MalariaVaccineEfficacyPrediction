@@ -21,6 +21,7 @@ def configurator(
         )
     )
 
+    param_grid: Dict[str, List[Union[float, str]]]
     # Set up grid of parameters to optimize over
     if combination == 'SPP':
         param_grid = {

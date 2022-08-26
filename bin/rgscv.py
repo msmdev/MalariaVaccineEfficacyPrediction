@@ -260,13 +260,13 @@ if __name__ == "__main__":
     parser.add_argument(
         '--combination',
         dest='combination',
-        help='Kernel combination. Supply SPP, SPR, SRP, or SRR.'
+        help="Kernel combination. Supply 'SPP', 'SPR', 'SRP', or 'SRR'."
     )
     parser.add_argument(
         '--identifier',
         dest='identifier',
-        help=('Prefix to identify the precomputed kernel matrices (stored as .npy files).'
-              'E.g. kernel_matrix_rescale.')
+        help=("Prefix to identify the precomputed kernel matrices (stored as .npy files), "
+              "i.e., 'kernel_matrix' or 'kernel_matrix_SelectiveSet'.")
     )
     args = parser.parse_args()
 
