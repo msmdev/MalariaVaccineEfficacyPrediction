@@ -199,6 +199,7 @@ def make_symmetric_matrix_psd(
 
 
 def assign_folds(
+    *,
     labels: np.ndarray,
     groups: np.ndarray,
     delta: int,
@@ -563,6 +564,7 @@ def select_timepoint(
 
 
 def make_kernel_combinations(
+    *,
     meta_data: np.ndarray,
     kernel_time_series: str,
     kernel_dosage: str,
@@ -693,6 +695,7 @@ def multitask(
 
 
 def make_kernel_matrix(
+    *,
     AB_signals: pd.DataFrame,
     time_series: pd.Series,
     dose: pd.Series,

@@ -46,7 +46,7 @@ def calc_and_save_GramMatrices(
     kernel_for_abSignal: str,
     save_to_dir: str,
     scale: bool = False,
-) -> Dict[str, List[Any]]:
+) -> Dict[str, List[Union[np.ndarray, List[str], List[float], Tuple[Any, ...]]]]:
 
     collection: Dict[
         str, List[Union[np.ndarray, List[str], List[float], Tuple[Any, ...]]]
@@ -273,7 +273,7 @@ def calc_and_save_GramMatrices(
     return collection
 
 
-def heatmap2d(arr: np.ndarray):
+def heatmap2d(arr: np.ndarray) -> None:
     plt.figure(figsize=(9.5, 8))
     plt.imshow(arr, cmap='hot')
     plt.colorbar()
@@ -281,10 +281,13 @@ def heatmap2d(arr: np.ndarray):
     plt.close()
 
 
-def overview(collection, plot=False):
+def overview(
+    collection: Dict[str, List[Union[np.ndarray, List[str], List[float], Tuple[Any, ...]]]],
+    plot: bool = False,
+) -> None:
     damping_value_sums = []
-    for i in collection['damping_values_list']:
-        damping_value_sums.append(np.sum(i))
+    for damping_values in collection['damping_values_list']:
+        damping_value_sums.append(np.sum(damping_values))
     print('maximum sum:', np.max(damping_value_sums))
     print('sorted sums:', np.sort(damping_value_sums)[::-1])
     print('')
@@ -305,68 +308,58 @@ def overview(collection, plot=False):
             heatmap2d(collection['kernel_matrices'][i])
 
 
-def looper(data, params, identifier, out_dir, combinations):
+def looper(
+    *,
+    data: pd.DataFrame,
+    params: np.ndarray,
+    identifier: str,
+    out_dir: str,
+    combinations: List[str],
+) -> None:
 
     for id in combinations:
 
         if id == 'SRR':
-            kernel_param = make_kernel_combinations(
-                params, "sigmoid_kernel", "rbf_kernel", "rbf_kernel"
-            )
             kernel_for_time_series = "sigmoid_kernel"
             kernel_for_dosage = "rbf_kernel"
             kernel_for_abSignal = "rbf_kernel"
         elif id == 'SRP':
-            kernel_param = make_kernel_combinations(
-                kernel_param, "sigmoid_kernel", "rbf_kernel", "poly_kernel"
-            )
             kernel_for_time_series = "sigmoid_kernel"
             kernel_for_dosage = "rbf_kernel"
             kernel_for_abSignal = "poly_kernel"
         elif id == 'SPR':
-            kernel_param = make_kernel_combinations(
-                kernel_param, "sigmoid_kernel", "poly_kernel", "rbf_kernel"
-            )
             kernel_for_time_series = "sigmoid_kernel"
             kernel_for_dosage = "poly_kernel"
             kernel_for_abSignal = "rbf_kernel"
         elif id == 'SPP':
-            kernel_param = make_kernel_combinations(
-                kernel_param, "sigmoid_kernel", "poly_kernel", "poly_kernel"
-            )
             kernel_for_time_series = "sigmoid_kernel"
             kernel_for_dosage = "poly_kernel"
             kernel_for_abSignal = "poly_kernel"
         elif id == 'RRR':
-            kernel_param = make_kernel_combinations(
-                kernel_param, "rbf_kernel", "rbf_kernel", "rbf_kernel"
-            )
             kernel_for_time_series = "rbf_kernel"
             kernel_for_dosage = "rbf_kernel"
             kernel_for_abSignal = "rbf_kernel"
         elif id == 'RRP':
-            kernel_param = make_kernel_combinations(
-                kernel_param, "rbf_kernel", "rbf_kernel", "poly_kernel"
-            )
             kernel_for_time_series = "rbf_kernel"
             kernel_for_dosage = "rbf_kernel"
             kernel_for_abSignal = "poly_kernel"
         elif id == 'RPR':
-            kernel_param = make_kernel_combinations(
-                kernel_param, "rbf_kernel", "poly_kernel", "rbf_kernel"
-            )
             kernel_for_time_series = "rbf_kernel"
             kernel_for_dosage = "poly_kernel"
             kernel_for_abSignal = "rbf_kernel"
         elif id == 'RPP':
-            kernel_param = make_kernel_combinations(
-                kernel_param, "rbf_kernel", "poly_kernel", "poly_kernel"
-            )
             kernel_for_time_series = "rbf_kernel"
             kernel_for_dosage = "poly_kernel"
             kernel_for_abSignal = "poly_kernel"
         else:
             raise ValueError(f'Unknown combination {id}')
+
+        kernel_param = make_kernel_combinations(
+            meta_data=params,
+            kernel_time_series=kernel_for_time_series,
+            kernel_dosage=kernel_for_dosage,
+            kernel_abSignal=kernel_for_abSignal,
+        )
 
         collection = calc_and_save_GramMatrices(
             identifier=identifier,
@@ -386,11 +379,12 @@ def looper(data, params, identifier, out_dir, combinations):
 
 
 def main(
+    *,
     kernel_params_file: str,
     data_file: str,
     out_dir: str,
     identifier: str,
-):
+) -> None:
 
     combinations = ['SRR', 'SPR', 'SRP', 'SPP', 'RRR', 'RPR', 'RRP', 'RPP']
 
@@ -401,7 +395,13 @@ def main(
 
     pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)
 
-    looper(data, params, identifier, out_dir, combinations)
+    looper(
+        data=data,
+        params=params,
+        identifier=identifier,
+        out_dir=out_dir,
+        combinations=combinations
+    )
 
 
 if __name__ == "__main__":
@@ -441,8 +441,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(
-        args.kernel_params_file,
-        args.data_file,
-        args.out_dir,
-        args.identifier,
+        kernel_params_file=args.kernel_params_file,
+        data_file=args.data_file,
+        out_dir=args.out_dir,
+        identifier=args.identifier,
     )

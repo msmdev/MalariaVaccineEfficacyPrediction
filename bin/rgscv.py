@@ -132,7 +132,14 @@ def main(
         for rep in range(Nexp):
             print(f'CV folds for repetition {rep}:')
             test_fold, train_fold = assign_folds(
-                y_all, groups_all, 40, step, random_state=rep, print_info=False
+                labels=y_all,
+                groups=groups_all,
+                delta=40,
+                step=step,
+                n_splits=5,
+                shuffle=True,
+                print_info=False,
+                random_state=rep,
             )
             if method != 'multitaskSVM':
                 test_fold = test_fold[40 * step: 40 * (step + 1)]
@@ -270,22 +277,20 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    param_grid: Dict[str, List[Any]]
-    n_jobs: int
     method = args.method
-    if method == 'multitaskSVM':
+    if method == 'SVM':
+        from source.SVM_config import estimator, param_grid, n_jobs
+    elif method == 'RLR':
+        from source.RLR_config import estimator, param_grid, n_jobs
+    elif method == 'RF':
+        from source.RF_config import estimator, param_grid, n_jobs
+    elif method == 'multitaskSVM':
         from source.multitaskSVM_config import configurator
         param_grid, estimator, n_jobs = configurator(
             combination=args.combination,
             identifier=args.identifier,
             kernel_dir=args.kernel_dir,
         )
-    elif method == 'SVM':
-        from source.SVM_config import estimator, param_grid, n_jobs
-    elif method == 'RLR':
-        from source.RLR_config import estimator, param_grid, n_jobs
-    elif method == 'RF':
-        from source.RF_config import estimator, param_grid, n_jobs
     else:
         raise ValueError(f"Unexpected method '{method}' passed.")
 
