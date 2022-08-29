@@ -32,12 +32,37 @@ topdir="${HOME}/MalariaVaccineEfficacyPrediction"
 if [ ! -d "$topdir" ]; then
     { echo "${topdir} doesn't exists."; exit 1; }
 fi
+data_dir="${topdir}/data/proteome_data"
+ana_dir="${data_dir}/correlationFiltering"
+if [ ! -d "$ana_dir" ]; then
+    mkdir "$ana_dir"
+fi
+method='spearman'
 
 for dataset in 'whole' 'selective'; do
 
-    out="${topdir}/data/proteome_data/run_dataPreprocessing_${dataset}.out"
-    err="${topdir}/data/proteome_data/run_dataPreprocessing_${dataset}.err"
+    cd "${data_dir}" || { echo "Couldn't cd into ${data_dir}"; exit 1; }
+    cp "${topdir}/bin/dataPreprocessing.py" . || { echo "cp ${topdir}/bin/dataPreprocessing.py . failed"; exit 1; }
 
-    python -u dataPreprocessing.py --data-dir "${topdir}/data/proteome_data" --data-file "${dataset}_proteomearray_rawdata.csv" --out-name "preprocessed_${dataset}_data" 1> "${out}" 2> "${err}"
+    out="run_dataPreprocessing_${dataset}.out"
+    err="run_dataPreprocessing_${dataset}.err"
+
+    python -u dataPreprocessing.py --data-dir "$data_dir" --data-file "${dataset}_proteomearray_rawdata.csv" --out-name "preprocessed_${dataset}_data" 1> "${out}" 2> "${err}"
+
+    cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
+    cp "${topdir}/bin/groupCorrelatedFeatures.py" . || { echo "cp ${topdir}/bin/groupCorrelatedFeatures.py . failed"; exit 1; }
+
+    for timepoint in 'all' 'III14' 'C-1' 'C28'; do
+
+        for threshold in '0.95' '0.98' '1.0'; do
+
+            timestamp=$(date +%d-%m-%Y_%H-%M-%S)
+            err="run_groupCorrelatedFeatures_${dataset}_${method}_threshold${threshold}_${timepoint}_${timestamp}.err"
+            out="run_groupCorrelatedFeatures_${dataset}_${method}_threshold${threshold}_${timepoint}_${timestamp}.out"
+            python -u groupCorrelatedFeatures.py --data-dir "${data_dir}" --data-file-id "preprocessed_${dataset}_data" --out-dir "$ana_dir" --timepoint "$timepoint" --correlation_threshold "$threshold" --correlation_method "$method" 1> "${out}" 2> "${err}"
+
+        done
+
+    done
 
 done
