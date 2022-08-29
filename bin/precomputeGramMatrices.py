@@ -311,7 +311,7 @@ def overview(
 def looper(
     *,
     data: pd.DataFrame,
-    params: np.ndarray,
+    params: Dict[str, np.ndarray],
     identifier: str,
     out_dir: str,
     combinations: List[str],
@@ -355,7 +355,7 @@ def looper(
             raise ValueError(f'Unknown combination {id}')
 
         kernel_param = make_kernel_combinations(
-            meta_data=params,
+            kernel_params=params,
             kernel_time_series=kernel_for_time_series,
             kernel_dosage=kernel_for_dosage,
             kernel_abSignal=kernel_for_abSignal,
@@ -386,12 +386,12 @@ def main(
     identifier: str,
 ) -> None:
 
+    from source.multitaskSVM_config import kernel_params as params
+
     combinations = ['SRR', 'SPR', 'SRP', 'SPP', 'RRR', 'RPR', 'RRP', 'RPP']
 
     fn = os.path.join(data_file)
     data = pd.read_csv(fn)
-
-    params = pd.read_csv(kernel_params_file).to_numpy()
 
     pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)
 

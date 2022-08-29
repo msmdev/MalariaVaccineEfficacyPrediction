@@ -2,13 +2,14 @@ from sklearn.pipeline import make_pipeline
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
 from typing import Any, Dict, List
+import numpy as np
 
 
 # Set up grid of parameters to optimize over
 # 3*3=9 points
 param_grid: Dict[str, List[Any]] = {
-    'svc__gamma': [1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1., 1e1, 1e2, 1e3, 1e4, 1e5],
-    'svc__C': [1.e-4, 1.e-3, 1.e-2, 1.e-1, 1.e0, 1.e1, 1.e2, 1.e3, 1.e4],
+    'svc__gamma': 10.0 ** np.arange(-6, 6),
+    'svc__C': 10.0 ** np.arange(-4, 5),
 }
 n_jobs = 9
 

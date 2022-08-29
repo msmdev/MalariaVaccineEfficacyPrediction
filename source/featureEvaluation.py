@@ -168,6 +168,12 @@ def compute_distance_hyper(
 
             if isinstance(data, pd.DataFrame) and isinstance(kernel_parameters, dict):
 
+                keys = {"SA", "SO", "R0", "R1", "R2", "P1", "P2"}
+                if not set(kernel_parameters.keys()) == keys:
+                    raise ValueError(
+                        f"Expected multitaskSVM parameters but set(params.keys()) != {keys}: "
+                        f"{set(kernel_parameters.keys())} != {keys}"
+                    )
                 params = (
                     kernel_parameters['SA'],
                     kernel_parameters['SO'],

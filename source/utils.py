@@ -565,7 +565,7 @@ def select_timepoint(
 
 def make_kernel_combinations(
     *,
-    meta_data: np.ndarray,
+    kernel_params: Dict[str, np.ndarray],
     kernel_time_series: str,
     kernel_dosage: str,
     kernel_abSignal: str
@@ -576,15 +576,24 @@ def make_kernel_combinations(
 
     Parameters
     ----------
-    meta_data : np.ndarray
-        Matrix of kernel parameter ranges.
+    kernel_params : Dict[str, np.ndarray]
+        Dict with ranges of kernel parameters.
+        Expected is a dict with keys {'SA', 'SO', 'R0', 'R1', 'R2', 'P1', 'P2'}.
+        'SA' defines the value range of the factor `gamma` and 'SO' defines the value range of the
+        offset parameter `coef0` of the time-series sigmoid kernel
+        `K(X, Y) = tanh(gamma <X, Y> + coef0)`;
+        'R1' ('R2' ('R3')) defines the range of the power `d` of the `gamma` (`gamma = 10^d`)
+        parameter of the time-series (dosage (AB-signal)) RBF kernel
+        `K(x, y) = exp(-gamma ||x-y||^2)`.
+        'P1' ('P2') defines the range of values for the degree parameter of the dosage (AB-Signal)
+        polynomial kernel `K(X, Y) = (gamma <X, Y> + coef0)^degree`;
     kernel_time_series : str
         Kernel function to compute relationship between individuals based on time points.
     kernel_dosage : str
-        Pre-defined kernel function for to represent relationship between individuals
+        Kernel function for to represent relationship between individuals
         based on dosage level.
     kernel_abSignal : str
-        Pre-defined kernel function for to represent relationship between individuals
+        Kernel function for to represent relationship between individuals
         based on ab signal intensity
 
     Returns
@@ -593,79 +602,101 @@ def make_kernel_combinations(
         Dictionary of value ranges for each kernel parameter.
 
     """
+    keys = {"SA", "SO", "R0", "R1", "R2", "P1", "P2"}
+    if not set(kernel_params.keys()) == keys:
+        raise ValueError(
+            f"Expected multitaskSVM parameters but set(params.keys()) != {keys}: "
+            f"{set(kernel_params.keys())} != {keys}"
+        )
     kernel_comb_param: Dict[str, np.ndarray]
     if (kernel_time_series == "sigmoid_kernel" and kernel_dosage == "rbf_kernel"
             and kernel_abSignal == "rbf_kernel"):
-        kernel_comb_param = {"SA": np.arange(meta_data[1, 1], 1, meta_data[1, 1]),
-                             "SO": np.arange(meta_data[2, 1], meta_data[2, 2]),
-                             "R0": np.array(['X']),
-                             "R1": 10 ** np.arange(meta_data[3, 1], meta_data[3, 2], dtype=float),
-                             "R2": 10 ** np.arange(meta_data[3, 1], meta_data[3, 2], dtype=float),
-                             "P1": np.array(['X']),
-                             "P2": np.array(['X'])}
+        kernel_comb_param = {
+            "SA": kernel_params['SA'],
+            "SO": kernel_params['SO'],
+            "R0": np.array(['X']),
+            "R1": kernel_params['R1'],
+            "R2": kernel_params['R2'],
+            "P1": np.array(['X']),
+            "P2": np.array(['X']),
+        }
     elif (kernel_time_series == "sigmoid_kernel" and kernel_dosage == "poly_kernel"
             and kernel_abSignal == "poly_kernel"):
-        kernel_comb_param = {"SA": np.arange(meta_data[1, 1], 1, meta_data[1, 1]),
-                             "SO": np.arange(meta_data[2, 1], meta_data[2, 2], dtype=float),
-                             "R0": np.array(['X']),
-                             "R1": np.array(['X']),
-                             "R2": np.array(['X']),
-                             "P1": np.arange(meta_data[0, 1], meta_data[0, 2]),
-                             "P2": np.arange(meta_data[0, 1], meta_data[0, 2])}
+        kernel_comb_param = {
+            "SA": kernel_params['SA'],
+            "SO": kernel_params['SO'],
+            "R0": np.array(['X']),
+            "R1": np.array(['X']),
+            "R2": np.array(['X']),
+            "P1": kernel_params['P1'],
+            "P2": kernel_params['P2'],
+        }
     elif (kernel_time_series == "sigmoid_kernel" and kernel_dosage == "poly_kernel"
             and kernel_abSignal == "rbf_kernel"):
-        kernel_comb_param = {"SA": np.arange(meta_data[1, 1], 1, meta_data[1, 1]),
-                             "SO": np.arange(meta_data[2, 1], meta_data[2, 2]),
-                             "R0": np.array(['X']),
-                             "R1": np.array(['X']),
-                             "R2": 10 ** np.arange(meta_data[3, 1], meta_data[3, 2], dtype=float),
-                             "P1": np.arange(meta_data[0, 1], meta_data[0, 2]),
-                             "P2": np.array(['X'])}
+        kernel_comb_param = {
+            "SA": kernel_params['SA'],
+            "SO": kernel_params['SO'],
+            "R0": np.array(['X']),
+            "R1": np.array(['X']),
+            "R2": kernel_params['R2'],
+            "P1": kernel_params['P1'],
+            "P2": np.array(['X']),
+        }
     elif (kernel_time_series == "sigmoid_kernel" and kernel_dosage == "rbf_kernel"
             and kernel_abSignal == "poly_kernel"):
-        kernel_comb_param = {"SA": np.arange(meta_data[1, 1], 1, meta_data[1, 1]),
-                             "SO": np.arange(meta_data[2, 1], meta_data[2, 2]),
-                             "R0": np.array(['X']),
-                             "R1": 10 ** np.arange(meta_data[3, 1], meta_data[3, 2], dtype=float),
-                             "R2": np.array(['X']),
-                             "P1": np.array(['X']),
-                             "P2": np.arange(meta_data[0, 1], meta_data[0, 2])}
+        kernel_comb_param = {
+            "SA": kernel_params['SA'],
+            "SO": kernel_params['S0'],
+            "R0": np.array(['X']),
+            "R1": kernel_params['R1'],
+            "R2": np.array(['X']),
+            "P1": np.array(['X']),
+            "P2": kernel_params['P2'],
+        }
     elif (kernel_time_series == "rbf_kernel" and kernel_dosage == "rbf_kernel"
             and kernel_abSignal == "rbf_kernel"):
-        kernel_comb_param = {"SA": np.array(['X']),
-                             "SO": np.array(['X']),
-                             "R0": 10 ** np.arange(meta_data[3, 1], meta_data[3, 2], dtype=float),
-                             "R1": 10 ** np.arange(meta_data[3, 1], meta_data[3, 2], dtype=float),
-                             "R2": 10 ** np.arange(meta_data[3, 1], meta_data[3, 2], dtype=float),
-                             "P1": np.array(['X']),
-                             "P2": np.array(['X'])}
+        kernel_comb_param = {
+            "SA": np.array(['X']),
+            "SO": np.array(['X']),
+            "R0": kernel_params['R0'],
+            "R1": kernel_params['R1'],
+            "R2": kernel_params['R2'],
+            "P1": np.array(['X']),
+            "P2": np.array(['X']),
+        }
     elif (kernel_time_series == "rbf_kernel" and kernel_dosage == "poly_kernel"
             and kernel_abSignal == "poly_kernel"):
-        kernel_comb_param = {"SA": np.array(['X']),
-                             "SO": np.array(['X']),
-                             "R0": 10 ** np.arange(meta_data[3, 1], meta_data[3, 2], dtype=float),
-                             "R1": np.array(['X']),
-                             "R2": np.array(['X']),
-                             "P1": np.arange(meta_data[0, 1], meta_data[0, 2]),
-                             "P2": np.arange(meta_data[0, 1], meta_data[0, 2])}
+        kernel_comb_param = {
+            "SA": np.array(['X']),
+            "SO": np.array(['X']),
+            "R0": kernel_params['R0'],
+            "R1": np.array(['X']),
+            "R2": np.array(['X']),
+            "P1": kernel_params['P1'],
+            "P2": kernel_params['P2'],
+        }
     elif (kernel_time_series == "rbf_kernel" and kernel_dosage == "poly_kernel"
             and kernel_abSignal == "rbf_kernel"):
-        kernel_comb_param = {"SA": np.array(['X']),
-                             "SO": np.array(['X']),
-                             "R0": 10 ** np.arange(meta_data[3, 1], meta_data[3, 2], dtype=float),
-                             "R1": np.array(['X']),
-                             "R2": 10 ** np.arange(meta_data[3, 1], meta_data[3, 2], dtype=float),
-                             "P1": np.arange(meta_data[0, 1], meta_data[0, 2]),
-                             "P2": np.array(['X'])}
+        kernel_comb_param = {
+            "SA": np.array(['X']),
+            "SO": np.array(['X']),
+            "R0": kernel_params['R0'],
+            "R1": np.array(['X']),
+            "R2": kernel_params['R2'],
+            "P1": kernel_params['P1'],
+            "P2": np.array(['X'])
+        }
     elif (kernel_time_series == "rbf_kernel" and kernel_dosage == "rbf_kernel"
             and kernel_abSignal == "poly_kernel"):
-        kernel_comb_param = {"SA": np.array(['X']),
-                             "SO": np.array(['X']),
-                             "R0": 10 ** np.arange(meta_data[3, 1], meta_data[3, 2], dtype=float),
-                             "R1": 10 ** np.arange(meta_data[3, 1], meta_data[3, 2], dtype=float),
-                             "R2": np.array(['X']),
-                             "P1": np.array(['X']),
-                             "P2": np.arange(meta_data[0, 1], meta_data[0, 2])}
+        kernel_comb_param = {
+            "SA": np.array(['X']),
+            "SO": np.array(['X']),
+            "R0": kernel_params['R0'],
+            "R1": kernel_params['R1'],
+            "R2": np.array(['X']),
+            "P1": np.array(['X']),
+            "P2": kernel_params['P2'],
+        }
 
     return {k: v.tolist() for k, v in kernel_comb_param.items()}
 
@@ -721,8 +752,17 @@ def make_kernel_matrix(
         Series of time points at which the antibody signal intensities were recorded.
     dose : pd.Series
         Series of dosages administered.
-    model : dict
+    model : tuple
         Combination of kernel parameters.
+        Expected is a tuple `T` with seven elements `T = (t0, ..., t6)`.
+        `t0` defines the value of the factor `gamma` and `t1` defines the value of the
+        offset parameter `coef0` of the time-series sigmoid kernel
+        `K(X, Y) = tanh(gamma <X, Y> + coef0)`;
+        `t2` (`t3` (`t4`)) defines the power `d` of the `gamma` (`gamma = 10^d`)
+        parameter of the time-series (dosage (AB-signal)) RBF kernel
+        `K(x, y) = exp(-gamma ||x-y||^2)`.
+        `t5` (`t6`) defines the value of the `degree` parameter of the dosage (AB-Signal)
+        polynomial kernel `K(X, Y) = (gamma <X, Y> + coef0)^degree`;
     kernel_time_series : str
         Kernel function to compute relationship between individuals based on time points.
     kernel_dosage : str
@@ -746,7 +786,12 @@ def make_kernel_matrix(
         a str '_epsilon' will be appended resulting in 'negative_epsilon' or 'imaginary_epsilon'.
     """
 
-    # pre-computed kernel matrix of time points K(n_t,n_t')
+    if not isinstance(model, tuple):
+        raise ValueError("The model must be given as a tuple of kernel parameters.")
+    if not len(model) == 7:
+        raise ValueError("Expected model tuple of length 7.")
+
+    # pre-compute kernel matrix of time points K(n_t,n_t')
     if kernel_time_series == 'sigmoid_kernel':
         time_series_kernel_matrix = sigmoid_kernel(
                 time_series.values.reshape(len(time_series), 1),
@@ -758,13 +803,13 @@ def make_kernel_matrix(
             time_series.values.reshape(len(time_series), 1), gamma=model[2]
         )
 
-    # pre-computed kernel matrix of dosage K(n_d,n_d')
+    # pre-compute kernel matrix of dosage K(n_d,n_d')
     if kernel_dosage == "rbf_kernel":
         dose_kernel_matrix = rbf_kernel(dose.values.reshape(len(dose), 1), gamma=model[3])
     elif kernel_dosage == "poly_kernel":
         dose_kernel_matrix = polynomial_kernel(dose.values.reshape(len(dose), 1), degree=model[5])
 
-    # pre-computed kernel matrix of antibody reactivity K(n_p,n_p')
+    # pre-compute kernel matrix of antibody reactivity K(n_p,n_p')
     if kernel_abSignals == "rbf_kernel":
         AB_signals_kernel_matrix = rbf_kernel(AB_signals, gamma=model[4])
     elif kernel_abSignals == "poly_kernel":
