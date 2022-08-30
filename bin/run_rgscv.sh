@@ -62,7 +62,7 @@ for threshold in '0.95' '0.98' '1.0'; do
                     err="runRGSCV.err"
                     out="runRGSCV.out"
                     ana_dir="${maindir}/${dataset}/${combination}"
-                    mkdir "${ana_dir}"
+                    mkdir "${ana_dir}" || { echo "mkdir ${ana_dir} failed"; exit 1; }
                     cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
                     cp "${topdir}/bin/rgscv.py" . || { echo "cp ${topdir}/bin/rgscv.py . failed"; exit 1; }
                     cp "${topdir}/bin/${method}_config.py" . || { echo "cp ${topdir}/bin/${method}_config.py . failed"; exit 1; }
@@ -74,7 +74,7 @@ for threshold in '0.95' '0.98' '1.0'; do
                 err="runRGSCV.err"
                 out="runRGSCV.out"
                 ana_dir="${maindir}/${dataset}"
-                mkdir "${ana_dir}"
+                mkdir "${ana_dir}" || { echo "mkdir ${ana_dir} failed"; exit 1; }
                 cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
                 cp "${topdir}/bin/rgscv.py" . || { echo "cp ${topdir}/bin/rgscv.py . failed"; exit 1; }
                 cp "${topdir}/bin/${method}_config.py" . || { echo "cp ${topdir}/bin/${method}_config.py . failed"; exit 1; }

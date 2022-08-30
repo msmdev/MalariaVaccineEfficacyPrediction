@@ -74,7 +74,7 @@ for method in 'multitaskSVM' 'RF' 'RLR'; do
                 fi
 
                 if [ ! -d "$ana_dir" ]; then
-                    mkdir "$ana_dir"
+                    mkdir "$ana_dir" || { echo "mkdir ${ana_dir} failed"; exit 1; }
                 fi
                 cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
                 cp "${topdir}/bin/featureEvalRLR.py" . || { echo "cp ${topdir}/bin/featureEvalRLR.py . failed"; exit 1; }
@@ -85,7 +85,7 @@ for method in 'multitaskSVM' 'RF' 'RLR'; do
                 rgscv_path="${maindir}/RGSCV/RepeatedGridSearchCV_results.tsv"
                 ana_dir="${maindir}/featureEvaluation"
                 if [ ! -d "$ana_dir" ]; then
-                    mkdir "$ana_dir"
+                    mkdir "$ana_dir" || { echo "mkdir ${ana_dir} failed"; exit 1; }
                 fi
                 cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
                 cp "${topdir}/bin/featureEvalRLR.py" . || { echo "cp ${topdir}/bin/featureEvalRLR.py . failed"; exit 1; }

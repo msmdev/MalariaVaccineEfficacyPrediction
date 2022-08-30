@@ -35,7 +35,7 @@ fi
 data_dir="${topdir}/data/proteome_data"
 ana_dir="${data_dir}/correlationFiltering"
 if [ ! -d "$ana_dir" ]; then
-    mkdir "$ana_dir"
+    mkdir "$ana_dir" || { echo "mkdir ${ana_dir} failed"; exit 1; }
 fi
 method='spearman'
 
