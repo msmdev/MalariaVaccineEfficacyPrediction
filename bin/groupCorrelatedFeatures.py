@@ -29,7 +29,6 @@ Will save the results to .csv files
 import nestedcv as ncv
 import pandas as pd
 import numpy as np
-import scipy
 import warnings
 import pathlib
 import os
@@ -55,6 +54,8 @@ def main(
     if timepoint not in ['III14', 'C-1', 'C28', 'all']:
         raise ValueError("timepoint must be one of 'III14', 'C-1', 'C28', or 'all'")
 
+    pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)
+
     fn = os.path.join(data_dir, f'{identifier}_{timepoint}.csv')
     data = pd.read_csv(fn, sep=',')
 
@@ -66,7 +67,7 @@ def main(
 
     if correlation_threshold == 1.0:
         print(f"Correlation grouping with threshold {correlation_threshold} requested."
-              "Since 1.0 is the maximal possible correlation, the data will be saved unchanged.")
+              "Since 1.0 is the maximal possible correlation, the data will be saved unchanged.\n")
     else:
         print(f"Grouping features based on {correlation_method} correlation "
               f"with threshold {correlation_threshold}:\n")
@@ -204,9 +205,6 @@ def main(
 
 
 if __name__ == "__main__":
-    print('pandas version:', pd.__version__)
-    print('numpy version:', np.__version__)
-    print('scipy version:', scipy.__version__)
 
     parser = argparse.ArgumentParser(
         description=('Function to group strongly covarying features together.')
@@ -249,8 +247,6 @@ if __name__ == "__main__":
         )
     )
     args = parser.parse_args()
-
-    pathlib.Path(args.out_dir).mkdir(parents=True, exist_ok=True)
 
     main(
         data_dir=args.data_dir,

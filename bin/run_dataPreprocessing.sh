@@ -56,9 +56,8 @@ for dataset in 'whole' 'selective'; do
 
         for threshold in '0.95' '0.98' '1.0'; do
 
-            timestamp=$(date +%d-%m-%Y_%H-%M-%S)
-            err="run_groupCorrelatedFeatures_${dataset}_${method}_threshold${threshold}_${timepoint}_${timestamp}.err"
-            out="run_groupCorrelatedFeatures_${dataset}_${method}_threshold${threshold}_${timepoint}_${timestamp}.out"
+            err="run_groupCorrelatedFeatures_${dataset}_${method}_threshold${threshold}_${timepoint}.err"
+            out="run_groupCorrelatedFeatures_${dataset}_${method}_threshold${threshold}_${timepoint}.out"
             python -u groupCorrelatedFeatures.py --data-dir "${data_dir}" --data-file-id "preprocessed_${dataset}_data" --out-dir "$ana_dir" --timepoint "$timepoint" --correlation_threshold "$threshold" --correlation_method "$method" 1> "${out}" 2> "${err}"
 
         done

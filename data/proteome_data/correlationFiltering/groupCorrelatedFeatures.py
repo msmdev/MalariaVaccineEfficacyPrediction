@@ -29,7 +29,6 @@ Will save the results to .csv files
 import nestedcv as ncv
 import pandas as pd
 import numpy as np
-import scipy
 import warnings
 import pathlib
 import os
