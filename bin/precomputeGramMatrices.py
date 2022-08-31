@@ -266,7 +266,7 @@ def calc_and_save_GramMatrices(
             collection['damping_values_list'].append(damping_values)
             output_file_name = (
                 f"{identifier}_RPP_SA_{m[0]}_SO_{m[1]}_R0_{m[2]:.1E}_"
-                "R1_{m[3]}_R2_{m[4]}_P1_{m[5]}_P2_{m[6]}.npy"
+                f"R1_{m[3]}_R2_{m[4]}_P1_{m[5]}_P2_{m[6]}.npy"
             )
             np.save(os.path.join(save_to_dir, output_file_name), kernel_matrix)
 
@@ -380,7 +380,6 @@ def looper(
 
 def main(
     *,
-    kernel_params_file: str,
     data_file: str,
     out_dir: str,
     identifier: str,
@@ -412,13 +411,6 @@ if __name__ == "__main__":
         )
     )
     parser.add_argument(
-        '--kernel-params-file',
-        dest='kernel_params_file',
-        metavar='PATH',
-        required=True,
-        help=('Path to the file were the multitask kernel parameters are stored.')
-    )
-    parser.add_argument(
         '--data-file',
         dest='data_file',
         metavar='PATH',
@@ -441,7 +433,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(
-        kernel_params_file=args.kernel_params_file,
         data_file=args.data_file,
         out_dir=args.out_dir,
         identifier=args.identifier,

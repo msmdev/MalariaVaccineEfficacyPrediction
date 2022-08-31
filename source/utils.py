@@ -646,7 +646,7 @@ def make_kernel_combinations(
             and kernel_abSignal == "poly_kernel"):
         kernel_comb_param = {
             "SA": kernel_params['SA'],
-            "SO": kernel_params['S0'],
+            "SO": kernel_params['SO'],
             "R0": np.array(['X']),
             "R1": kernel_params['R1'],
             "R2": np.array(['X']),

@@ -106,7 +106,7 @@ def main(
             os.path.join(data_dir, f'{data_file_id}_all.csv'),
             header=0,
         )
-        y_all = data.loc[:, 'Protection'].to_numpy()
+        y = data.loc[:, 'Protection'].to_numpy()
         assert y.size * y.size < np.iinfo(np.uint32).max, \
             f"y is to large: y.size * y.size >= {np.iinfo(np.uint32).max}"
         X = np.array(
@@ -128,7 +128,7 @@ def main(
 
         multitask_classifier = estimator['svc']
         multitask_classifier.set_params(**{'C': params['C']})
-        multitask_classifier.fit(kernel_matrix, y_all)
+        multitask_classifier.fit(kernel_matrix, y)
 
         importances = featureEvaluationESPY(
             eval_data=data_at_timePoint.drop(
