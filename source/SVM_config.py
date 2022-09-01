@@ -11,7 +11,7 @@ param_grid: Dict[str, List[Any]] = {
     'svc__gamma': 10.0 ** np.arange(-6, 6),
     'svc__C': 10.0 ** np.arange(-4, 5),
 }
-n_jobs = 9
+n_jobs = -1
 
 estimator = make_pipeline(
     StandardScaler(

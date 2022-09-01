@@ -37,16 +37,68 @@ import pathlib
 import argparse
 
 
+def helper(
+    m: Tuple[Any, ...],
+) -> Dict[str, Union[float, int, str]]:
+
+    # input sanity checks:
+    if not isinstance(m, tuple):
+        raise ValueError("The model must be given as a tuple of kernel parameters.")
+    if not len(m) == 7:
+        raise ValueError("Expected model tuple of length 7.")
+    for i in range(5):
+        if not isinstance(m[i], (float, str)):
+            raise ValueError(f'm[{i}] must be either of type float or str.')
+    for i in [5, 6]:
+        if not isinstance(m[i], (int, str)):
+            raise ValueError(f'm[{i}] must be either of type int or str.')
+
+    model = {
+        'SA': m[0],
+        'SO': m[1],
+        'R0': m[2],
+        'R1': m[3],
+        'R2': m[4],
+        'P1': m[5],
+        'P2': m[6],
+    }
+    return model
+
+
 def calc_and_save_GramMatrices(
     identifier: str,
     data: pd.DataFrame,
-    kernel_param: Dict[str, List[Union[str, float]]],
+    kernel_param: Dict[str, List[Union[float, int, str]]],
     kernel_for_time_series: str,
     kernel_for_dosage: str,
     kernel_for_abSignal: str,
     save_to_dir: str,
     scale: bool = False,
 ) -> Dict[str, List[Union[np.ndarray, List[str], List[float], Tuple[Any, ...]]]]:
+
+    # check for correct parameter keys:
+    keys = {"SA", "SO", "R0", "R1", "R2", "P1", "P2"}
+    if not set(kernel_param.keys()) == keys:
+        raise ValueError(
+            f"Expected multitaskSVM parameters but set(kernel_param.keys()) != {keys}: "
+            f"{set(kernel_param.keys())} != {keys}"
+        )
+    for key in ["SA", "SO", "R0", "R1", "R2"]:
+        if not isinstance(kernel_param[key], list):
+            raise ValueError(f"kernel_params[{key}] must be a list.")
+        if not (all(isinstance(x, str) for x in kernel_param[key]) or
+                all(isinstance(x, float) for x in kernel_param[key])):
+            raise ValueError(
+                f"All elements of kernel_params[{key}] must be either of type str or float."
+            )
+    for key in ["P1", "P2"]:
+        if not isinstance(kernel_param[key], list):
+            raise ValueError(f"kernel_params[{key}] must be a list.")
+        if not (all(isinstance(x, str) for x in kernel_param[key]) or
+                all(isinstance(x, int) for x in kernel_param[key])):
+            raise ValueError(
+                f"All elements of kernel_params[{key}] must be either of type str or int."
+            )
 
     collection: Dict[
         str, List[Union[np.ndarray, List[str], List[float], Tuple[Any, ...]]]
@@ -66,7 +118,7 @@ def calc_and_save_GramMatrices(
                 ),
                 time_series=data['TimePointOrder'],
                 dose=data['Dose'],
-                model=m,
+                model=helper(m),
                 kernel_time_series=kernel_for_time_series,
                 kernel_dosage=kernel_for_dosage,
                 kernel_abSignals=kernel_for_abSignal,
@@ -93,7 +145,7 @@ def calc_and_save_GramMatrices(
                 ),
                 time_series=data['TimePointOrder'],
                 dose=data['Dose'],
-                model=m,
+                model=helper(m),
                 kernel_time_series=kernel_for_time_series,
                 kernel_dosage=kernel_for_dosage,
                 kernel_abSignals=kernel_for_abSignal,
@@ -120,7 +172,7 @@ def calc_and_save_GramMatrices(
                 ),
                 time_series=data['TimePointOrder'],
                 dose=data['Dose'],
-                model=m,
+                model=helper(m),
                 kernel_time_series=kernel_for_time_series,
                 kernel_dosage=kernel_for_dosage,
                 kernel_abSignals=kernel_for_abSignal,
@@ -147,7 +199,7 @@ def calc_and_save_GramMatrices(
                 ),
                 time_series=data['TimePointOrder'],
                 dose=data['Dose'],
-                model=m,
+                model=helper(m),
                 kernel_time_series=kernel_for_time_series,
                 kernel_dosage=kernel_for_dosage,
                 kernel_abSignals=kernel_for_abSignal,
@@ -173,7 +225,7 @@ def calc_and_save_GramMatrices(
                 ),
                 time_series=data['TimePointOrder'],
                 dose=data['Dose'],
-                model=m,
+                model=helper(m),
                 kernel_time_series=kernel_for_time_series,
                 kernel_dosage=kernel_for_dosage,
                 kernel_abSignals=kernel_for_abSignal,
@@ -200,7 +252,7 @@ def calc_and_save_GramMatrices(
                 ),
                 time_series=data['TimePointOrder'],
                 dose=data['Dose'],
-                model=m,
+                model=helper(m),
                 kernel_time_series=kernel_for_time_series,
                 kernel_dosage=kernel_for_dosage,
                 kernel_abSignals=kernel_for_abSignal,
@@ -227,7 +279,7 @@ def calc_and_save_GramMatrices(
                 ),
                 time_series=data['TimePointOrder'],
                 dose=data['Dose'],
-                model=m,
+                model=helper(m),
                 kernel_time_series=kernel_for_time_series,
                 kernel_dosage=kernel_for_dosage,
                 kernel_abSignals=kernel_for_abSignal,
@@ -254,7 +306,7 @@ def calc_and_save_GramMatrices(
                 ),
                 time_series=data['TimePointOrder'],
                 dose=data['Dose'],
-                model=m,
+                model=helper(m),
                 kernel_time_series=kernel_for_time_series,
                 kernel_dosage=kernel_for_dosage,
                 kernel_abSignals=kernel_for_abSignal,

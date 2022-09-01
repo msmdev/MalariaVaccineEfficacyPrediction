@@ -104,11 +104,12 @@ def check_complex_or_negative(
 def make_symmetric_matrix_psd(
     X: np.ndarray,
     epsilon_factor: float = 1.e3,
-) -> Tuple[np.ndarray, List[float], List[str]]:
+    iterations: int = 1000,
+) -> Tuple[np.ndarray, List[float], List[str], str]:
     """ Spectral Translation approach
     Tests, if a given symmetric matrix is positive semi-definite (psd) and, if not,
-    a damping value `c` is iteratively added to the matrix diagonal, i.e. `X = X + c * I`,
-    until the kernel matrix becomes positive semi-definite.
+    a damping value `c` is iteratively (up to `iterations + 1` iterations) added to the matrix
+    diagonal, i.e., `X = X + c * I`, until the kernel matrix becomes positive semi-definite.
     Non-positive-semi-definiteness will be tested via a spectral criterion:
     If `X` has negative or complex eigenvalues, `X` can not be psd.
     The damping value `c` is derived from the spectrum of `X`: If negative eigenvalues exist,
@@ -124,6 +125,10 @@ def make_symmetric_matrix_psd(
         Factor `epsilon_factor` to multiply the machine precision `np.finfo(X.dtype).eps` with,
         resulting in `epsilon = epsilon_factor * np.finfo(X.dtype).eps` being the mimimum value
         to add to the diagonal of `X`, if `X` is not psd.
+    iterations : int, default = 1000
+        `iterations + 1` is the maximal number of iterations (of adding a damping value)
+        to perform before stopping and returning the resulting matrix,
+        even if the matrix coultn't be made psd.
 
     Returns
     -------
@@ -132,14 +137,18 @@ def make_symmetric_matrix_psd(
     c_list : list
         List of damping_values `c` added to the diagonal.
     info_list : list
-        List of strings telleing, if the damping was applied due to a negative real part
+        List of strings telling, if the damping was applied due to a negative real part
         ('negative') or a imaginary part ('imaginary') of an eigenvalue. If the damping value `c`
         is smaller than `epsilon`, i.e. `c < epsilon = epsilon_factor * np.finfo(X.dtype).eps`,
         a str '_epsilon' will be appended resulting in 'negative_epsilon' or 'imaginary_epsilon'.
+    warning : str, default = ''
+        If the matrix couldn't be made psd and the returned matrix has negative eigenvalues,
+        a warning message will be returned. Otherwise, `warning = ''`.
     """
     epsilon = epsilon_factor * np.finfo(X.dtype).eps
     c_list = []
     info_list = []
+    warning = ''
 
     # check, if X is square
     if X.shape[0] != X.shape[1]:
@@ -163,7 +172,7 @@ def make_symmetric_matrix_psd(
         n_negative = 0
         n_imaginary = 0
         counter = 0
-        while (complex or negative) and counter <= 1000:
+        while (complex or negative) and counter <= iterations:
             counter += 1
             if negative:
                 n_negative += 1
@@ -181,23 +190,48 @@ def make_symmetric_matrix_psd(
             np.fill_diagonal(X, np.diag(X) + c)
             eigenvalues = np.linalg.eigvals(X)
             complex, negative = check_complex_or_negative(eigenvalues, warn=False)
+        # if counter == iterations:
+        #     counter += 1
+        #     c = 1.0
+        #     temp = X + np.diag([c for i in range(X.shape[0])])
+        #     temp_eigenvalues = np.linalg.eigvals(temp)
+        #     temp_complex, temp_negative = check_complex_or_negative(temp_eigenvalues, warn=False)
+        #     if not (temp_complex or temp_negative):
+        #         if negative:
+        #             n_negative += 1
+        #             info = 'negative_1.0'
+        #         else:
+        #             n_imaginary += 1
+        #             info = 'imaginary_1.0'
+        #         info_list.append(info)
+        #         c_list.append(c)
+        #         X = temp
+        #         eigenvalues = temp_eigenvalues
 
         complex, negative = check_complex_or_negative(eigenvalues)
         if complex or negative:
             print(
-                "Couldn't make matrix positive semi-definite by adding"
-                f"sum_c={np.sum(c_list)} in {len(c_list)} steps to its diagonal.\n"
+                "Couldn't make matrix positive semi-definite by adding "
+                f"sum_c={np.sum(c_list)} in {counter} steps to its diagonal.\n"
                 f"Damped {n_negative} times for negative eigenvalues "
                 f"and {n_imaginary} times for imaginary parts."
             )
+            if negative:
+                warning = (
+                    "Couldn't make matrix positive semi-definite by adding "
+                    f"sum_c={np.sum(c_list)} in {counter} steps to its diagonal.\n"
+                    f"Damped {n_negative} times for negative eigenvalues "
+                    f"and {n_imaginary} times for imaginary parts."
+                    "CAUTION: The returned matrix has negative eigenvalues."
+                )
         else:
             print(
                 "Made matrix positive semi-definite by adding "
-                f"sum_c={np.sum(c_list)} in {len(c_list)} steps to its diagonal.\n"
+                f"sum_c={np.sum(c_list)} in {counter} steps to its diagonal.\n"
                 f"Damped {n_negative} times for negative eigenvalues "
                 f"and {n_imaginary} times for imaginary parts."
             )
-    return X, c_list, info_list
+    return X, c_list, info_list, warning
 
 
 def assign_folds(
@@ -396,8 +430,8 @@ class DataSelector:
         R0: Union[float, str] = 'X',
         R1: Union[float, str] = 'X',
         R2: Union[float, str] = 'X',
-        P1: Union[float, str] = 'X',
-        P2: Union[float, str] = 'X',
+        P1: Union[int, str] = 'X',
+        P2: Union[int, str] = 'X',
     ) -> None:
         self.kernel_directory = kernel_directory
         self.identifier = identifier
@@ -489,7 +523,7 @@ class DataSelector:
 def get_parameters(
     timepoint_results: pd.DataFrame,
     model: str,
-) -> Dict[str, Union[str, float]]:
+) -> Dict[str, Union[float, int, str]]:
     """Return combination of parameters to initialize RLR.
 
     Parameters
@@ -573,7 +607,7 @@ def make_kernel_combinations(
     kernel_time_series: str,
     kernel_dosage: str,
     kernel_abSignal: str
-) -> Dict[str, List[Union[float, str]]]:
+) -> Dict[str, List[Union[float, int, str]]]:
     """Make dictionary of kernel combination values
 
     For each kernel parameter a range of values is defined.
@@ -583,14 +617,15 @@ def make_kernel_combinations(
     kernel_params : Dict[str, np.ndarray]
         Dict with ranges of kernel parameters.
         Expected is a dict with keys {'SA', 'SO', 'R0', 'R1', 'R2', 'P1', 'P2'}.
-        `kernel_params['SA']` defines the value range of the factor `gamma` and `kernel_params['SO']` defines
-        the value range of the offset parameter `coef0` of the time-series sigmoid kernel
-        `K(X, Y) = tanh(gamma <X, Y> + coef0)`;
-        `kernel_params['R1']` (`kernel_params['R2']` (`kerenl_params['R3']`)) defines the range of the power `d` of the
-        `gamma` (`gamma = 10^d`) parameter of the time-series (dosage (AB-signal)) RBF kernel
-        `K(x, y) = exp(-gamma ||x-y||^2)`;
-        `kernel_params['P1']` (`kerenl_params['P2']`) defines the range of values for the degree parameter of the
-        dosage (AB-Signal) polynomial kernel `K(X, Y) = (gamma <X, Y> + coef0)^degree`.
+        `kernel_params['SA']` defines the value range of the factor `gamma` and
+        `kernel_params['SO']` defines the value range of the offset parameter `coef0`
+        of the time-series sigmoid kernel `K(X, Y) = tanh(gamma <X, Y> + coef0)`;
+        `kernel_params['R1']` (`kernel_params['R2']` (`kernel_params['R3']`)) defines
+        the range of the power `d` of the `gamma` (`gamma = 10^d`) parameter of the
+        time-series (dosage (AB-signal)) RBF kernel `K(x, y) = exp(-gamma ||x-y||^2)`;
+        `kernel_params['P1']` (`kernel_params['P2']`) defines the range of values for
+        the degree parameter of the dosage (AB-Signal) polynomial kernel
+        `K(X, Y) = (gamma <X, Y> + coef0)^degree`.
     kernel_time_series : str
         Kernel function to compute relationship between individuals based on time points.
     kernel_dosage : str
@@ -606,12 +641,34 @@ def make_kernel_combinations(
         Dictionary of value ranges for each kernel parameter.
 
     """
+
+    # check for correct parameter keys:
     keys = {"SA", "SO", "R0", "R1", "R2", "P1", "P2"}
     if not set(kernel_params.keys()) == keys:
         raise ValueError(
             f"Expected multitaskSVM parameters but set(params.keys()) != {keys}: "
             f"{set(kernel_params.keys())} != {keys}"
         )
+    # assert that the types of the parameter values are correct:
+    for key in ["SA", "SO", "R0", "R1", "R2"]:
+        if not isinstance(kernel_params[key], np.ndarray):
+            raise ValueError(f"kernel_params[{key}] must be a np.ndarray.")
+        if not kernel_params[key].ndim == 1:
+            raise ValueError(f"kernel_params[{key}] must be one-dimensional.")
+        if not (kernel_params[key].dtype == float or kernel_params[key].dtype.type == np.str_):
+            raise ValueError(
+                f"All elements of kernel_params[{key}] must be either of type str or float."
+            )
+    for key in ["P1", "P2"]:
+        if not isinstance(kernel_params[key], np.ndarray):
+            raise ValueError(f"kernel_params[{key}] must be a np.ndarray.")
+        if not kernel_params[key].ndim == 1:
+            raise ValueError(f"kernel_params[{key}] must be one-dimensional.")
+        if not (kernel_params[key].dtype == int or kernel_params[key].dtype.type == np.str_):
+            raise ValueError(
+                f"All elements of kernel_params[{key}] must be either of type str or int."
+            )
+
     kernel_comb_param: Dict[str, np.ndarray]
     if (kernel_time_series == "sigmoid_kernel" and kernel_dosage == "rbf_kernel"
             and kernel_abSignal == "rbf_kernel"):
@@ -734,9 +791,7 @@ def make_kernel_matrix(
     AB_signals: pd.DataFrame,
     time_series: pd.Series,
     dose: pd.Series,
-    model: Tuple[Union[float, str], Union[float, str], Union[float, str],
-                 Union[float, str], Union[float, str], Union[float, str],
-                 Union[float, str]],
+    model: Dict[str, Union[float, int, str]],
     kernel_time_series: str,
     kernel_dosage: str,
     kernel_abSignals: str,
@@ -756,17 +811,17 @@ def make_kernel_matrix(
         Series of time points at which the antibody signal intensities were recorded.
     dose : pd.Series
         Series of dosages administered.
-    model : tuple
-        Combination of kernel parameters.
-        Expected is a tuple `T` with seven elements `T = (t0, ..., t6)`.
-        `t0` defines the value of the factor `gamma` and `t1` defines the value of the
-        offset parameter `coef0` of the time-series sigmoid kernel
+    model : dict
+        Dict of kernel parameters.
+        Expected is a dict with keys `{'SA', 'SO', 'R0', 'R1', 'R2', 'P1', 'P2'}`.
+        `model['SA']` defines the value of the factor `gamma` and `model['SO']` defines
+        the value of the offset parameter `coef0` of the time-series sigmoid kernel
         `K(X, Y) = tanh(gamma <X, Y> + coef0)`;
-        `t2` (`t3` (`t4`)) defines the power `d` of the `gamma` (`gamma = 10^d`)
-        parameter of the time-series (dosage (AB-signal)) RBF kernel
-        `K(x, y) = exp(-gamma ||x-y||^2)`.
-        `t5` (`t6`) defines the value of the `degree` parameter of the dosage (AB-Signal)
-        polynomial kernel `K(X, Y) = (gamma <X, Y> + coef0)^degree`;
+        `model['R1']` (`model['R2']` (`model['R3']`)) defines the power `d` of the
+        `gamma` (`gamma = 10^d`) parameter of the time-series (dosage (AB-signal)) RBF kernel
+        `K(x, y) = exp(-gamma ||x-y||^2)`;
+        `model['P1']` (`model['P2']`) defines the value of the degree parameter of the dosage
+        (AB-Signal) polynomial kernel `K(X, Y) = (gamma <X, Y> + coef0)^degree`.
     kernel_time_series : str
         Kernel function to compute relationship between individuals based on time points.
     kernel_dosage : str
@@ -790,34 +845,53 @@ def make_kernel_matrix(
         a str '_epsilon' will be appended resulting in 'negative_epsilon' or 'imaginary_epsilon'.
     """
 
-    if not isinstance(model, tuple):
-        raise ValueError("The model must be given as a tuple of kernel parameters.")
-    if not len(model) == 7:
-        raise ValueError("Expected model tuple of length 7.")
+    # model input parameters sanity checks:
+    if not isinstance(model, dict):
+        raise ValueError("The model must be given as a dict of kernel parameters.")
+
+    # check for correct parameter keys:
+    keys = {"SA", "SO", "R0", "R1", "R2", "P1", "P2"}
+    if not set(model.keys()) == keys:
+        raise ValueError(
+            f"Expected multitaskSVM parameters but set(model.keys()) != {keys}: "
+            f"{set(model.keys())} != {keys}"
+        )
+    for key in ["SA", "SO", "R0", "R1", "R2"]:
+        if not isinstance(model[key], (float, str)):
+            raise ValueError(
+                f"model[{key}] must be either of type str or float."
+            )
+    for key in ["P1", "P2"]:
+        if not isinstance(model[key], (int, str)):
+            raise ValueError(
+                f"model[{key}] must be either of type str or int."
+            )
 
     # pre-compute kernel matrix of time points K(n_t,n_t')
     if kernel_time_series == 'sigmoid_kernel':
         time_series_kernel_matrix = sigmoid_kernel(
                 time_series.values.reshape(len(time_series), 1),
-                gamma=model[0],
-                coef0=model[1],
+                gamma=model['SA'],
+                coef0=model['SO'],
         )
     elif kernel_time_series == 'rbf_kernel':
         time_series_kernel_matrix = rbf_kernel(
-            time_series.values.reshape(len(time_series), 1), gamma=model[2]
+            time_series.values.reshape(len(time_series), 1), gamma=model['R0']
         )
 
     # pre-compute kernel matrix of dosage K(n_d,n_d')
     if kernel_dosage == "rbf_kernel":
-        dose_kernel_matrix = rbf_kernel(dose.values.reshape(len(dose), 1), gamma=model[3])
+        dose_kernel_matrix = rbf_kernel(dose.values.reshape(len(dose), 1), gamma=model['R1'])
     elif kernel_dosage == "poly_kernel":
-        dose_kernel_matrix = polynomial_kernel(dose.values.reshape(len(dose), 1), degree=model[5])
+        dose_kernel_matrix = polynomial_kernel(
+            dose.values.reshape(len(dose), 1), degree=model['P1']
+        )
 
     # pre-compute kernel matrix of antibody reactivity K(n_p,n_p')
     if kernel_abSignals == "rbf_kernel":
-        AB_signals_kernel_matrix = rbf_kernel(AB_signals, gamma=model[4])
+        AB_signals_kernel_matrix = rbf_kernel(AB_signals, gamma=model['R2'])
     elif kernel_abSignals == "poly_kernel":
-        AB_signals_kernel_matrix = polynomial_kernel(AB_signals, degree=model[6])
+        AB_signals_kernel_matrix = polynomial_kernel(AB_signals, degree=model['P2'])
 
     # pre-compute multitask kernel matrix K((np, nt),(np', nt'))
     multi_AB_signals_time_series_kernel_matrix = multitask(
@@ -826,7 +900,7 @@ def make_kernel_matrix(
     )
 
     # pre-compute multitask kernel matrix K((np, nt, nd),(np', nt', nd'))
-    multi_AB_signals_time_dose_kernel_matrix, c_list, info_list = make_symmetric_matrix_psd(
+    multitaskMatrix, c_list, info_list, message = make_symmetric_matrix_psd(
         multitask(
             multi_AB_signals_time_series_kernel_matrix,
             dose_kernel_matrix,
@@ -834,33 +908,49 @@ def make_kernel_matrix(
     )
     if c_list:
         print(
-            "multi_AB_signals_time_dose_kernel_matrix kernel had to be corrected.\n"
+            "multitask Gram matrix had to be corrected.\n"
             f"model: {model}"
+        )
+    if len(message) > 0 and kernel_time_series != 'sigmoid_kernel':
+        warnings.warn(
+            "Correction failed for a multitask Gram matrix with non-sigmoid "
+            f"time-series kernel (model: {model}):\n{message}"
         )
 
     if scale:
-        multi_AB_signals_time_dose_kernel_matrix, warn, _ = make_symmetric_matrix_psd(
+        multitaskMatrix, warn, _, message = make_symmetric_matrix_psd(
             normalize(
-                KernelCenterer().fit_transform(multi_AB_signals_time_dose_kernel_matrix)
+                KernelCenterer().fit_transform(multitaskMatrix)
             )
         )
         if warn:
             print(
-                "Scaled multi_AB_signals_time_dose_kernel_matrix kernel had to be corrected.\n"
+                "Scaled multitask Gram matrix had to be corrected.\n"
                 f"model: {model}"
             )
-        if np.max(np.diag(multi_AB_signals_time_dose_kernel_matrix)) > 1.1:
-            print(
-                "Scaled multi_AB_signals_time_dose_kernel_matrix "
+        if np.max(np.diag(multitaskMatrix)) > 1.1:
+            warnings.warn(
+                "Scaled multitask Gram matrix "
                 "kernel had diagonal elements > 1.1.\n"
                 f"model: {model}"
             )
+        if len(message) > 0 and kernel_time_series != 'sigmoid_kernel':
+            warnings.warn(
+                "Correction failed for a scaled multitask Gram matrix with non-sigmoid "
+                f"time-series kernel (model: {model}):\n{message}"
+            )
 
     # proof Dimension and rank of kernel matrix
-    print("Dimension of final multitask kernel matrix:")
-    print(multi_AB_signals_time_dose_kernel_matrix.shape)
-    print("Rank of final multitask kernel matrix:")
-    print(np.linalg.matrix_rank(multi_AB_signals_time_dose_kernel_matrix))
+    print("Dimension of final multitask Gram matrix:")
+    print(multitaskMatrix.shape)
+    print(
+        "Rank of final multitask Gram matrix (Returns matrix rank of array using SVD method. "
+        "Rank of the array is the number of singular values of the array that are greater than a "
+        "tolerance tol. May declare a matrix M rank deficient even if the linear combination of "
+        "some columns of M is not exactly equal to another column of M but only numerically very "
+        "close to another column of M.):"
+    )
+    print(np.linalg.matrix_rank(multitaskMatrix))
     print('\n\n')
 
-    return multi_AB_signals_time_dose_kernel_matrix, c_list, info_list
+    return multitaskMatrix, c_list, info_list
