@@ -44,6 +44,7 @@ from sklearn.model_selection import StratifiedGroupKFold
 from typing import Any, Dict, Union, Optional, List
 import nestedcv as ncv
 from source.utils import CustomPredefinedSplit, assign_folds
+from source.config import seed
 
 
 def main(
@@ -63,15 +64,13 @@ def main(
     timestamp = ncv.generate_timestamp()
 
     print('========================================')
-    print('sys.path:', sys.path)
-    print('scikit-learn version:', sklearn.__version__)
-    print('pandas version:', pd.__version__)
-    print('numpy version:', np.__version__)
-    print('scipy version:', scipy.__version__)
-    print(f'estimator: {type(estimator)}')
+    print(f'numpy version: {np.__version__}')
+    print(f'pandas version: {pd.__version__}')
+    print(f'scikit-learn version: {sklearn.__version__}')
+    print(f'scipy version: {scipy.__version__}')
     print('========================================\n')
-
     print(f'data file identifier: {data_file_id}\n')
+    print(f'estimator: {type(estimator)}')
     print(f'parameter grid: {param_grid}\n')
     print(f'start time: {timestamp}\n')
 
@@ -116,14 +115,14 @@ def main(
         # define prefix for filenames:
         prefix = f'{time}'
 
-        rng = np.random.RandomState(0)
+        rng = np.random.RandomState(seed)
 
         if method == 'multitaskSVM':
             y = y_all
             groups = groups_all
             # initialize running index array for DataSelector
-            assert y.size * y.size < np.iinfo(np.uint32).max, \
-                f"y is to large: y.size * y.size >= {np.iinfo(np.uint32).max}"
+            if not y.size * y.size < np.iinfo(np.uint32).max:
+                raise ValueError(f"y is to large: y.size * y.size >= {np.iinfo(np.uint32).max}")
             X = np.array(
                 [x for x in range(y.size * y.size)],
                 dtype=np.uint32
@@ -164,8 +163,8 @@ def main(
             if method != 'multitaskSVM':
                 test_fold = test_fold[40 * step: 40 * (step + 1)]
                 train_fold = train_fold[40 * step: 40 * (step + 1)]
-            assert np.all(test_fold == train_fold), \
-                f"test_fold != train_fold: {test_fold} != {train_fold}"
+            if not np.all(test_fold == train_fold):
+                raise ValueError(f"test_fold != train_fold: {test_fold} != {train_fold}")
             outer_cv.append(CustomPredefinedSplit(test_fold, train_fold))
             print(
                 f"train_fold: {train_fold} "
@@ -251,8 +250,10 @@ def main(
                 performance[f'test_{score}'] = result[scoring][f'test_{score}']
                 performance[f'train_{score}'] = result[scoring][f'train_{score}']
 
-            assert len(performance['best_inner_params']) % cv_options['Nexp2'] == 0, \
-                'len(best_inner_params[%s] modulo Nexp2 != 0 for %s.)' % (prefix, scoring)
+            if not len(performance['best_inner_params']) % cv_options['Nexp2'] == 0:
+                raise ValueError(
+                    f'len(best_inner_params[{prefix}] modulo Nexp2 != 0 for {scoring}.)'
+                )
             index = []
             n_cv_splits = len(performance['best_inner_params']) // cv_options['Nexp2']
             for x2 in range(cv_options['Nexp2']):

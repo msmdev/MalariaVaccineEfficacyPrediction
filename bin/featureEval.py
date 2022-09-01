@@ -28,9 +28,6 @@ Will save the results.
 
 import numpy as np
 import pandas as pd
-import scipy
-import sklearn
-import sys
 import os
 import argparse
 from source.featureEvaluation import featureEvaluationRF, featureEvaluationRLR
@@ -107,8 +104,8 @@ def main(
             header=0,
         )
         y = data.loc[:, 'Protection'].to_numpy()
-        assert y.size * y.size < np.iinfo(np.uint32).max, \
-            f"y is to large: y.size * y.size >= {np.iinfo(np.uint32).max}"
+        if not y.size * y.size < np.iinfo(np.uint32).max:
+            raise ValueError(f"y is to large: y.size * y.size >= {np.iinfo(np.uint32).max}")
         X = np.array(
             [x for x in range(y.size * y.size)],
             dtype=np.uint32
@@ -161,11 +158,6 @@ def main(
 
 
 if __name__ == "__main__":
-    print('sys.path:', sys.path)
-    print('scikit-learn version:', sklearn.__version__)
-    print('pandas version:', pd.__version__)
-    print('numpy version:', np.__version__)
-    print('scipy version:', scipy.__version__)
 
     parser = argparse.ArgumentParser(
         description=('Function to run an analysis of informative features from RF.')

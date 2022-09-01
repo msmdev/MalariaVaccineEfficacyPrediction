@@ -60,15 +60,13 @@ def main(
     timestamp = ncv.generate_timestamp()
 
     print('========================================')
-    print('sys.path:', sys.path)
-    print('scikit-learn version:', sklearn.__version__)
-    print('pandas version:', pd.__version__)
-    print('numpy version:', np.__version__)
-    print('scipy version:', scipy.__version__)
-    print(f'estimator: {type(estimator)}')
+    print(f'numpy version: {np.__version__}')
+    print(f'pandas version: {pd.__version__}')
+    print(f'scikit-learn version: {sklearn.__version__}')
+    print(f'scipy version: {scipy.__version__}')
     print('========================================\n')
-
     print(f'data file identifier: {data_file_id}\n')
+    print(f'estimator: {type(estimator)}')
     print(f'parameter grid: {param_grid}\n')
     print(f'start time: {timestamp}\n')
 
@@ -102,8 +100,8 @@ def main(
             y = y_all
             groups = groups_all
             # initialize running index array for DataSelector
-            assert y.size * y.size < np.iinfo(np.uint32).max, \
-                f"y is to large: y.size * y.size >= {np.iinfo(np.uint32).max}"
+            if not y.size * y.size < np.iinfo(np.uint32).max:
+                raise ValueError(f"y is to large: y.size * y.size >= {np.iinfo(np.uint32).max}")
             X = np.array(
                 [x for x in range(y.size * y.size)],
                 dtype=np.uint32
@@ -144,8 +142,8 @@ def main(
             if method != 'multitaskSVM':
                 test_fold = test_fold[40 * step: 40 * (step + 1)]
                 train_fold = train_fold[40 * step: 40 * (step + 1)]
-            assert np.all(test_fold == train_fold), \
-                f"test_fold != train_fold: {test_fold} != {train_fold}"
+            if not np.all(test_fold == train_fold):
+                raise ValueError(f"test_fold != train_fold: {test_fold} != {train_fold}")
             cv.append(CustomPredefinedSplit(test_fold, train_fold))
             print(
                 f"train_fold: {train_fold} "

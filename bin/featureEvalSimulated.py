@@ -40,6 +40,7 @@ import shap
 import warnings
 import argparse
 from source.featureEvaluation import featureEvaluationESPY, make_plot
+from source.config import seed
 
 
 def optimize_svm_model(
@@ -48,7 +49,6 @@ def optimize_svm_model(
     y_train_data: np.ndarray,
     X_test_data: np.ndarray,
     y_test_data: np.ndarray,
-    reproducible: bool = True,
 ) -> SVC:
     """ Initialize SVM model on simulated data.
 
@@ -74,19 +74,15 @@ def optimize_svm_model(
         Trained SVM model with best kernel parameters found via GridSearchCV.
     """
 
-    # Initialize SVM model, rbf kernel
-    param_grid = {
-        'gamma': [1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1., 1e1, 1e2, 1e3, 1e4, 1e5, 1e6],
-        'C': [1.e-3, 1.e-2, 1.e-1, 1.e0, 1.e1, 1.e2, 1.e3],
-    }
+    from source.SVM_config import param_grid
 
     # grid-search on simulated data
     clf = GridSearchCV(
-        SVC(kernel='rbf', probability=True, random_state=123),
+        SVC(kernel='rbf', probability=True, random_state=seed),
         param_grid,
         scoring='roc_auc',
         refit=True,
-        cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=123),
+        cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=seed),
     )
     clf.fit(X_train_data, y_train_data)
 
@@ -101,7 +97,7 @@ def optimize_svm_model(
         gamma=clf.best_params_.get('gamma'),
         C=clf.best_params_.get('C'),
         probability=True,
-        random_state=123,
+        random_state=seed,
     )
 
     model = svm.fit(X_train_data, y_train_data)
@@ -128,7 +124,7 @@ def main(
         data.iloc[:, :1000].to_numpy(),
         data.iloc[:, 1000].to_numpy(),
         test_size=0.3,
-        random_state=123,
+        random_state=seed,
     )
     rbf_SVM_model = optimize_svm_model(
         X_train_data=X_train,

@@ -35,6 +35,7 @@ from source.utils import make_kernel_matrix
 from sklearn.inspection import permutation_importance
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+from source.config import seed
 
 
 def make_feature_combination(
@@ -517,7 +518,7 @@ def featureEvaluationRF(
         scoring='roc_auc',
         n_repeats=100,
         n_jobs=-1,
-        random_state=123
+        random_state=seed,
     )
 
     sorted_importances_idx = result.importances_mean.argsort()

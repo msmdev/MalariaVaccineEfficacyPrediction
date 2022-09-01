@@ -4,6 +4,7 @@ from source.utils import DataSelector
 from typing import Dict, Union, Tuple, Any, List
 import numpy as np
 from source.utils import make_kernel_combinations
+from source.config import seed
 
 
 kernel_params: Dict[str, np.ndarray] = {
@@ -85,7 +86,7 @@ def configurator(
         SVC(
             kernel='precomputed',
             probability=True,
-            random_state=1337,
+            random_state=seed,
             cache_size=500,
         ),
     )

@@ -3,7 +3,7 @@ from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
 from typing import Any, Dict, List
 import numpy as np
-
+from source.config import seed
 
 # Set up grid of parameters to optimize over
 # 3*3=9 points
@@ -21,7 +21,7 @@ estimator = make_pipeline(
     SVC(
         kernel='rbf',
         probability=True,
-        random_state=1337,
+        random_state=seed,
         cache_size=500,
     ),
 )
