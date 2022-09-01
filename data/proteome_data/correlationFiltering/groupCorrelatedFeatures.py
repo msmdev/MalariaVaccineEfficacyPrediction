@@ -144,7 +144,7 @@ def main(
             f"{identifier}_{correlation_method}_correlation_"
             f"grouped_features_threshold{correlation_threshold}_{timepoint}"
         )
-        ncv.save_json(groups, out_dir, fn, timestamp=False)
+        ncv.save_json(groups, out_dir, fn, timestamp=False, overwrite=True)
 
         # keep only the key(-variant)s
         keep = []
