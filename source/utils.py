@@ -35,11 +35,11 @@ import pandas as pd
 import os
 from source.RLR_config import param_grid as param_grid_RLR
 from source.RF_config import param_grid as param_grid_RF
+import warnings
 
 
 def normalize(
     X: np.ndarray,
-    clip: bool = False,
     assert_sym: bool = False,
 ) -> np.ndarray:
     """Utility function (loop version) to normalize a square symmetric matrix by
@@ -58,10 +58,12 @@ def normalize(
         Normalized square symmetric matrix.
     """
     # assert that X matrix is square
-    assert X.shape[0] == X.shape[1], "Matrix is not square."
+    if not X.shape[0] == X.shape[1]:
+        raise ValueError("Matrix is not square.")
     if assert_sym:
         # assert that X matrix is symmetric:
-        assert np.allclose(X, X.T), "Matrix isn't symmetric."
+        if not np.allclose(X, X.T):
+            raise ValueError("Matrix isn't symmetric.")
     # check, if all diagonal elements are positive:
     if np.any(np.diag(X) <= 0.0):
         raise ValueError(
@@ -263,10 +265,12 @@ def assign_folds(
     """
     labels = column_or_1d(labels)
     groups = column_or_1d(groups)
-    assert len(labels) == len(groups), "labels and groups arrays must be of same length."
-    assert len(labels) % delta == 0, "len(labels) % delta = 0 must be ensured."
-    assert delta + delta * step <= len(labels), \
-        "delta + delta * step <= len(labels) must be ensured"
+    if not len(labels) == len(groups):
+        raise ValueError("labels and groups arrays must be of same length.")
+    if not len(labels) % delta == 0:
+        raise ValueError("len(labels) % delta = 0 must be ensured.")
+    if not delta + delta * step <= len(labels):
+        raise ValueError("delta + delta * step <= len(labels) must be ensured")
     labels_slice = labels[delta * step: delta + delta * step]
     groups_slice = groups[delta * step: delta + delta * step]
     skf = StratifiedKFold(n_splits, shuffle=shuffle, random_state=random_state)
@@ -318,14 +322,14 @@ class CustomPredefinedSplit(BaseCrossValidator):
         self.test_fold = column_or_1d(self.test_fold)
         self.train_fold = np.array(train_fold, dtype=int)
         self.train_fold = column_or_1d(self.train_fold)
-        assert len(self.test_fold) == len(self.train_fold), \
-            "test_fold and train_fold must be of equal length."
+        if not len(self.test_fold) == len(self.train_fold):
+            raise ValueError("test_fold and train_fold must be of equal length.")
         unique_test_folds = np.unique(self.test_fold)
         unique_test_folds = unique_test_folds[unique_test_folds != -1]
         unique_train_folds = np.unique(self.train_fold)
         unique_train_folds = unique_train_folds[unique_train_folds != -1]
-        assert np.array_equal(unique_test_folds, unique_train_folds), \
-            "test_fold and train fold must have the same fold indices."
+        if not np.array_equal(unique_test_folds, unique_train_folds):
+            raise ValueError("test_fold and train_fold must have the same fold indices.")
         self.unique_folds = unique_test_folds
 
     def split(self, X=None, y=None, groups=None):
@@ -502,11 +506,11 @@ def get_parameters(
         Parameter dictionary.
     """
     roc_results = timepoint_results[timepoint_results['scoring'].isin(['roc_auc'])]
-    assert roc_results.shape == (1, 4), \
-        f"roc_results.shape != (1, 4): {roc_results.shape} != (1, 4)"
+    if not roc_results.shape == (1, 4):
+        raise ValueError(f"roc_results.shape != (1, 4): {roc_results.shape} != (1, 4)")
     params_string = roc_results['best_params'].iloc[0]
-    assert type(params_string) == str, \
-        f"type(params_string) != str: {type(params_string)} != str"
+    if not type(params_string) == str:
+        raise ValueError(f"type(params_string) != str: {type(params_string)} != str")
     params = eval(params_string)
     if model == 'RLR':
         keys = param_grid_RLR.keys()
@@ -579,14 +583,14 @@ def make_kernel_combinations(
     kernel_params : Dict[str, np.ndarray]
         Dict with ranges of kernel parameters.
         Expected is a dict with keys {'SA', 'SO', 'R0', 'R1', 'R2', 'P1', 'P2'}.
-        'SA' defines the value range of the factor `gamma` and 'SO' defines the value range of the
-        offset parameter `coef0` of the time-series sigmoid kernel
+        `kernel_params['SA']` defines the value range of the factor `gamma` and `kernel_params['SO']` defines
+        the value range of the offset parameter `coef0` of the time-series sigmoid kernel
         `K(X, Y) = tanh(gamma <X, Y> + coef0)`;
-        'R1' ('R2' ('R3')) defines the range of the power `d` of the `gamma` (`gamma = 10^d`)
-        parameter of the time-series (dosage (AB-signal)) RBF kernel
-        `K(x, y) = exp(-gamma ||x-y||^2)`.
-        'P1' ('P2') defines the range of values for the degree parameter of the dosage (AB-Signal)
-        polynomial kernel `K(X, Y) = (gamma <X, Y> + coef0)^degree`;
+        `kernel_params['R1']` (`kernel_params['R2']` (`kerenl_params['R3']`)) defines the range of the power `d` of the
+        `gamma` (`gamma = 10^d`) parameter of the time-series (dosage (AB-signal)) RBF kernel
+        `K(x, y) = exp(-gamma ||x-y||^2)`;
+        `kernel_params['P1']` (`kerenl_params['P2']`) defines the range of values for the degree parameter of the
+        dosage (AB-Signal) polynomial kernel `K(X, Y) = (gamma <X, Y> + coef0)^degree`.
     kernel_time_series : str
         Kernel function to compute relationship between individuals based on time points.
     kernel_dosage : str
@@ -775,7 +779,7 @@ def make_kernel_matrix(
 
     Returns
     -------
-    multi_AB_signals_time_dose_kernel_matrix : np.ndarray
+    multitaskMatrix : np.ndarray
         Returns a combined matrix.
     c_list : list
         List of damping_values `c` added to the diagonal.

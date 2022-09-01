@@ -361,6 +361,10 @@ def looper(
             kernel_abSignal=kernel_for_abSignal,
         )
 
+        fn = os.path.join(out_dir, f'kernel_comb_{id}.json')
+        with open(fn, 'w') as fp:
+            json.dump(kernel_param, fp)
+
         collection = calc_and_save_GramMatrices(
             identifier=identifier,
             data=data,
