@@ -163,8 +163,8 @@ def main(
             if method != 'multitaskSVM':
                 test_fold = test_fold[40 * step: 40 * (step + 1)]
                 train_fold = train_fold[40 * step: 40 * (step + 1)]
-            if not np.all(test_fold == train_fold):
-                raise ValueError(f"test_fold != train_fold: {test_fold} != {train_fold}")
+                if not np.all(test_fold == train_fold):
+                    raise ValueError(f"test_fold != train_fold: {test_fold} != {train_fold}")
             outer_cv.append(CustomPredefinedSplit(test_fold, train_fold))
             print(
                 f"train_fold: {train_fold} "
