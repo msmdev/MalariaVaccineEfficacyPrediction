@@ -69,7 +69,7 @@ def main(
     print(f'scikit-learn version: {sklearn.__version__}')
     print(f'scipy version: {scipy.__version__}')
     print('========================================\n')
-    print(f'data file identifier: {data_file_id}\n')
+    print(f'data file identifier: {data_file_id}')
     print(f'estimator: {type(estimator)}')
     print(f'parameter grid: {param_grid}\n')
     print(f'start time: {timestamp}\n')
@@ -180,7 +180,7 @@ def main(
         print('----------------------------------------\n')
 
         # define identifiers used for naming of output files
-        rfile = f'{prefix}_RGSCV'
+        rfile = f'{prefix}_RNCV'
 
         # set options for NestedGridSearchCV
         cv_options = {

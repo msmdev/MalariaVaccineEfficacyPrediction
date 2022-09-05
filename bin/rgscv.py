@@ -65,7 +65,7 @@ def main(
     print(f'scikit-learn version: {sklearn.__version__}')
     print(f'scipy version: {scipy.__version__}')
     print('========================================\n')
-    print(f'data file identifier: {data_file_id}\n')
+    print(f'data file identifier: {data_file_id}')
     print(f'estimator: {type(estimator)}')
     print(f'parameter grid: {param_grid}\n')
     print(f'start time: {timestamp}\n')
@@ -225,6 +225,15 @@ if __name__ == "__main__":
 
     warnings.showwarning = warn_with_traceback
     warnings.simplefilter("default")
+    warnings.filterwarnings(
+        "ignore",
+        message=(
+            "Divide through zero encountered while trying to calculate the MCC. "
+            "MCC is set to zero."
+        ),
+        category=UserWarning,
+        module=r".*nestedcv"
+    )
 
     parser = argparse.ArgumentParser(
         description=('Function to run repeated grid-search cross-validation.')

@@ -58,12 +58,11 @@ for threshold in '0.95' '0.98' '1.0'; do
                 fi
 
                 for combination in "${combinations[@]}"; do
-                    mkdir "${maindir}/${dataset}/${combination}"
                     err="runRNCV.err"
                     out="runRNCV.out"
                     ana_dir="${maindir}/${dataset}/${combination}"
-                    mkdir "${ana_dir}" || { echo "mkdir ${ana_dir} failed"; exit 1; }
-                    cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
+                    mkdir "$ana_dir" || { echo "mkdir ${ana_dir} failed"; exit 1; }
+                    cd "$ana_dir" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
                     cp "${topdir}/bin/rncv.py" . || { echo "cp ${topdir}/bin/rncv.py . failed"; exit 1; }
                     cp "${topdir}/bin/${method}_config.py" . || { echo "cp ${topdir}/bin/${method}_config.py . failed"; exit 1; }
                     python -u rncv.py --analysis-dir "$ana_dir" --data-dir "$data_dir" --data-file-id "preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}" --method "$method" --Nexp1 1 --Nexp2 10 --kernel-dir "$kernel_dir" --combination "$combination" --identifier "$identifier" 1> "${out}" 2> "${err}"
@@ -74,8 +73,8 @@ for threshold in '0.95' '0.98' '1.0'; do
                 err="runRNCV.err"
                 out="runRNCV.out"
                 ana_dir="${maindir}/${dataset}"
-                mkdir "${ana_dir}" || { echo "mkdir ${ana_dir} failed"; exit 1; }
-                cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
+                mkdir "$ana_dir" || { echo "mkdir ${ana_dir} failed"; exit 1; }
+                cd "$ana_dir" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
                 cp "${topdir}/bin/rncv.py" . || { echo "cp ${topdir}/bin/rncv.py . failed"; exit 1; }
                 cp "${topdir}/bin/${method}_config.py" . || { echo "cp ${topdir}/bin/${method}_config.py . failed"; exit 1; }
                 python -u rncv.py --analysis-dir "${ana_dir}" --data-dir "${data_dir}" --data-file-id "preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}" --method "${method}" --Nexp1 1 --Nexp2 10 1> "${out}" 2> "${err}"
