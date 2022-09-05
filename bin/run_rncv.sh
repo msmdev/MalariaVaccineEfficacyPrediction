@@ -43,9 +43,6 @@ for threshold in '0.95' '0.98' '1.0'; do
             { echo "${kernel_dir} doesn't exist"; exit 1; }
         fi
         maindir="${topdir}/results/threshold${threshold}/${method}"
-        if [ ! -d "$maindir" ]; then
-            mkdir "$maindir" || { echo "mkdir ${maindir} failed"; exit 1; }
-        fi
 
         for dataset in 'whole' 'selective'; do
 
@@ -61,7 +58,9 @@ for threshold in '0.95' '0.98' '1.0'; do
                     err="runRNCV.err"
                     out="runRNCV.out"
                     ana_dir="${maindir}/${dataset}/${combination}"
-                    mkdir "$ana_dir" || { echo "mkdir ${ana_dir} failed"; exit 1; }
+                    if [ ! -d "$ana_dir" ]; then
+                        mkdir -p "$ana_dir" || { echo "mkdir ${ana_dir} failed"; exit 1; }
+                    fi
                     cd "$ana_dir" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
                     cp "${topdir}/bin/rncv.py" . || { echo "cp ${topdir}/bin/rncv.py . failed"; exit 1; }
                     cp "${topdir}/bin/${method}_config.py" . || { echo "cp ${topdir}/bin/${method}_config.py . failed"; exit 1; }
@@ -73,7 +72,9 @@ for threshold in '0.95' '0.98' '1.0'; do
                 err="runRNCV.err"
                 out="runRNCV.out"
                 ana_dir="${maindir}/${dataset}"
-                mkdir "$ana_dir" || { echo "mkdir ${ana_dir} failed"; exit 1; }
+                if [ ! -d "$ana_dir" ]; then
+                    mkdir -p "$ana_dir" || { echo "mkdir ${ana_dir} failed"; exit 1; }
+                fi
                 cd "$ana_dir" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
                 cp "${topdir}/bin/rncv.py" . || { echo "cp ${topdir}/bin/rncv.py . failed"; exit 1; }
                 cp "${topdir}/bin/${method}_config.py" . || { echo "cp ${topdir}/bin/${method}_config.py . failed"; exit 1; }
