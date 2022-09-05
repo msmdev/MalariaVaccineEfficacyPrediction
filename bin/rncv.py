@@ -526,16 +526,16 @@ if __name__ == "__main__":
 
     warnings.showwarning = warn_with_traceback
     warnings.simplefilter("default")
-    warnings.filterwarnings(
-        "ignore",
-        message=(
-            "`np.object` is a deprecated alias for the builtin `object`. "
-            "To silence this warning, use `object` by itself. "
-            "Doing this will not modify any behavior and is safe."
-        ),
-        category=DeprecationWarning,
-        module=r".*nestedcv"
-    )
+    # warnings.filterwarnings(
+    #     "ignore",
+    #     message=(
+    #         "`np.object` is a deprecated alias for the builtin `object`. "
+    #         "To silence this warning, use `object` by itself. "
+    #         "Doing this will not modify any behavior and is safe."
+    #     ),
+    #     category=DeprecationWarning,
+    #     module=r".*nestedcv"
+    # )
     warnings.filterwarnings(
         "ignore",
         message=(
