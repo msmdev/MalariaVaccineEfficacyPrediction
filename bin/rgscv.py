@@ -228,6 +228,14 @@ if __name__ == "__main__":
     warnings.filterwarnings(
         "ignore",
         message=(
+            r"`np.bool` is a deprecated alias for the builtin `bool`.*"
+        ),
+        category=DeprecationWarning,
+        module=r".*_ranking",
+    )
+    warnings.filterwarnings(
+        "ignore",
+        message=(
             "Divide through zero encountered while trying to calculate the MCC. "
             "MCC is set to zero."
         ),
