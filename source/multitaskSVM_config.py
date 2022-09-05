@@ -30,49 +30,73 @@ def configurator(
     if combination == 'SPP':
         param_grid = {
             f'dataselector__{k}': v for k, v in make_kernel_combinations(
-                kernel_params, "sigmoid_kernel", "poly_kernel", "poly_kernel"
+                kernel_params=kernel_params,
+                kernel_time_series="sigmoid_kernel",
+                kernel_dosage="poly_kernel",
+                kernel_abSignal="poly_kernel",
             ).items()
         }
     elif combination == 'SPR':
         param_grid = {
             f'dataselector__{k}': v for k, v in make_kernel_combinations(
-                kernel_params, "sigmoid_kernel", "poly_kernel", "rbf_kernel"
+                kernel_params=kernel_params,
+                kernel_time_series="sigmoid_kernel",
+                kernel_dosage="poly_kernel",
+                kernel_abSignal="rbf_kernel",
             ).items()
         }
     elif combination == 'SRP':
         param_grid = {
             f'dataselector__{k}': v for k, v in make_kernel_combinations(
-                kernel_params, "sigmoid_kernel", "rbf_kernel", "poly_kernel"
+                kernel_params=kernel_params,
+                kernel_time_series="sigmoid_kernel",
+                kernel_dosage="rbf_kernel",
+                kernel_abSignal="poly_kernel",
             ).items()
         }
     elif combination == 'SRR':
         param_grid = {
             f'dataselector__{k}': v for k, v in make_kernel_combinations(
-                kernel_params, "sigmoid_kernel", "rbf_kernel", "rbf_kernel"
+                kernel_params=kernel_params,
+                kernel_time_series="sigmoid_kernel",
+                kernel_dosage="rbf_kernel",
+                kernel_abSignal="rbf_kernel",
             ).items()
         }
     elif combination == 'RPP':
         param_grid = {
             f'dataselector__{k}': v for k, v in make_kernel_combinations(
-                kernel_params, "rbf_kernel", "poly_kernel", "poly_kernel"
+                kernel_params=kernel_params,
+                kernel_time_series="rbf_kernel",
+                kernel_dosage="poly_kernel",
+                kernel_abSignal="poly_kernel",
             ).items()
         }
     elif combination == 'RPR':
         param_grid = {
             f'dataselector__{k}': v for k, v in make_kernel_combinations(
-                kernel_params, "rbf_kernel", "poly_kernel", "rbf_kernel"
+                kernel_params=kernel_params,
+                kernel_time_series="rbf_kernel",
+                kernel_dosage="poly_kernel",
+                kernel_abSignal="rbf_kernel",
             ).items()
         }
     elif combination == 'RRP':
         param_grid = {
             f'dataselector__{k}': v for k, v in make_kernel_combinations(
-                kernel_params, "rbf_kernel", "rbf_kernel", "poly_kernel"
+                kernel_params=kernel_params,
+                kernel_time_series="rbf_kernel",
+                kernel_dosage="rbf_kernel",
+                kernel_abSignal="poly_kernel",
             ).items()
         }
     elif combination == 'RRR':
         param_grid = {
             f'dataselector__{k}': v for k, v in make_kernel_combinations(
-                kernel_params, "rbf_kernel", "rbf_kernel", "rbf_kernel"
+                kernel_params=kernel_params,
+                kernel_time_series="rbf_kernel",
+                kernel_dosage="rbf_kernel",
+                kernel_abSignal="rbf_kernel",
             ).items()
         }
     param_grid['svc__C'] = 10.0 ** np.arange(-4, 5)
