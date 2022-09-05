@@ -63,7 +63,7 @@ for threshold in '0.95' '0.98' '1.0'; do
                     fi
                     cd "$ana_dir" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
                     cp "${topdir}/bin/rgscv.py" . || { echo "cp ${topdir}/bin/rgscv.py . failed"; exit 1; }
-                    cp "${topdir}/bin/${method}_config.py" . || { echo "cp ${topdir}/bin/${method}_config.py . failed"; exit 1; }
+                    cp "${topdir}/source/${method}_config.py" . || { echo "cp ${topdir}/source/${method}_config.py . failed"; exit 1; }
                     python -u rgscv.py --analysis-dir "$ana_dir" --data-dir "$data_dir" --data-file-id "preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}" --method "$method" --Nexp 10 --kernel-dir "$kernel_dir" --combination "$combination" --identifier "$identifier" 1> "${out}" 2> "${err}"
                 done
 
@@ -77,7 +77,7 @@ for threshold in '0.95' '0.98' '1.0'; do
                 fi
                 cd "$ana_dir" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
                 cp "${topdir}/bin/rgscv.py" . || { echo "cp ${topdir}/bin/rgscv.py . failed"; exit 1; }
-                cp "${topdir}/bin/${method}_config.py" . || { echo "cp ${topdir}/bin/${method}_config.py . failed"; exit 1; }
+                cp "${topdir}/source/${method}_config.py" . || { echo "cp ${topdir}/source/${method}_config.py . failed"; exit 1; }
                 python -u rgscv.py --analysis-dir "${ana_dir}" --data-dir "${data_dir}" --data-file-id "preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}" --method "${method}" --Nexp 10 1> "${out}" 2> "${err}"
             fi
 
