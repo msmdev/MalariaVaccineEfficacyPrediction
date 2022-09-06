@@ -23,7 +23,7 @@ def configurator(
     combination: str,
     identifier: str,
     kernel_dir: str,
-) -> Tuple[Dict[str, List[Union[float, int, str]]], Any, int]:
+) -> Tuple[Dict[str, List[Union[float, int, str]]], Any]:
 
     param_grid: Dict[str, List[Union[float, int, str]]]
     # Set up grid of parameters to optimize over
@@ -100,7 +100,6 @@ def configurator(
             ).items()
         }
     param_grid['svc__C'] = 10.0 ** np.arange(-4, 5)
-    n_jobs = -1
 
     estimator = make_pipeline(
         DataSelector(
@@ -114,4 +113,4 @@ def configurator(
         ),
     )
 
-    return param_grid, estimator, n_jobs
+    return param_grid, estimator

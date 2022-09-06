@@ -282,6 +282,14 @@ if __name__ == "__main__":
         help='Number of grid-search cross-validation repetitions.',
     )
     parser.add_argument(
+        '--njobs',
+        dest='njobs',
+        type=int,
+        default=1,
+        help=('Number of jobs of RepeatedGridSearchCV to run in parallel. '
+              '`-1` means using all processors.'),
+    )
+    parser.add_argument(
         '--kernel-dir',
         dest='kernel_dir',
         metavar='DIR',
@@ -302,14 +310,14 @@ if __name__ == "__main__":
 
     method = args.method
     if method == 'SVM':
-        from source.SVM_config import estimator, param_grid, n_jobs
+        from source.SVM_config import estimator, param_grid
     elif method == 'RLR':
-        from source.RLR_config import estimator, param_grid, n_jobs
+        from source.RLR_config import estimator, param_grid
     elif method == 'RF':
-        from source.RF_config import estimator, param_grid, n_jobs
+        from source.RF_config import estimator, param_grid
     elif method == 'multitaskSVM':
         from source.multitaskSVM_config import configurator
-        param_grid, estimator, n_jobs = configurator(
+        param_grid, estimator = configurator(
             combination=args.combination,
             identifier=args.identifier,
             kernel_dir=args.kernel_dir,
@@ -325,7 +333,7 @@ if __name__ == "__main__":
             method=method,
             param_grid=param_grid,
             estimator=estimator,
-            n_jobs=n_jobs,
+            n_jobs=args.njobs,
             Nexp=args.Nexp,
         )
     finally:

@@ -11,7 +11,6 @@ param_grid: Dict[str, List[Any]] = {
     'randomforestclassifier__n_estimators': [100, 500, 1000],
     'randomforestclassifier__max_features': ['sqrt', 0.1, 0.333],
 }
-n_jobs = -1
 
 estimator = make_pipeline(
     StandardScaler(
