@@ -73,7 +73,7 @@ for threshold in '0.95' '0.98' '1.0'; do
                 cp "${topdir}/bin/run_rgscv_BINAC.sh" . || { echo "cp ${topdir}/bin/run_rgscv_BINAC.sh . failed"; exit 1; }
                 cp "${topdir}/source/${method}_config.py" . || { echo "cp ${topdir}/source/${method}_config.py . failed"; exit 1; }
                 if [ "$method" = 'SVM' ]; then
-                    qsub -v "ANA_DIR"="${ana_dir}","DATA_DIR"="${data_dir}","DATA_FILE_ID"="preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}","METHOD"="${method}" -N "$jobname" -q short -l walltime=24:00:00,mem=64gb,nodes=1:ppn=8 "run_rgscv_BINAC.sh"
+                    qsub -v "ANA_DIR"="${ana_dir}","DATA_DIR"="${data_dir}","DATA_FILE_ID"="preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}","METHOD"="${method}" -N "$jobname" -q short -l walltime=24:00:00,mem=64gb,nodes=1:ppn=4 "run_rgscv_BINAC.sh"
                 else
                     qsub -v "ANA_DIR"="${ana_dir}","DATA_DIR"="${data_dir}","DATA_FILE_ID"="preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}","METHOD"="${method}" -N "$jobname" -q short -l walltime=24:00:00,mem=17gb,nodes=1:ppn=4 "run_rgscv_BINAC.sh"
                 fi

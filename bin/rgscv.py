@@ -228,6 +228,14 @@ if __name__ == "__main__":
     warnings.filterwarnings(
         "ignore",
         message=(
+            r"distutils Version classes are deprecated. Use packaging.version instead.*"
+        ),
+        category=DeprecationWarning,
+        module=r".*",
+    )
+    warnings.filterwarnings(
+        "ignore",
+        message=(
             r"`np.bool` is a deprecated alias for the builtin `bool`.*"
         ),
         category=DeprecationWarning,
