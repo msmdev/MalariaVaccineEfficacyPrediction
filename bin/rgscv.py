@@ -193,7 +193,7 @@ def main(
             results['best_score'].append(opt_scores[scoring])
 
         print(f'{time} end: {ncv.generate_timestamp()}')
-        print('++++++++++++++++++++++++++++++++++++++++')
+        print('++++++++++++++++++++++++++++++++++++++++\n')
 
     print('results:')
     pprint(results)
