@@ -106,7 +106,7 @@ def main(
                 [x for x in range(y.size * y.size)],
                 dtype=np.uint32
             ).reshape((y.size, y.size))
-            print(f'shape of running index array: {X.shape}/n')
+            print(f'shape of running index array: {X.shape}\n')
         else:
             data_at_timePoint = pd.read_csv(
                 os.path.join(data_dir, f'{data_file_id}_{time}.csv'),
