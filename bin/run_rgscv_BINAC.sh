@@ -199,8 +199,13 @@ err="runRGSCV_${PBS_JOBNAME}_${PBS_JOBID}.err"
 out="runRGSCV_${PBS_JOBNAME}_${PBS_JOBID}.out"
 
 if [ "$METHOD" = 'multitaskSVM' ]; then
+    combinations=('RPP' 'RPR' 'RRP' 'RRR' 'SPP' 'SPR' 'SRP' 'SRR')
     cp -r "${KERNEL_DIR}/"* "$TMPDIR" || { echo "Couldn't copy Kernels to ${TMPDIR}"; exit 1; }
-    python -u rgscv.py --analysis-dir "$ANA_DIR" --data-dir "$DATA_DIR" --data-file-id "$DATA_FILE_ID" --method "$METHOD" --kernel-dir "$TMPDIR" --combination "$COMBINATION" --identifier "$IDENTIFIER" 1> "${out}" 2> "${err}"
+    for combination in "${combinations[@]}"; do
+        ana_dir="${ANA_DIR}/${combination}"
+        cd "$ana_dir" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
+        python -u rgscv.py --analysis-dir "$ana_dir" --data-dir "$DATA_DIR" --data-file-id "$DATA_FILE_ID" --method "$METHOD" --kernel-dir "$TMPDIR" --combination "$combination" --identifier "$IDENTIFIER" 1> "${out}" 2> "${err}"
+    done
 else
     python -u rgscv.py --analysis-dir "$ANA_DIR" --data-dir "$DATA_DIR" --data-file-id "$DATA_FILE_ID" --method "$METHOD" 1> "${out}" 2> "${err}"
 fi

@@ -22,6 +22,5 @@ estimator = make_pipeline(
         kernel='rbf',
         probability=True,
         random_state=seed,
-        cache_size=500,
     ),
 )

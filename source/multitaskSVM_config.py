@@ -111,7 +111,6 @@ def configurator(
             kernel='precomputed',
             probability=True,
             random_state=seed,
-            cache_size=500,
         ),
     )
 
