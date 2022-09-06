@@ -195,8 +195,8 @@ cd "$PBS_O_WORKDIR" || { echo "Couldn't cd into ${PBS_O_WORKDIR}"; exit 1; }
 source "${HOME}/miniconda3/etc/profile.d/conda.sh"
 conda activate malaria_env
 
-err="runRGSCV_${PBS_JOBNAME}_${PBS_JOBID}.err"
-out="runRGSCV_${PBS_JOBNAME}_${PBS_JOBID}.out"
+err="runRNCV_${PBS_JOBNAME}_${PBS_JOBID}.err"
+out="runRNCV_${PBS_JOBNAME}_${PBS_JOBID}.out"
 
 if [ "$METHOD" = 'multitaskSVM' ]; then
     combinations=('RPP' 'RPR' 'RRP' 'RRR' 'SPP' 'SPR' 'SRP' 'SRR')

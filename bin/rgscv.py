@@ -211,7 +211,7 @@ def main(
 
 if __name__ == "__main__":
 
-    warning_file = open("warnings.log", "w")
+    warning_file = open("warnings_RGSCV.log", "w")
 
     def warn_with_traceback(
         message, category, filename, lineno, file=None, line=None
