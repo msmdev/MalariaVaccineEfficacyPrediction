@@ -55,7 +55,7 @@ for threshold in '0.95' '0.98' '1.0'; do
                     cp "${topdir}/bin/rncv.py" . || { echo "cp ${topdir}/bin/rncv.py . failed"; exit 1; }
                     cp "${topdir}/source/${method}_config.py" . || { echo "cp ${topdir}/source/${method}_config.py . failed"; exit 1; }
                 done
-                jobname="${threshold}${method}${dataset}"
+                jobname="rncv${threshold}${method}${dataset}"
                 ana_dir="${maindir}/${dataset}"
                 cd "$ana_dir" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
                 cp "${topdir}/bin/run_rncv_BINAC.sh" . || { echo "cp ${topdir}/bin/run_rncv_BINAC.sh . failed"; exit 1; }
@@ -63,7 +63,7 @@ for threshold in '0.95' '0.98' '1.0'; do
 
             else
 
-                jobname="${threshold}${method}${dataset}"
+                jobname="rncv${threshold}${method}${dataset}"
                 ana_dir="${maindir}/${dataset}"
                 if [ ! -d "$ana_dir" ]; then
                     mkdir -p "$ana_dir" || { echo "mkdir ${ana_dir} failed"; exit 1; }
