@@ -3,6 +3,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from typing import Any, Dict, List
 from source.config import seed
+from numpy.random import RandomState
 
 
 # Set up grid of parameters to optimize over
@@ -21,6 +22,6 @@ estimator = make_pipeline(
         penalty='elasticnet',
         solver='saga',
         max_iter=10000,
-        random_state=seed,
+        random_state=RandomState(seed),
     ),
 )

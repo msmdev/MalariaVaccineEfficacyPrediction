@@ -3,6 +3,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from typing import Any, Dict, List
 from source.config import seed
+from numpy.random import RandomState
 
 
 # Set up grid of parameters to optimize over
@@ -17,5 +18,5 @@ estimator = make_pipeline(
         with_mean=True,
         with_std=True,
     ),
-    RandomForestClassifier(random_state=seed),
+    RandomForestClassifier(random_state=RandomState(seed)),
 )
