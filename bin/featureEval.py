@@ -35,6 +35,7 @@ from source.featureEvaluation import featureEvaluationESPY, make_plot
 from source.utils import select_timepoint, get_parameters
 from source.utils import DataSelector
 from typing import Optional
+from nestedcv import save_model
 
 
 def main(
@@ -78,7 +79,7 @@ def main(
             model='RF',
         )
         estimator.set_params(**params)
-        importances = featureEvaluationRF(estimator, X, y)
+        importances, model = featureEvaluationRF(estimator, X, y)
     elif method == 'RLR':
         from source.RLR_config import estimator
         params = get_parameters(
@@ -86,7 +87,7 @@ def main(
             model='RLR',
         )
         estimator.set_params(**params)
-        importances = featureEvaluationRLR(estimator, X, y)
+        importances, model = featureEvaluationRLR(estimator, X, y)
     elif method == 'multitaskSVM':
         if not (isinstance(kernel_dir, str) and isinstance(kernel_identifier, str)):
             raise ValueError(
@@ -123,15 +124,15 @@ def main(
             P2=params['P2'],
         ).fit(X, y).transform(X)
 
-        multitask_classifier = estimator['svc']
-        multitask_classifier.set_params(**{'C': params['C']})
-        multitask_classifier.fit(kernel_matrix, y)
+        model = estimator['svc']
+        model.set_params(**{'C': params['C']})
+        model.fit(kernel_matrix, y)
 
         importances = featureEvaluationESPY(
             eval_data=data_at_timePoint.drop(
                 columns=['Patient', 'group', 'Protection']
             ),  # including dose AND timepoint
-            model=multitask_classifier,
+            model=model,
             lq=25,
             up=75,
             basis_data=data.drop(
@@ -146,6 +147,18 @@ def main(
             name=f"top50_informative_features_{timepoint}",
             outputdir=out_dir,
         )
+
+    fn = 'best_{method}_model_'
+    for key in params.keys():
+        fn = fn + f"{key}_{params[key]}"
+    save_model(
+        model,
+        out_dir,
+        fn,
+        timestamp=True,
+        compress=False,
+        method='joblib',
+    )
 
     print(f"Parameter combination for best mean AUROC at time point {timepoint} :")
     print(params)

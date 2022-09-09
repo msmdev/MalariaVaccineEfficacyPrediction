@@ -490,7 +490,7 @@ def featureEvaluationRF(
     model: RandomForestClassifier,
     X: pd.DataFrame,
     y: np.ndarray,
-) -> pd.DataFrame:
+) -> Tuple[pd.DataFrame, RandomForestClassifier]:
     """Evaluation of informative features of a given RF model.
     Feature importances are obtained via permutation importance evaluation.
     The model will be fitted on X, y before feature evaluation.
@@ -507,7 +507,8 @@ def featureEvaluationRF(
     -------
     importances : pd.Dataframe
         Dataframe of non-zero feature importances.
-
+    model : sklearn.ensemble.RandomForestClassifier
+        Fitted model (using X, y).
     """
 
     model.fit(X.to_numpy(), y)
@@ -531,14 +532,14 @@ def featureEvaluationRF(
     # Extract non-zero importances
     print("Number of non-zero importances:", np.count_nonzero(result.importances_mean))
 
-    return importances[importances['importance'] != 0]
+    return importances[importances['importance'] != 0], model
 
 
 def featureEvaluationRLR(
     model: LogisticRegression,
     X: pd.DataFrame,
     y: np.ndarray,
-) -> pd.DataFrame:
+) -> Tuple[pd.DataFrame, LogisticRegression]:
     """Evaluation of informative features of a given RLR model.
     The model will be fitted on X, y before feature evaluation.
 
@@ -554,7 +555,8 @@ def featureEvaluationRLR(
     -------
     importances : pd.Dataframe
         Dataframe of non-zero feature importances.
-
+    model : sklearn.linear_model.LogisticRegression
+        Fitted model (using X, y).
     """
 
     model.fit(X.to_numpy(), y)
@@ -577,4 +579,4 @@ def featureEvaluationRLR(
     # Extract non-zero coefficients
     print("Number of non-zero importances (weights):", np.count_nonzero(coefs))
 
-    return importances[importances['importance'] != 0]
+    return importances[importances['importance'] != 0], model
