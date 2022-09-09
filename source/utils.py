@@ -36,6 +36,7 @@ import os
 from source.RLR_config import param_grid as param_grid_RLR
 from source.RF_config import param_grid as param_grid_RF
 import warnings
+import ast
 
 
 def normalize(
@@ -545,7 +546,7 @@ def get_parameters(
     params_string = roc_results['best_params'].iloc[0]
     if not type(params_string) == str:
         raise ValueError(f"type(params_string) != str: {type(params_string)} != str")
-    params = eval(params_string)
+    params = ast.literal_eval(params_string)
     if model == 'RLR':
         keys = param_grid_RLR.keys()
         if not set(params.keys()) == keys:
