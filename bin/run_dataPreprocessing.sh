@@ -54,7 +54,7 @@ for dataset in 'whole' 'selective'; do
 
     for timepoint in 'all' 'III14' 'C-1' 'C28'; do
 
-        for threshold in '0.95' '0.98' '1.0'; do
+        for threshold in '0.85' '0.9' '0.95' '0.98' '1.0'; do
 
             err="run_groupCorrelatedFeatures_${dataset}_${method}_threshold${threshold}_${timepoint}.err"
             out="run_groupCorrelatedFeatures_${dataset}_${method}_threshold${threshold}_${timepoint}.out"
