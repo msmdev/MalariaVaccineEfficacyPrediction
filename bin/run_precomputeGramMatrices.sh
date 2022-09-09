@@ -33,7 +33,7 @@ if [ ! -d "$topdir" ]; then
     { echo "${topdir} doesn't exists."; exit 1; }
 fi
 
-for threshold in '0.85' '0.9'; do
+for threshold in '0.85' '0.9' '0.95' '0.98' '1.0'; do
 
     for dataset in 'whole' 'selective'; do
 
