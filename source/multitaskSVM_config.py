@@ -99,6 +99,9 @@ def configurator(
                 kernel_abSignal="rbf_kernel",
             ).items()
         }
+    else:
+        raise ValueError(f"Unknown combination {combination} supplied.")
+
     param_grid['svc__C'] = 10.0 ** np.arange(-4, 5)
 
     estimator = make_pipeline(

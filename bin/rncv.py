@@ -606,7 +606,9 @@ if __name__ == "__main__":
     parser.add_argument(
         '--combination',
         dest='combination',
-        help="Kernel combination. Supply 'SPP', 'SPR', 'SRP', or 'SRR'."
+        help=(
+            "Kernel combination. Supply 'RPP', 'RPR', 'RRP', 'RRR', 'SPP', 'SPR', 'SRP', or 'SRR'."
+        )
     )
     parser.add_argument(
         '--identifier',

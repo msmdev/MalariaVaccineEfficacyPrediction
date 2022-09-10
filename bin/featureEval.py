@@ -33,7 +33,6 @@ import argparse
 from source.featureEvaluation import featureEvaluationRF, featureEvaluationRLR
 from source.featureEvaluation import featureEvaluationESPY, make_plot
 from source.utils import select_timepoint, get_parameters
-from source.utils import DataSelector
 from typing import Optional
 from nestedcv import save_model
 
@@ -48,6 +47,7 @@ def main(
     method: str,
     kernel_dir: Optional[str] = None,
     kernel_identifier: Optional[str] = None,
+    combination: Optional[str] = None,
 ):
     """
     Evaluation of informative features.
@@ -73,30 +73,49 @@ def main(
 
     # Initialize, fit, and evaluate
     if method == 'RF':
+
         from source.RF_config import estimator
+
         params = get_parameters(
             timepoint_results=timepoint_results,
             model='RF',
         )
         estimator.set_params(**params)
+
         importances, model = featureEvaluationRF(estimator, X, y)
+
     elif method == 'RLR':
+
         from source.RLR_config import estimator
+
         params = get_parameters(
             timepoint_results=timepoint_results,
             model='RLR',
         )
         estimator.set_params(**params)
+
         importances, model = featureEvaluationRLR(estimator, X, y)
+
     elif method == 'multitaskSVM':
-        if not (isinstance(kernel_dir, str) and isinstance(kernel_identifier, str)):
+
+        from source.multitaskSVM_config import configurator
+
+        if not (isinstance(kernel_dir, str) and isinstance(kernel_identifier, str) and
+                isinstance(combination, str)):
             raise ValueError(
-                "`kernel_dir` and `kernel_identifier` must be given if `method`='multitaskSVM'."
+                "`kernel_dir`, `kernel_identifier` and `combination` must be given "
+                "if `method`='multitaskSVM'."
             )
-        from source.multitaskSVM_config import estimator
+
+        _, model = configurator(
+            combination=combination,
+            identifier=kernel_identifier,
+            kernel_dir=kernel_dir,
+        )
+
         params = get_parameters(
             timepoint_results=timepoint_results,
-            model='multitask',
+            model='multitaskSVM',
         )
 
         # initialize running index array for DataSelector
@@ -112,21 +131,8 @@ def main(
             dtype=np.uint32
         ).reshape((y.size, y.size))
 
-        kernel_matrix = DataSelector(
-            kernel_directory=kernel_dir,
-            identifier=kernel_identifier,
-            SA=params['SA'],
-            SO=params['SO'],
-            R0=params['R0'],
-            R1=params['R1'],
-            R2=params['R2'],
-            P1=params['P1'],
-            P2=params['P2'],
-        ).fit(X, y).transform(X)
-
-        model = estimator['svc']
-        model.set_params(**{'C': params['C']})
-        model.fit(kernel_matrix, y)
+        model.set_params(**params)
+        model.fit(X, y)
 
         importances = featureEvaluationESPY(
             eval_data=data_at_timePoint.drop(
@@ -148,9 +154,9 @@ def main(
             outputdir=out_dir,
         )
 
-    fn = 'best_{method}_model_'
+    fn = f'best_{method}_model_'
     for key in params.keys():
-        fn = fn + f"{key}_{params[key]}"
+        fn = fn + f"_{key.split('__')[-1]}_{params[key]}"
     save_model(
         model,
         out_dir,
@@ -230,6 +236,13 @@ if __name__ == "__main__":
         dest='kernel_identifier',
         help='Filename prefix of the precomputed kernel matrix.',
     )
+    parser.add_argument(
+        '--combination',
+        dest='combination',
+        help=(
+            "Kernel combination. Supply 'RPP', 'RPR', 'RRP', 'RRR', 'SPP', 'SPR', 'SRP', or 'SRR'."
+        )
+    )
     args = parser.parse_args()
 
     main(
@@ -241,4 +254,5 @@ if __name__ == "__main__":
         method=args.method,
         kernel_dir=args.kernel_dir,
         kernel_identifier=args.kernel_identifier,
+        combination=args.combination,
     )

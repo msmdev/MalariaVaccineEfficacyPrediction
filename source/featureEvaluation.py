@@ -169,20 +169,29 @@ def compute_distance_hyper(
 
             if isinstance(data, pd.DataFrame) and isinstance(kernel_parameters, dict):
 
-                keys = {"SA", "SO", "R0", "R1", "R2", "P1", "P2"}
-                if not set(kernel_parameters.keys()) == keys:
+                expected_keys = {"SA", "SO", "R0", "R1", "R2", "P1", "P2"}
+                actual_keys = set()
+                prefix = ''
+                for key in kernel_parameters.keys():
+                    actual_keys.add(key.split('__')[-1])
+                    if key.split('__')[-1] == 'SA' and len(key.split('__')[-1]) > 1:
+                        prefix = key.split('__')[0]
+                        prefix = prefix + '__'
+
+                if not expected_keys.issubset(actual_keys):
                     raise ValueError(
-                        f"Expected multitaskSVM parameters but set(params.keys()) != {keys}: "
-                        f"{set(kernel_parameters.keys())} != {keys}"
+                        f"Expected multitaskSVM parameters {expected_keys} to "
+                        f"be contained in {actual_keys}."
                     )
+
                 params = (
-                    kernel_parameters['SA'],
-                    kernel_parameters['SO'],
-                    kernel_parameters['R0'],
-                    kernel_parameters['R1'],
-                    kernel_parameters['R2'],
-                    kernel_parameters['P1'],
-                    kernel_parameters['P2'],
+                    kernel_parameters[f'{prefix}SA'],
+                    kernel_parameters[f'{prefix}SO'],
+                    kernel_parameters[f'{prefix}R0'],
+                    kernel_parameters[f'{prefix}R1'],
+                    kernel_parameters[f'{prefix}R2'],
+                    kernel_parameters[f'{prefix}P1'],
+                    kernel_parameters[f'{prefix}P2'],
                 )
 
                 if (params[0] == 'X' or params[1] == 'X') and params[2] != 'X':

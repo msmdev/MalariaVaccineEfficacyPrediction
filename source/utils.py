@@ -33,8 +33,6 @@ from sklearn.metrics.pairwise import rbf_kernel, sigmoid_kernel, polynomial_kern
 from sklearn.preprocessing import KernelCenterer
 import pandas as pd
 import os
-from source.RLR_config import param_grid as param_grid_RLR
-from source.RF_config import param_grid as param_grid_RF
 import warnings
 import ast
 
@@ -548,32 +546,38 @@ def get_parameters(
         raise ValueError(f"type(params_string) != str: {type(params_string)} != str")
     params = ast.literal_eval(params_string)
     if model == 'RLR':
-        keys = param_grid_RLR.keys()
+        from source.RLR_config import param_grid
+        keys = param_grid.keys()
         if not set(params.keys()) == keys:
             raise ValueError(
                 f"Expected RLR parameters but set(params.keys()) != {keys}: "
                 f"{set(params.keys())} != {keys}"
             )
     elif model == 'RF':
-        keys = param_grid_RF.keys()
+        from source.RF_config import param_grid
+        keys = param_grid.keys()
         if not set(params.keys()) == keys:
             raise ValueError(
                 f"Expected RF parameters but set(params.keys()) != {keys}: "
                 f"{set(params.keys())} != {keys}"
             )
     elif model == 'multitaskSVM':
-        keys = {"SA", "SO", "R0", "R1", "R2", "P1", "P2"}
+        from source.multitaskSVM_config import configurator
+        param_grid, _ = configurator(
+            combination='RPR',  # see *
+            identifier='',
+            kernel_dir='',
+        )
+        # *You can supply any legal combination here,
+        # since the returned param_grid isn't actually used (only the keys are used).
+        keys = param_grid.keys()
         if not set(params.keys()) == keys:
             raise ValueError(
                 f"Expected multitaskSVM parameters but set(params.keys()) != {keys}: "
                 f"{set(params.keys())} != {keys}"
             )
-        temp = dict()
-        for key in keys:
-            temp[key.split('__')[1]] = params[key]
-        params = temp
     else:
-        raise ValueError("`model` must be either 'RF', 'RLR' or 'multitask'.")
+        raise ValueError("`model` must be either 'RF', 'RLR' or 'multitaskSVM'.")
     return params
 
 
