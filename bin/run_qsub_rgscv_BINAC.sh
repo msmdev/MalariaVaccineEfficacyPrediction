@@ -27,13 +27,13 @@ cd "${topdir}/bin" || { echo "Couldn't cd into ${topdir}/bin directory."; exit 1
 data_dir="${topdir}/data/proteome_data/correlationFiltering"
 combinations=('RPP' 'RPR' 'RRP' 'RRR' 'SPP' 'SPR' 'SRP' 'SRR')
 
-for threshold in '0.95' '0.98' '1.0'; do
+for threshold in '0.85' '0.9' '0.95' '0.98' '1.0'; do
     kernel_dir="${topdir}/data/precomputed_multitask_kernels/threshold${threshold}"
     if [ ! -d "$kernel_dir" ]; then
         { echo "${kernel_dir} doesn't exist"; exit 1; }
     fi
 
-    for method in 'multitaskSVM' 'RF' 'RLR' 'SVM'; do
+    for method in 'RLR' 'multitaskSVM' 'RF' 'SVM'; do
         maindir="${topdir}/results/threshold${threshold}/${method}"
 
         for dataset in 'whole' 'selective'; do
@@ -72,7 +72,12 @@ for threshold in '0.95' '0.98' '1.0'; do
                 cp "${topdir}/bin/rgscv.py" . || { echo "cp ${topdir}/bin/rgscv.py . failed"; exit 1; }
                 cp "${topdir}/bin/run_rgscv_BINAC.sh" . || { echo "cp ${topdir}/bin/run_rgscv_BINAC.sh . failed"; exit 1; }
                 cp "${topdir}/source/${method}_config.py" . || { echo "cp ${topdir}/source/${method}_config.py . failed"; exit 1; }
-                qsub -v "ANA_DIR"="${ana_dir}","DATA_DIR"="${data_dir}","DATA_FILE_ID"="preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}","METHOD"="${method}","NJOBS"=4 -N "$jobname" -q short -l walltime=48:00:00,mem=17gb,nodes=1:ppn=4 "run_rgscv_BINAC.sh"
+                if [ "$method" = 'RLR' ]; then
+                    qsub -v "ANA_DIR"="${ana_dir}","DATA_DIR"="${data_dir}","DATA_FILE_ID"="preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}","METHOD"="${method}","NJOBS"=28 -N "$jobname" -q short -l walltime=48:00:00,mem=125gb,nodes=1:ppn=28 "run_rgscv_BINAC.sh"
+                else
+		    qsub -v "ANA_DIR"="${ana_dir}","DATA_DIR"="${data_dir}","DATA_FILE_ID"="preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}","METHOD"="${method}","NJOBS"=4 -N "$jobname" -q short -l walltime=48:00:00,mem=17gb,nodes=1:ppn=4 "run_rgscv_BINAC.sh"
+                fi
+
             fi
 
         done
