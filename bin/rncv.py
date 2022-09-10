@@ -179,9 +179,6 @@ def main(
             print('')
         print('----------------------------------------\n')
 
-        # define identifiers used for naming of output files
-        rfile = f'{prefix}_RNCV'
-
         # set options for NestedGridSearchCV
         cv_options = {
             'scoring': ['precision_recall_auc',
@@ -189,7 +186,7 @@ def main(
                         'mcc'],
             'refit': False,
             'tune_threshold': False,
-            'save_to': {'directory': rfiledir, 'ID': rfile},
+            'save_to': None,
             'save_pred': None,
             'save_inner_to': None,
             'reproducible': False,
