@@ -33,20 +33,24 @@ if [ ! -d "$topdir" ]; then
     { echo "${topdir} doesn't exists."; exit 1; }
 fi
 
-for threshold in '0.85' '0.9' '0.95' '0.98' '1.0'; do
+for timepoint in 'III14' 'C-1' 'C28'; do
 
-    for dataset in 'whole' 'selective'; do
+    for threshold in '0.85' '0.9' '0.95' '0.98' '1.0'; do
 
-        if [ "$dataset" = 'whole' ]; then
-            identifier='kernel_matrix'
-        elif [ "$dataset" = 'selective' ]; then
-            identifier='kernel_matrix_SelectiveSet'
-        fi
+        for dataset in 'whole' 'selective'; do
 
-        out="${topdir}/data/precomputed_multitask_kernels/run_precomputeGramMatrices_${dataset}_threshold${threshold}.out"
-        err="${topdir}/data/precomputed_multitask_kernels/run_precomputeGramMatrices_${dataset}_threshold${threshold}.err"
+            if [ "$dataset" = 'whole' ]; then
+                identifier='kernel_matrix'
+            elif [ "$dataset" = 'selective' ]; then
+                identifier='kernel_matrix_SelectiveSet'
+            fi
 
-        python -u precomputeGramMatrices.py --data-file "${topdir}/data/proteome_data/correlationFiltering/preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}_all.csv" --out-dir "${topdir}/data/precomputed_multitask_kernels/threshold${threshold}" --identifier "$identifier" 1> "${out}" 2> "${err}"
+            out="${topdir}/data/precomputed_multitask_kernels/run_precomputeGramMatrices_${dataset}_threshold${threshold}_${timepoint}.out"
+            err="${topdir}/data/precomputed_multitask_kernels/run_precomputeGramMatrices_${dataset}_threshold${threshold}_${timepoint}.err"
+
+            python -u precomputeGramMatrices.py --data-file "${topdir}/data/proteome_data/correlationFiltering/preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}_${timepoint}_all.csv" --out-dir "${topdir}/data/precomputed_multitask_kernels/threshold${threshold}" --identifier "$identifier" 1> "${out}" 2> "${err}"
+
+        done
 
     done
 
