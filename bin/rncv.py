@@ -81,11 +81,6 @@ def main(
     rfiledir = os.path.join(ana_dir, 'RNCV/results/')
     pathlib.Path(rfiledir).mkdir(parents=True, exist_ok=True)
 
-    data = pd.read_csv(os.path.join(data_dir, f'{data_file_id}_all.csv'), header=0)
-
-    groups_all = data.loc[:, 'group'].to_numpy()
-    y_all = data.loc[:, 'Protection'].to_numpy()
-
     # initialize the key result collector:
     key_results: Dict[str, List[Any]] = {}
     key_results['time'] = []
@@ -117,6 +112,11 @@ def main(
         prefix = f'{time}'
 
         rng = np.random.RandomState(seed)
+
+        data = pd.read_csv(os.path.join(data_dir, f'{data_file_id}_{time}_all.csv'), header=0)
+
+        groups_all = data.loc[:, 'group'].to_numpy()
+        y_all = data.loc[:, 'Protection'].to_numpy()
 
         if method == 'multitaskSVM':
 

@@ -75,11 +75,6 @@ def main(
     maindir = os.path.join(ana_dir, 'RGSCV/')
     pathlib.Path(maindir).mkdir(parents=True, exist_ok=True)
 
-    data = pd.read_csv(os.path.join(data_dir, f'{data_file_id}_all.csv'), header=0)
-
-    groups_all = data.loc[:, 'group'].to_numpy()
-    y_all = data.loc[:, 'Protection'].to_numpy()
-
     # initialize result dict
     results: Dict[str, List[Any]] = dict()
     results['time'] = []
@@ -96,6 +91,11 @@ def main(
 
         # define prefix for filenames:
         prefix = f'{time}'
+
+        data = pd.read_csv(os.path.join(data_dir, f'{data_file_id}_{time}_all.csv'), header=0)
+
+        groups_all = data.loc[:, 'group'].to_numpy()
+        y_all = data.loc[:, 'Protection'].to_numpy()
 
         if method == 'multitaskSVM':
 
