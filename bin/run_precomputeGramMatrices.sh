@@ -32,6 +32,10 @@ topdir="${HOME}/MalariaVaccineEfficacyPrediction"
 if [ ! -d "$topdir" ]; then
     { echo "${topdir} doesn't exists."; exit 1; }
 fi
+maindir="${topdir}/data/precomputed_multitask_kernels"
+if [ ! -d "$maindir" ]; then
+    mkdir -p "$maindir" || { echo "mkdir ${maindir} failed"; exit 1; }
+fi
 identifier='kernel_matrix'
 
 for timepoint in 'III14' 'C-1' 'C28'; do
@@ -40,10 +44,10 @@ for timepoint in 'III14' 'C-1' 'C28'; do
 
         for dataset in 'whole' 'selective'; do
 
-            out="${topdir}/data/precomputed_multitask_kernels/run_precomputeGramMatrices_${dataset}_threshold${threshold}_${timepoint}.out"
-            err="${topdir}/data/precomputed_multitask_kernels/run_precomputeGramMatrices_${dataset}_threshold${threshold}_${timepoint}.err"
+            out="${maindir}/run_precomputeGramMatrices_${dataset}_threshold${threshold}_${timepoint}.out"
+            err="${maindir}/run_precomputeGramMatrices_${dataset}_threshold${threshold}_${timepoint}.err"
 
-            python -u precomputeGramMatrices.py --data-file "${topdir}/data/proteome_data/correlationFiltering/preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}_${timepoint}_all.csv" --out-dir "${topdir}/data/precomputed_multitask_kernels/threshold${threshold}/${dataset}/${timepoint}" --identifier "$identifier" 1> "${out}" 2> "${err}"
+            python -u precomputeGramMatrices.py --data-file "${topdir}/data/proteome_data/correlationFiltering/preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}_${timepoint}_all.csv" --out-dir "${maindir}/threshold${threshold}/${dataset}/${timepoint}" --identifier "$identifier" 1> "${out}" 2> "${err}"
 
         done
 
