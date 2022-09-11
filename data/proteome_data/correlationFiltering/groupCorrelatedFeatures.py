@@ -59,11 +59,17 @@ def main(
     fn = os.path.join(data_dir, f'{identifier}_{timepoint}.csv')
     data = pd.read_csv(fn, sep=',')
 
+    data_all = pd.read_csv(os.path.join(data_dir, f'{identifier}_all.csv'), sep=',')
+
     print(f'Shape of dataframe loaded from {fn} at timepoint={timepoint}: {data.shape}\n')
 
     # check, if there are NaN DF entries:
     if data.isna().sum().sum() != 0:
         raise ValueError(f"{fn} contains NaN entries.")
+    if data_all.isna().sum().sum() != 0:
+        raise ValueError(
+            f"{os.path.join(data_dir, f'{identifier}_all.csv')} contains NaN entries."
+        )
 
     if correlation_threshold == 1.0:
         print(f"Correlation grouping with threshold {correlation_threshold} requested."
@@ -90,6 +96,10 @@ def main(
         )
         print(f'Shape of intensities dataframe: {intensities.shape}')
         print(f'# of variants: {intensities.shape[1]}\n')
+
+        intensities_all = data_all.drop(
+            columns=['Patient', 'group', 'Protection', 'TimePointOrder', 'Dose']
+        )
 
         # check if there are constant features (and drop them):
         const_features = intensities.columns[intensities.std(axis=0.0) == 0].to_list()
@@ -174,6 +184,7 @@ def main(
         plt.savefig(fn, format='pdf')
         plt.close()
         print(f'# of (key-)variants to keep: {len(keep)}\n')
+
         intensities = intensities.loc[:, keep]
         metadata = data[['Patient', 'group', 'Protection', 'TimePointOrder', 'Dose']]
         if intensities.index.to_list() != metadata.index.to_list():
@@ -192,6 +203,24 @@ def main(
                 "| set(metadata.columns.to_list())"
             )
 
+        intensities_all = intensities_all.loc[:, keep]
+        metadata_all = data_all[['Patient', 'group', 'Protection', 'TimePointOrder', 'Dose']]
+        if intensities_all.index.to_list() != metadata_all.index.to_list():
+            raise ValueError("intensities_all.index != data_all.index")
+        if set(intensities_all.columns.to_list()) & set(metadata_all.columns.to_list()):
+            raise ValueError(
+                f"Columns overlap when joining intensities_all dataframe "
+                f"with metadata_all for {identifier} proteome data at time "
+                f"{timepoint} for threshold {correlation_threshold}."
+            )
+        data_all = metadata_all.join(intensities_all, how='left', sort=False)
+        if set(data_all.columns.to_list()) != \
+                set(intensities_all.columns.to_list()) | set(metadata_all.columns.to_list()):
+            raise ValueError(
+                "set(data_all.columns.to_list) != set(intensities_all.columns.to_list()) "
+                "| set(metadata_all.columns.to_list())"
+            )
+
     # save reduced DF:
     fn = os.path.join(
         out_dir,
@@ -200,7 +229,15 @@ def main(
     )
     data.to_csv(fn, sep=',', index=False)
 
+    fn = os.path.join(
+        out_dir,
+        (f'{identifier}_{correlation_method}_filtered'
+         f'_threshold{correlation_threshold}_{timepoint}_all.csv'),
+    )
+    data_all.to_csv(fn, sep=',', index=False)
+
     print(f"Shape of kept {identifier} proteome data at time {timepoint}: {data.shape}")
+    print(f"Shape of kept {identifier} proteome data over all timepoints: {data_all.shape}")
     print('')
 
 

@@ -11,4 +11,5 @@ correlation matrix memory usage (kB): 445512.702
 # of (key-)variants to keep: 5421
 
 Shape of kept preprocessed_whole_data proteome data at time C28: (40, 5426)
+Shape of kept preprocessed_whole_data proteome data over all timepoints: (120, 5426)
 
