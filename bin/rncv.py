@@ -625,8 +625,10 @@ if __name__ == "__main__":
         '--kernel-identifier',
         default=None,
         dest='kernel_identifier',
-        help=("Prefix to identify the precomputed kernel matrices (stored as .npy files), "
-              "i.e., 'kernel_matrix' or 'kernel_matrix_SelectiveSet'.")
+        help=(
+            "Prefix to identify the precomputed kernel matrices (stored as .npy files), "
+            "i.e., 'kernel_matrix'."
+        )
     )
     parser.add_argument(
         '--kernel-dir',

@@ -483,8 +483,10 @@ if __name__ == "__main__":
     parser.add_argument(
         '--identifier',
         dest='identifier',
-        help=("Prefix to identify the precomputed kernel matrices (stored as .npy files), "
-              "i.e., 'kernel_matrix' or 'kernel_matrix_SelectiveSet'.")
+        help=(
+            "Prefix to identify the precomputed kernel matrices (stored as .npy files), "
+            "i.e., 'kernel_matrix'."
+        )
     )
     args = parser.parse_args()
 

@@ -38,10 +38,6 @@ data_dir="${topdir}/data/proteome_data/correlationFiltering"
 if [ ! -d "$data_dir" ]; then
     { echo "${data_dir} doesn't exists."; exit 1; }
 fi
-kernel_dir="${topdir}/data/precomputed_multitask_kernels/threshold${threshold}"
-if [ ! -d "$kernel_dir" ]; then
-    { echo "${kernel_dir} doesn't exists."; exit 1; }
-fi
 
 for method in 'multitaskSVM' 'RLR' 'RF'; do
 
@@ -50,6 +46,10 @@ for method in 'multitaskSVM' 'RLR' 'RF'; do
         if [ ! -d "$maindir" ]; then
             { echo "${maindir} doesn't exists."; exit 1; }
         fi
+        kernel_dir="${topdir}/data/precomputed_multitask_kernels/threshold${threshold}/${dataset}"
+        if [ ! -d "$kernel_dir" ]; then
+            { echo "${kernel_dir} doesn't exists."; exit 1; }
+        fi
 
         for timepoint in 'III14' 'C-1' 'C28'; do
 
@@ -57,14 +57,10 @@ for method in 'multitaskSVM' 'RLR' 'RF'; do
             out="runFeatureEval_${timepoint}.out"
 
             if [ "$method" = 'multitaskSVM' ]; then
+
                 rgscv_path="${maindir}/RPR/RGSCV/RepeatedGridSearchCV_results.tsv"
                 ana_dir="${maindir}/RPR/featureEvaluation"
-
-                if [ "$dataset" = 'whole' ]; then
-                    kernel_identifier='kernel_matrix'
-                else
-                    kernel_identifier='kernel_matrix_SelectiveSet'
-                fi
+                kernel_identifier='kernel_matrix'
 
                 if [ ! -d "$ana_dir" ]; then
                     mkdir "$ana_dir" || { echo "mkdir ${ana_dir} failed"; exit 1; }

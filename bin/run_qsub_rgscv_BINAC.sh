@@ -28,23 +28,19 @@ data_dir="${topdir}/data/proteome_data/correlationFiltering"
 combinations=('RPP' 'RPR' 'RRP' 'RRR' 'SPP' 'SPR' 'SRP' 'SRR')
 
 for threshold in '0.85' '0.9' '0.95' '0.98' '1.0'; do
-    kernel_dir="${topdir}/data/precomputed_multitask_kernels/threshold${threshold}"
-    if [ ! -d "$kernel_dir" ]; then
-        { echo "${kernel_dir} doesn't exist"; exit 1; }
-    fi
 
     for method in 'RLR' 'multitaskSVM' 'RF' 'SVM'; do
         maindir="${topdir}/results/threshold${threshold}/${method}"
 
         for dataset in 'whole' 'selective'; do
+            kernel_dir="${topdir}/data/precomputed_multitask_kernels/threshold${threshold}/${dataset}"
+            if [ ! -d "$kernel_dir" ]; then
+                { echo "${kernel_dir} doesn't exist"; exit 1; }
+            fi
 
             if [ "$method" = 'multitaskSVM' ]; then
 
-                if [ "$dataset" = 'whole' ]; then
-                    identifier='kernel_matrix'
-                elif [ "$dataset" = 'selective' ]; then
-                    identifier='kernel_matrix_SelectiveSet'
-                fi
+                identifier='kernel_matrix'
 
                 for combination in "${combinations[@]}"; do
                     ana_dir="${maindir}/${dataset}/${combination}"
