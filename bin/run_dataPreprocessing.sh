@@ -52,7 +52,7 @@ for dataset in 'whole' 'selective'; do
     cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
     cp "${topdir}/bin/groupCorrelatedFeatures.py" . || { echo "cp ${topdir}/bin/groupCorrelatedFeatures.py . failed"; exit 1; }
 
-    for timepoint in 'all' 'III14' 'C-1' 'C28'; do
+    for timepoint in 'III14' 'C-1' 'C28'; do
 
         for threshold in '0.85' '0.9' '0.95' '0.98' '1.0'; do
 

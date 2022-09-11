@@ -204,7 +204,7 @@ def main(
             )
 
         intensities_all = intensities_all.loc[:, keep]
-        metadata_all = data[['Patient', 'group', 'Protection', 'TimePointOrder', 'Dose']]
+        metadata_all = data_all[['Patient', 'group', 'Protection', 'TimePointOrder', 'Dose']]
         if intensities_all.index.to_list() != metadata_all.index.to_list():
             raise ValueError("intensities_all.index != data_all.index")
         if set(intensities_all.columns.to_list()) & set(metadata_all.columns.to_list()):
