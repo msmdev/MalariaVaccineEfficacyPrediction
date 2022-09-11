@@ -51,8 +51,8 @@ def main(
         raise ValueError("correlation_threshold is not in [0, 1]")
     if correlation_method not in ['spearman', 'pearson']:
         raise ValueError("correlation_method is not in {'spearman', 'pearson'}")
-    if timepoint not in ['III14', 'C-1', 'C28', 'all']:
-        raise ValueError("timepoint must be one of 'III14', 'C-1', 'C28', or 'all'")
+    if timepoint not in ['III14', 'C-1', 'C28']:
+        raise ValueError("timepoint must be one of 'III14', 'C-1', or  'C28'")
 
     pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)
 
