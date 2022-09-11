@@ -72,9 +72,7 @@ def main(
     print(f'scikit-learn version: {sklearn.__version__}')
     print(f'scipy version: {scipy.__version__}')
     print('========================================\n')
-    print(f'data file identifier: {data_file_id}')
-    print(f'estimator: {type(estimator)}')
-    print(f'parameter grid: {param_grid}\n')
+    print(f'data file identifier: {data_file_id}\n')
     print(f'start time: {timestamp}\n')
 
     # Create directories for the output files
@@ -158,6 +156,8 @@ def main(
             groups = data_at_timePoint.loc[:, 'group'].to_numpy()
             y = data_at_timePoint.loc[:, 'Protection'].to_numpy()
 
+        print(f'estimator: {type(estimator)}')
+        print(f'parameter grid: {param_grid}\n')
         print('shape of binary response array:', y.size)
         print('number of positives:', np.sum(y))
         print('number of positives divided by total number of samples:', np.sum(y)/y.size)
