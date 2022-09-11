@@ -53,11 +53,14 @@ def main(
     data_dir: str,
     data_file_id: str,
     method: str,
-    param_grid: Union[Dict[str, List[Any]], List[Dict[str, List[Any]]]],
-    estimator,
+    param_grid: Optional[Union[Dict[str, List[Any]], List[Dict[str, List[Any]]]]],
+    estimator: Optional[Any],
     n_jobs: Optional[int] = None,
     Nexp1: int = 1,
     Nexp2: int = 10,
+    combination: Optional[str] = None,
+    kernel_identifier: Optional[str] = None,
+    kernel_dir: Optional[str] = None,
 ) -> None:
 
     # Generate a timestamp
@@ -118,6 +121,20 @@ def main(
         rng = np.random.RandomState(seed)
 
         if method == 'multitaskSVM':
+
+            if (combination is not None and kernel_identifier is not None and
+                    kernel_dir is not None):
+                param_grid, estimator = configurator(
+                    combination=combination,
+                    identifier=kernel_identifier,
+                    kernel_dir=os.path.join(kernel_dir, f"{time}"),
+                )
+            else:
+                raise ValueError(
+                    "Each of `combination`, `kernel_identifier`, and `kernel_dir` "
+                    "must be of type str if `method`='multitaskSVM'."
+                )
+
             y = y_all
             groups = groups_all
             # initialize running index array for DataSelector
@@ -128,7 +145,9 @@ def main(
                 dtype=np.uint32
             ).reshape((y.size, y.size))
             print(f'shape of running index array: {X.shape}\n')
+
         else:
+
             data_at_timePoint = pd.read_csv(
                 os.path.join(data_dir, f'{data_file_id}_{time}.csv'),
                 header=0,
@@ -595,23 +614,26 @@ if __name__ == "__main__":
               '`-1` means using all processors.'),
     )
     parser.add_argument(
-        '--kernel-dir',
-        dest='kernel_dir',
-        metavar='DIR',
-        help='Path to the directory were the precomputed Gram matrices are located.'
-    )
-    parser.add_argument(
         '--combination',
         dest='combination',
+        default=None,
         help=(
             "Kernel combination. Supply 'RPP', 'RPR', 'RRP', 'RRR', 'SPP', 'SPR', 'SRP', or 'SRR'."
         )
     )
     parser.add_argument(
-        '--identifier',
-        dest='identifier',
+        '--kernel-identifier',
+        default=None,
+        dest='kernel_identifier',
         help=("Prefix to identify the precomputed kernel matrices (stored as .npy files), "
               "i.e., 'kernel_matrix' or 'kernel_matrix_SelectiveSet'.")
+    )
+    parser.add_argument(
+        '--kernel-dir',
+        dest='kernel_dir',
+        metavar='DIR',
+        default=None,
+        help='Path to the directory were the precomputed Gram matrices are located.'
     )
     args = parser.parse_args()
 
@@ -624,11 +646,8 @@ if __name__ == "__main__":
         from source.RF_config import estimator, param_grid
     elif method == 'multitaskSVM':
         from source.multitaskSVM_config import configurator
-        param_grid, estimator = configurator(
-            combination=args.combination,
-            identifier=args.identifier,
-            kernel_dir=args.kernel_dir,
-        )
+        param_grid = None
+        estimator = None
     else:
         raise ValueError(f"Unexpected method '{method}' passed.")
 
@@ -643,6 +662,9 @@ if __name__ == "__main__":
             n_jobs=args.njobs,
             Nexp1=args.Nexp1,
             Nexp2=args.Nexp2,
+            combination=args.combination,
+            kernel_identifier=args.kernel_identifier,
+            kernel_dir=args.kernel_dir,
         )
     finally:
 

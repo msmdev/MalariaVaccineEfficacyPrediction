@@ -204,7 +204,7 @@ if [ "$METHOD" = 'multitaskSVM' ]; then
     for combination in "${combinations[@]}"; do
         ana_dir="${ANA_DIR}/${combination}"
         cd "$ana_dir" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
-        python -u rncv.py --analysis-dir "$ana_dir" --data-dir "$DATA_DIR" --data-file-id "$DATA_FILE_ID" --method "$METHOD" --njobs="$NJOBS" --kernel-dir "$TMPDIR" --combination "$combination" --identifier "$IDENTIFIER" 1> "${out}" 2> "${err}"
+        python -u rncv.py --analysis-dir "$ana_dir" --data-dir "$DATA_DIR" --data-file-id "$DATA_FILE_ID" --method "$METHOD" --njobs="$NJOBS" --combination "$combination" --kernel-identifier "$IDENTIFIER" --kernel-dir "$TMPDIR" 1> "${out}" 2> "${err}"
     done
 else
     python -u rncv.py --analysis-dir "$ANA_DIR" --data-dir "$DATA_DIR" --data-file-id "$DATA_FILE_ID" --method "$METHOD" --njobs="$NJOBS" 1> "${out}" 2> "${err}"

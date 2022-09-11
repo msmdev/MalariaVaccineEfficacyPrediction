@@ -48,7 +48,7 @@ for timepoint in 'III14' 'C-1' 'C28'; do
             out="${topdir}/data/precomputed_multitask_kernels/run_precomputeGramMatrices_${dataset}_threshold${threshold}_${timepoint}.out"
             err="${topdir}/data/precomputed_multitask_kernels/run_precomputeGramMatrices_${dataset}_threshold${threshold}_${timepoint}.err"
 
-            python -u precomputeGramMatrices.py --data-file "${topdir}/data/proteome_data/correlationFiltering/preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}_${timepoint}_all.csv" --out-dir "${topdir}/data/precomputed_multitask_kernels/threshold${threshold}" --identifier "$identifier" 1> "${out}" 2> "${err}"
+            python -u precomputeGramMatrices.py --data-file "${topdir}/data/proteome_data/correlationFiltering/preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}_${timepoint}_all.csv" --out-dir "${topdir}/data/precomputed_multitask_kernels/threshold${threshold}/${timepoint}" --identifier "$identifier" 1> "${out}" 2> "${err}"
 
         done
 
