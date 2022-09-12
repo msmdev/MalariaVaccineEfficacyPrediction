@@ -1,0 +1,15 @@
+Shape of dataframe loaded from /home/breuter/MalariaVaccineEfficacyPrediction/data/proteome_data/preprocessed_whole_data_C-1.csv at timepoint=C-1: (40, 7460)
+
+Grouping features based on spearman correlation with threshold 0.7:
+
+Shape of intensities dataframe: (40, 7455)
+# of variants: 7455
+
+correlation matrix shape: (7455, 7455)
+correlation matrix memory usage (kB): 445512.702
+
+# of (key-)variants to keep: 187
+
+Shape of kept preprocessed_whole_data proteome data at time C-1: (40, 192)
+Shape of kept preprocessed_whole_data proteome data over all timepoints: (120, 192)
+

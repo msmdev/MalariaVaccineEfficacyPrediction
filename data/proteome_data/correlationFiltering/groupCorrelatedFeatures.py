@@ -51,8 +51,8 @@ def main(
         raise ValueError("correlation_threshold is not in [0, 1]")
     if correlation_method not in ['spearman', 'pearson']:
         raise ValueError("correlation_method is not in {'spearman', 'pearson'}")
-    if timepoint not in ['III14', 'C-1', 'C28', 'all']:
-        raise ValueError("timepoint must be one of 'III14', 'C-1', 'C28', or 'all'")
+    if timepoint not in ['III14', 'C-1', 'C28']:
+        raise ValueError("timepoint must be one of 'III14', 'C-1', or  'C28'")
 
     pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)
 
@@ -78,14 +78,14 @@ def main(
         print(f"Grouping features based on {correlation_method} correlation "
               f"with threshold {correlation_threshold}:\n")
 
-        # assert that 'Dose' isn't strongly correlated with any AB signal:
+        # warn if 'Dose' is strongly correlated with any AB signal:
         correlation = data.drop(
             columns=['Patient', 'group', 'Protection', 'TimePointOrder']
         ).corr(method=correlation_method)
         if correlation.loc[
             ~correlation.index.isin(['Dose']), 'Dose'
         ].gt(correlation_threshold).any():
-            raise ValueError(
+            warnings.warn(
                 f"Dose is strongly correlated (>{correlation_threshold}) "
                 "with at least one antibody signal."
             )
