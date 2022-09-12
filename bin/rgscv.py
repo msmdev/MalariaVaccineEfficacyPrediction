@@ -190,8 +190,6 @@ def main(
         gs.fit(X, y, groups)
 
         filename = f"{prefix}_RepeatedGridSearchCV_cv_results"
-        fn = ncv.filename_generator(filename, '.tsv', directory=maindir, timestamp=False)
-        pd.DataFrame(data=gs.cv_results_).to_csv(fn, sep='\t', na_rep='nan')
         fn = ncv.filename_generator(filename, '.xlsx', directory=maindir, timestamp=False)
         pd.DataFrame(data=gs.cv_results_).to_excel(fn, na_rep='nan')
 

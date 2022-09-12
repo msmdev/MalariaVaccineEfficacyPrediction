@@ -20,7 +20,7 @@
 """
 Find the best parameters using 10-times repeated NestedGridsearchCV.
 
-Will save the results to a various .tsv/.xslx files.
+Will save the results to a various .tsv files.
 
 Activate associated environment first: conda activate malaria_env
 
