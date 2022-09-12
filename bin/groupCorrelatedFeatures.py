@@ -78,14 +78,14 @@ def main(
         print(f"Grouping features based on {correlation_method} correlation "
               f"with threshold {correlation_threshold}:\n")
 
-        # assert that 'Dose' isn't strongly correlated with any AB signal:
+        # warn if 'Dose' is strongly correlated with any AB signal:
         correlation = data.drop(
             columns=['Patient', 'group', 'Protection', 'TimePointOrder']
         ).corr(method=correlation_method)
         if correlation.loc[
             ~correlation.index.isin(['Dose']), 'Dose'
         ].gt(correlation_threshold).any():
-            raise ValueError(
+            warnings.warn(
                 f"Dose is strongly correlated (>{correlation_threshold}) "
                 "with at least one antibody signal."
             )
