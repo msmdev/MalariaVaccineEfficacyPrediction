@@ -40,7 +40,7 @@ identifier='kernel_matrix'
 
 for timepoint in 'III14' 'C-1' 'C28'; do
 
-    for threshold in '0.85' '0.9' '0.95' '0.98' '1.0'; do
+    for threshold in '0.7' '0.75' '0.8' '0.85' '0.9' '0.95' '1.0'; do
 
         for dataset in 'whole' 'selective'; do
 
