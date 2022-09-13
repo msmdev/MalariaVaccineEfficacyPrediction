@@ -1,0 +1,238 @@
+/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py:421: UserWarning: Divide through zero encountered while trying to calculate the negative predictive value (NPV). NPV is set to zero.
+  warnings.warn("Divide through zero encountered while trying to calculate "
+  File "rncv.py", line 669, in <module>
+    kernel_dir=args.kernel_dir,
+  File "rncv.py", line 224, in main
+    clf_grid.fit(X, y, None, groups)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2657, in fit
+    y_p['proba'][key], scoring=inner_key
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2003, in _score
+    score = markedness(y, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 454, in markedness
+    npv = negative_predictive_value(y_true, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 421, in negative_predictive_value
+    warnings.warn("Divide through zero encountered while trying to calculate "
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/warnings.py", line 110, in _showwarnmsg
+    msg.file, msg.line)
+  File "rncv.py", line 538, in warn_with_traceback
+    traceback.print_stack(file=warning_file)
+/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py:421: UserWarning: Divide through zero encountered while trying to calculate the negative predictive value (NPV). NPV is set to zero.
+  warnings.warn("Divide through zero encountered while trying to calculate "
+  File "rncv.py", line 669, in <module>
+    kernel_dir=args.kernel_dir,
+  File "rncv.py", line 224, in main
+    clf_grid.fit(X, y, None, groups)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2657, in fit
+    y_p['proba'][key], scoring=inner_key
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2016, in _score
+    score = negative_predictive_value(y, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 421, in negative_predictive_value
+    warnings.warn("Divide through zero encountered while trying to calculate "
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/warnings.py", line 110, in _showwarnmsg
+    msg.file, msg.line)
+  File "rncv.py", line 538, in warn_with_traceback
+    traceback.print_stack(file=warning_file)
+/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py:421: UserWarning: Divide through zero encountered while trying to calculate the negative predictive value (NPV). NPV is set to zero.
+  warnings.warn("Divide through zero encountered while trying to calculate "
+  File "rncv.py", line 669, in <module>
+    kernel_dir=args.kernel_dir,
+  File "rncv.py", line 224, in main
+    clf_grid.fit(X, y, None, groups)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2657, in fit
+    y_p['proba'][key], scoring=inner_key
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2003, in _score
+    score = markedness(y, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 454, in markedness
+    npv = negative_predictive_value(y_true, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 421, in negative_predictive_value
+    warnings.warn("Divide through zero encountered while trying to calculate "
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/warnings.py", line 110, in _showwarnmsg
+    msg.file, msg.line)
+  File "rncv.py", line 538, in warn_with_traceback
+    traceback.print_stack(file=warning_file)
+/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py:421: UserWarning: Divide through zero encountered while trying to calculate the negative predictive value (NPV). NPV is set to zero.
+  warnings.warn("Divide through zero encountered while trying to calculate "
+  File "rncv.py", line 669, in <module>
+    kernel_dir=args.kernel_dir,
+  File "rncv.py", line 224, in main
+    clf_grid.fit(X, y, None, groups)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2657, in fit
+    y_p['proba'][key], scoring=inner_key
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2016, in _score
+    score = negative_predictive_value(y, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 421, in negative_predictive_value
+    warnings.warn("Divide through zero encountered while trying to calculate "
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/warnings.py", line 110, in _showwarnmsg
+    msg.file, msg.line)
+  File "rncv.py", line 538, in warn_with_traceback
+    traceback.print_stack(file=warning_file)
+/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py:421: UserWarning: Divide through zero encountered while trying to calculate the negative predictive value (NPV). NPV is set to zero.
+  warnings.warn("Divide through zero encountered while trying to calculate "
+  File "rncv.py", line 669, in <module>
+    kernel_dir=args.kernel_dir,
+  File "rncv.py", line 224, in main
+    clf_grid.fit(X, y, None, groups)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2657, in fit
+    y_p['proba'][key], scoring=inner_key
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2003, in _score
+    score = markedness(y, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 454, in markedness
+    npv = negative_predictive_value(y_true, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 421, in negative_predictive_value
+    warnings.warn("Divide through zero encountered while trying to calculate "
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/warnings.py", line 110, in _showwarnmsg
+    msg.file, msg.line)
+  File "rncv.py", line 538, in warn_with_traceback
+    traceback.print_stack(file=warning_file)
+/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py:421: UserWarning: Divide through zero encountered while trying to calculate the negative predictive value (NPV). NPV is set to zero.
+  warnings.warn("Divide through zero encountered while trying to calculate "
+  File "rncv.py", line 669, in <module>
+    kernel_dir=args.kernel_dir,
+  File "rncv.py", line 224, in main
+    clf_grid.fit(X, y, None, groups)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2657, in fit
+    y_p['proba'][key], scoring=inner_key
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2016, in _score
+    score = negative_predictive_value(y, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 421, in negative_predictive_value
+    warnings.warn("Divide through zero encountered while trying to calculate "
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/warnings.py", line 110, in _showwarnmsg
+    msg.file, msg.line)
+  File "rncv.py", line 538, in warn_with_traceback
+    traceback.print_stack(file=warning_file)
+/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py:421: UserWarning: Divide through zero encountered while trying to calculate the negative predictive value (NPV). NPV is set to zero.
+  warnings.warn("Divide through zero encountered while trying to calculate "
+  File "rncv.py", line 669, in <module>
+    kernel_dir=args.kernel_dir,
+  File "rncv.py", line 224, in main
+    clf_grid.fit(X, y, None, groups)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2657, in fit
+    y_p['proba'][key], scoring=inner_key
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2003, in _score
+    score = markedness(y, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 454, in markedness
+    npv = negative_predictive_value(y_true, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 421, in negative_predictive_value
+    warnings.warn("Divide through zero encountered while trying to calculate "
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/warnings.py", line 110, in _showwarnmsg
+    msg.file, msg.line)
+  File "rncv.py", line 538, in warn_with_traceback
+    traceback.print_stack(file=warning_file)
+/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py:421: UserWarning: Divide through zero encountered while trying to calculate the negative predictive value (NPV). NPV is set to zero.
+  warnings.warn("Divide through zero encountered while trying to calculate "
+  File "rncv.py", line 669, in <module>
+    kernel_dir=args.kernel_dir,
+  File "rncv.py", line 224, in main
+    clf_grid.fit(X, y, None, groups)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2657, in fit
+    y_p['proba'][key], scoring=inner_key
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2016, in _score
+    score = negative_predictive_value(y, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 421, in negative_predictive_value
+    warnings.warn("Divide through zero encountered while trying to calculate "
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/warnings.py", line 110, in _showwarnmsg
+    msg.file, msg.line)
+  File "rncv.py", line 538, in warn_with_traceback
+    traceback.print_stack(file=warning_file)
+/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py:421: UserWarning: Divide through zero encountered while trying to calculate the negative predictive value (NPV). NPV is set to zero.
+  warnings.warn("Divide through zero encountered while trying to calculate "
+  File "rncv.py", line 669, in <module>
+    kernel_dir=args.kernel_dir,
+  File "rncv.py", line 224, in main
+    clf_grid.fit(X, y, None, groups)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2657, in fit
+    y_p['proba'][key], scoring=inner_key
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2003, in _score
+    score = markedness(y, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 454, in markedness
+    npv = negative_predictive_value(y_true, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 421, in negative_predictive_value
+    warnings.warn("Divide through zero encountered while trying to calculate "
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/warnings.py", line 110, in _showwarnmsg
+    msg.file, msg.line)
+  File "rncv.py", line 538, in warn_with_traceback
+    traceback.print_stack(file=warning_file)
+/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py:421: UserWarning: Divide through zero encountered while trying to calculate the negative predictive value (NPV). NPV is set to zero.
+  warnings.warn("Divide through zero encountered while trying to calculate "
+  File "rncv.py", line 669, in <module>
+    kernel_dir=args.kernel_dir,
+  File "rncv.py", line 224, in main
+    clf_grid.fit(X, y, None, groups)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2657, in fit
+    y_p['proba'][key], scoring=inner_key
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2016, in _score
+    score = negative_predictive_value(y, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 421, in negative_predictive_value
+    warnings.warn("Divide through zero encountered while trying to calculate "
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/warnings.py", line 110, in _showwarnmsg
+    msg.file, msg.line)
+  File "rncv.py", line 538, in warn_with_traceback
+    traceback.print_stack(file=warning_file)
+/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py:421: UserWarning: Divide through zero encountered while trying to calculate the negative predictive value (NPV). NPV is set to zero.
+  warnings.warn("Divide through zero encountered while trying to calculate "
+  File "rncv.py", line 669, in <module>
+    kernel_dir=args.kernel_dir,
+  File "rncv.py", line 224, in main
+    clf_grid.fit(X, y, None, groups)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2657, in fit
+    y_p['proba'][key], scoring=inner_key
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2003, in _score
+    score = markedness(y, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 454, in markedness
+    npv = negative_predictive_value(y_true, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 421, in negative_predictive_value
+    warnings.warn("Divide through zero encountered while trying to calculate "
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/warnings.py", line 110, in _showwarnmsg
+    msg.file, msg.line)
+  File "rncv.py", line 538, in warn_with_traceback
+    traceback.print_stack(file=warning_file)
+/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py:421: UserWarning: Divide through zero encountered while trying to calculate the negative predictive value (NPV). NPV is set to zero.
+  warnings.warn("Divide through zero encountered while trying to calculate "
+  File "rncv.py", line 669, in <module>
+    kernel_dir=args.kernel_dir,
+  File "rncv.py", line 224, in main
+    clf_grid.fit(X, y, None, groups)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2657, in fit
+    y_p['proba'][key], scoring=inner_key
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2016, in _score
+    score = negative_predictive_value(y, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 421, in negative_predictive_value
+    warnings.warn("Divide through zero encountered while trying to calculate "
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/warnings.py", line 110, in _showwarnmsg
+    msg.file, msg.line)
+  File "rncv.py", line 538, in warn_with_traceback
+    traceback.print_stack(file=warning_file)
+/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py:421: UserWarning: Divide through zero encountered while trying to calculate the negative predictive value (NPV). NPV is set to zero.
+  warnings.warn("Divide through zero encountered while trying to calculate "
+  File "rncv.py", line 669, in <module>
+    kernel_dir=args.kernel_dir,
+  File "rncv.py", line 224, in main
+    clf_grid.fit(X, y, None, groups)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2657, in fit
+    y_p['proba'][key], scoring=inner_key
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2003, in _score
+    score = markedness(y, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 454, in markedness
+    npv = negative_predictive_value(y_true, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 421, in negative_predictive_value
+    warnings.warn("Divide through zero encountered while trying to calculate "
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/warnings.py", line 110, in _showwarnmsg
+    msg.file, msg.line)
+  File "rncv.py", line 538, in warn_with_traceback
+    traceback.print_stack(file=warning_file)
+/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py:421: UserWarning: Divide through zero encountered while trying to calculate the negative predictive value (NPV). NPV is set to zero.
+  warnings.warn("Divide through zero encountered while trying to calculate "
+  File "rncv.py", line 669, in <module>
+    kernel_dir=args.kernel_dir,
+  File "rncv.py", line 224, in main
+    clf_grid.fit(X, y, None, groups)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2657, in fit
+    y_p['proba'][key], scoring=inner_key
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 2016, in _score
+    score = negative_predictive_value(y, y_pred)
+  File "/home/tu/tu_tu/tu_iizre01/NestedCV/nestedcv/_nestedcv.py", line 421, in negative_predictive_value
+    warnings.warn("Divide through zero encountered while trying to calculate "
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/warnings.py", line 110, in _showwarnmsg
+    msg.file, msg.line)
+  File "rncv.py", line 538, in warn_with_traceback
+    traceback.print_stack(file=warning_file)
