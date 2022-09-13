@@ -429,13 +429,9 @@ def main(
         filename = f"{prefix}_collected_mean_train_test_performance_scores"
         fn = ncv.filename_generator(filename, '.tsv', directory=maindir, timestamp=False)
         performance_mean_df.to_csv(fn, sep='\t', na_rep='')
-        # fn = ncv.filename_generator(filename, '.xlsx', directory=maindir, timestamp=False)
-        # performance_mean_df.to_excel(fn, na_rep='')
         filename = f"{prefix}_collected_formatted_min_max_train_test_performance_scores"
         fn = ncv.filename_generator(filename, '.tsv', directory=maindir, timestamp=False)
         performance_min_max_nice_df.to_csv(fn, sep='\t', na_rep='')
-        # fn = ncv.filename_generator(filename, '.xlsx', directory=maindir, timestamp=False)
-        # performance_min_max_nice_df.to_excel(fn, na_rep='')
         del performance_mean_df, performance_min_max_nice_df
 
         # collect and save nested cross-validation performance scores
@@ -504,13 +500,9 @@ def main(
         filename = f"{prefix}_collected_mean_ncv_performance_scores"
         fn = ncv.filename_generator(filename, '.tsv', directory=maindir, timestamp=False)
         performance_mean_df.to_csv(fn, sep='\t', na_rep='')
-        # fn = ncv.filename_generator(filename, '.xlsx', directory=maindir, timestamp=False)
-        # performance_mean_df.to_excel(fn, na_rep='')
         filename = f"{prefix}_collected_formatted_min_max_ncv_performance_scores"
         fn = ncv.filename_generator(filename, '.tsv', directory=maindir, timestamp=False)
         performance_min_max_nice_df.to_csv(fn, sep='\t', na_rep='')
-        # fn = ncv.filename_generator(filename, '.xlsx', directory=maindir, timestamp=False)
-        # performance_min_max_nice_df.to_excel(fn, na_rep='')
         del performance_mean, performance_mean_df
         del performance_min_max_nice, performance_min_max_nice_df
         print(f'{time} end: {ncv.generate_timestamp()}')
@@ -519,8 +511,6 @@ def main(
     filename = "collected_key_results"
     fn = ncv.filename_generator(filename, '.tsv', directory=maindir, timestamp=False)
     pd.DataFrame(key_results).to_csv(fn, sep='\t', na_rep='nan')
-    # fn = ncv.filename_generator(filename, '.xlsx', directory=maindir, timestamp=False)
-    # pd.DataFrame(key_results).to_excel(fn, na_rep='nan')
 
     print('End:', ncv.generate_timestamp())
     print('========================================\n')

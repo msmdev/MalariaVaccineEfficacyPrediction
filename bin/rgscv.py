@@ -219,8 +219,6 @@ def main(
     filename = "RepeatedGridSearchCV_results"
     fn = ncv.filename_generator(filename, '.tsv', directory=maindir, timestamp=False)
     pd.DataFrame(data=results).to_csv(fn, sep='\t', na_rep='nan')
-    fn = ncv.filename_generator(filename, '.xlsx', directory=maindir, timestamp=False)
-    pd.DataFrame(data=results).to_excel(fn, na_rep='nan')
 
     print(f'end time: {ncv.generate_timestamp()}')
     print('========================================\n')
