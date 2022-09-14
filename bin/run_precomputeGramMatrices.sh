@@ -38,18 +38,14 @@ if [ ! -d "$maindir" ]; then
 fi
 identifier='kernel_matrix'
 
-for timepoint in 'III14' 'C-1' 'C28'; do
+for threshold in '0.7' '0.75' '0.8' '0.85' '0.9' '0.95' '1.0'; do
 
-    for threshold in '0.7' '0.75' '0.8' '0.85' '0.9' '0.95' '1.0'; do
+    for dataset in 'whole' 'selective'; do
 
-        for dataset in 'whole' 'selective'; do
+        out="${maindir}/run_precomputeGramMatrices_${dataset}_threshold${threshold}.out"
+        err="${maindir}/run_precomputeGramMatrices_${dataset}_threshold${threshold}.err"
 
-            out="${maindir}/run_precomputeGramMatrices_${dataset}_threshold${threshold}_${timepoint}.out"
-            err="${maindir}/run_precomputeGramMatrices_${dataset}_threshold${threshold}_${timepoint}.err"
-
-            python -u precomputeGramMatrices.py --data-file "${topdir}/data/proteome_data/correlationFiltering/preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}_${timepoint}_all.csv" --out-dir "${maindir}/threshold${threshold}/${dataset}/${timepoint}" --identifier "$identifier" 1> "${out}" 2> "${err}"
-
-        done
+        python -u precomputeGramMatrices.py --data-file "${topdir}/data/proteome_data/correlationFiltering/preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}.csv" --out-dir "${maindir}/threshold${threshold}/${dataset}" --identifier "$identifier" 1> "${out}" 2> "${err}"
 
     done
 
