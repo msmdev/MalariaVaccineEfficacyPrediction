@@ -41,7 +41,6 @@ def main(
     data_dir: str,
     identifier: str,
     out_dir: str,
-    timepoint: str,
     correlation_threshold: float,
     correlation_method: str,
 ):
@@ -51,25 +50,17 @@ def main(
         raise ValueError("correlation_threshold is not in [0, 1]")
     if correlation_method not in ['spearman', 'pearson']:
         raise ValueError("correlation_method is not in {'spearman', 'pearson'}")
-    if timepoint not in ['III14', 'C-1', 'C28']:
-        raise ValueError("timepoint must be one of 'III14', 'C-1', or  'C28'")
 
     pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)
 
-    fn = os.path.join(data_dir, f'{identifier}_{timepoint}.csv')
+    fn = os.path.join(data_dir, f'{identifier}.csv')
     data = pd.read_csv(fn, sep=',')
 
-    data_all = pd.read_csv(os.path.join(data_dir, f'{identifier}_all.csv'), sep=',')
-
-    print(f'Shape of dataframe loaded from {fn} at timepoint={timepoint}: {data.shape}\n')
+    print(f'Shape of dataframe loaded from {fn}: {data.shape}\n')
 
     # check, if there are NaN DF entries:
     if data.isna().sum().sum() != 0:
         raise ValueError(f"{fn} contains NaN entries.")
-    if data_all.isna().sum().sum() != 0:
-        raise ValueError(
-            f"{os.path.join(data_dir, f'{identifier}_all.csv')} contains NaN entries."
-        )
 
     if correlation_threshold == 1.0:
         print(f"Correlation grouping with threshold {correlation_threshold} requested."
@@ -96,10 +87,6 @@ def main(
         )
         print(f'Shape of intensities dataframe: {intensities.shape}')
         print(f'# of variants: {intensities.shape[1]}\n')
-
-        intensities_all = data_all.drop(
-            columns=['Patient', 'group', 'Protection', 'TimePointOrder', 'Dose']
-        )
 
         # check if there are constant features (and drop them):
         const_features = intensities.columns[intensities.std(axis=0.0) == 0].to_list()
@@ -152,7 +139,7 @@ def main(
         # save dict as json:
         fn = (
             f"{identifier}_{correlation_method}_correlation_"
-            f"grouped_features_threshold{correlation_threshold}_{timepoint}"
+            f"grouped_features_threshold{correlation_threshold}"
         )
         ncv.save_json(groups, out_dir, fn, timestamp=False, overwrite=True)
 
@@ -168,13 +155,13 @@ def main(
         fn = os.path.join(
             out_dir,
             (f'{identifier}_{correlation_method}_correlated_group_sizes'
-             f'_threshold{correlation_threshold}_{timepoint}.csv'),
+             f'_threshold{correlation_threshold}.csv'),
         )
         hist.to_csv(fn, sep=',')
         fn = os.path.join(
             out_dir,
             (f'{identifier}_{correlation_method}_correlated_group_sizes'
-             f'_threshold{correlation_threshold}_{timepoint}.pdf'),
+             f'_threshold{correlation_threshold}.pdf'),
         )
         hist_max = np.amax(hist.to_numpy())
         fig, ax = plt.subplots()
@@ -192,8 +179,7 @@ def main(
         if set(intensities.columns.to_list()) & set(metadata.columns.to_list()):
             raise ValueError(
                 f"Columns overlap when joining intensities dataframe "
-                f"with metadata for {identifier} proteome data at time "
-                f"{timepoint} for threshold {correlation_threshold}."
+                f"with metadata for {identifier} data for threshold {correlation_threshold}."
             )
         data = metadata.join(intensities, how='left', sort=False)
         if set(data.columns.to_list()) != \
@@ -203,42 +189,15 @@ def main(
                 "| set(metadata.columns.to_list())"
             )
 
-        intensities_all = intensities_all.loc[:, keep]
-        metadata_all = data_all[['Patient', 'group', 'Protection', 'TimePointOrder', 'Dose']]
-        if intensities_all.index.to_list() != metadata_all.index.to_list():
-            raise ValueError("intensities_all.index != data_all.index")
-        if set(intensities_all.columns.to_list()) & set(metadata_all.columns.to_list()):
-            raise ValueError(
-                f"Columns overlap when joining intensities_all dataframe "
-                f"with metadata_all for {identifier} proteome data at time "
-                f"{timepoint} for threshold {correlation_threshold}."
-            )
-        data_all = metadata_all.join(intensities_all, how='left', sort=False)
-        if set(data_all.columns.to_list()) != \
-                set(intensities_all.columns.to_list()) | set(metadata_all.columns.to_list()):
-            raise ValueError(
-                "set(data_all.columns.to_list) != set(intensities_all.columns.to_list()) "
-                "| set(metadata_all.columns.to_list())"
-            )
-
     # save reduced DF:
     fn = os.path.join(
         out_dir,
         (f'{identifier}_{correlation_method}_filtered'
-         f'_threshold{correlation_threshold}_{timepoint}.csv'),
+         f'_threshold{correlation_threshold}.csv'),
     )
     data.to_csv(fn, sep=',', index=False)
 
-    fn = os.path.join(
-        out_dir,
-        (f'{identifier}_{correlation_method}_filtered'
-         f'_threshold{correlation_threshold}_{timepoint}_all.csv'),
-    )
-    data_all.to_csv(fn, sep=',', index=False)
-
-    print(f"Shape of kept {identifier} proteome data at time {timepoint}: {data.shape}")
-    print(f"Shape of kept {identifier} proteome data over all timepoints: {data_all.shape}")
-    print('')
+    print(f"Shape of kept {identifier} data: {data.shape}\n")
 
 
 if __name__ == "__main__":
@@ -263,13 +222,6 @@ if __name__ == "__main__":
         help='Path to the directory to which the output shall be written.'
     )
     parser.add_argument(
-        '--timepoint', dest='timepoint', required=True, type=str,
-        help=(
-            "Time point for which the analysis shall be performed. "
-            "Either 'III14', 'C-1', 'C28', or 'all'."
-        )
-    )
-    parser.add_argument(
         '--correlation_threshold', dest='correlation_threshold', required=True, type=float,
         help=(
             'The correlation coefficient threshold t determining if two features are '
@@ -289,7 +241,6 @@ if __name__ == "__main__":
         data_dir=args.data_dir,
         identifier=args.data_file_id,
         out_dir=args.out_dir,
-        timepoint=args.timepoint,
         correlation_threshold=args.correlation_threshold,
         correlation_method=args.correlation_method,
     )

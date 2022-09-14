@@ -42,34 +42,9 @@ def main(
     preprocessed_data = preprocessing(data)
 
     preprocessed_data.to_csv(
-        os.path.join(data_dir, f'{out_name}_all.csv'),
+        os.path.join(data_dir, f'{out_name}.csv'),
         index=False,
     )
-
-    TimePointOrder = [2, 3, 4]
-    times = ['III14', 'C-1', 'C28']
-    timepointwise_data = []
-    for t, time in zip(TimePointOrder, times):
-        temp = preprocessed_data.loc[preprocessed_data["TimePointOrder"] == t, :]
-        timepointwise_data.append(temp)
-
-    reconstruction = timepointwise_data[0].append(
-        timepointwise_data[1:],
-        ignore_index=True,
-        verify_integrity=False,
-        sort=False
-    )
-    if not preprocessed_data.equals(reconstruction):
-        raise ValueError(
-            "The original DataFrame and the DataFrame reconstructed "
-            "from the timepoint-wise DataFrames aren't equal."
-        )
-
-    for timepoint_data, time in zip(timepointwise_data, times):
-        timepoint_data.to_csv(
-            os.path.join(data_dir, f'{out_name}_{time}.csv'),
-            index=False,
-        )
 
     print("The proteome data was successfully preprocessed.\n")
 

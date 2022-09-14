@@ -52,15 +52,11 @@ for dataset in 'whole' 'selective'; do
     cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
     cp "${topdir}/bin/groupCorrelatedFeatures.py" . || { echo "cp ${topdir}/bin/groupCorrelatedFeatures.py . failed"; exit 1; }
 
-    for timepoint in 'III14' 'C-1' 'C28'; do
+    for threshold in '0.7' '0.75' '0.8' '0.85' '0.9' '0.95' '1.0'; do
 
-        for threshold in '0.7' '0.75' '0.8' '0.85' '0.9' '0.95' '1.0'; do
-
-            err="run_groupCorrelatedFeatures_${dataset}_${method}_threshold${threshold}_${timepoint}.err"
-            out="run_groupCorrelatedFeatures_${dataset}_${method}_threshold${threshold}_${timepoint}.out"
-            python -u groupCorrelatedFeatures.py --data-dir "${data_dir}" --data-file-id "preprocessed_${dataset}_data" --out-dir "$ana_dir" --timepoint "$timepoint" --correlation_threshold "$threshold" --correlation_method "$method" 1> "${out}" 2> "${err}"
-
-        done
+        err="run_groupCorrelatedFeatures_${dataset}_${method}_threshold${threshold}.err"
+        out="run_groupCorrelatedFeatures_${dataset}_${method}_threshold${threshold}.out"
+        python -u groupCorrelatedFeatures.py --data-dir "${data_dir}" --data-file-id "preprocessed_${dataset}_data" --out-dir "$ana_dir" --correlation_threshold "$threshold" --correlation_method "$method" 1> "${out}" 2> "${err}"
 
     done
 
