@@ -102,6 +102,10 @@ def main(
     for key in key_result_keys:
         key_results[key] = []
 
+    data = pd.read_csv(data_file, header=0)
+    groups = data.loc[:, 'group'].to_numpy()
+    y = data.loc[:, 'Protection'].to_numpy()
+
     for step, time in enumerate(['III14', 'C-1', 'C28']):
 
         print('++++++++++++++++++++++++++++++++++++++++')
@@ -111,11 +115,6 @@ def main(
         prefix = f'{time}'
 
         rng = np.random.RandomState(seed)
-
-        data = pd.read_csv(data_file, header=0)
-
-        groups = data.loc[:, 'group'].to_numpy()
-        y = data.loc[:, 'Protection'].to_numpy()
 
         if method == 'multitaskSVM':
 

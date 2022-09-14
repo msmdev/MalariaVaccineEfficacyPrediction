@@ -81,6 +81,10 @@ def main(
     results['best_params'] = []
     results['best_score'] = []
 
+    data = pd.read_csv(data_file, header=0)
+    groups = data.loc[:, 'group'].to_numpy()
+    y = data.loc[:, 'Protection'].to_numpy()
+
     times = ['III14', 'C-1', 'C28']
     scorings = ['mcc', 'precision_recall_auc', 'roc_auc']
     for step, time in enumerate(times):
@@ -90,11 +94,6 @@ def main(
 
         # define prefix for filenames:
         prefix = f'{time}'
-
-        data = pd.read_csv(data_file, header=0)
-
-        groups = data.loc[:, 'group'].to_numpy()
-        y = data.loc[:, 'Protection'].to_numpy()
 
         if method == 'multitaskSVM':
 
