@@ -50,8 +50,7 @@ from source.config import seed
 def main(
     *,
     ana_dir: str,
-    data_dir: str,
-    data_file_id: str,
+    data_file: str,
     method: str,
     param_grid: Optional[Union[Dict[str, List[Any]], List[Dict[str, List[Any]]]]],
     estimator: Optional[Any],
@@ -72,7 +71,7 @@ def main(
     print(f'scikit-learn version: {sklearn.__version__}')
     print(f'scipy version: {scipy.__version__}')
     print('========================================\n')
-    print(f'data file identifier: {data_file_id}\n')
+    print(f'data file: {data_file}\n')
     print(f'start time: {timestamp}\n')
 
     # Create directories for the output files
@@ -113,10 +112,10 @@ def main(
 
         rng = np.random.RandomState(seed)
 
-        data = pd.read_csv(os.path.join(data_dir, f'{data_file_id}_{time}_all.csv'), header=0)
+        data = pd.read_csv(data_file, header=0)
 
-        groups_all = data.loc[:, 'group'].to_numpy()
-        y_all = data.loc[:, 'Protection'].to_numpy()
+        groups = data.loc[:, 'group'].to_numpy()
+        y = data.loc[:, 'Protection'].to_numpy()
 
         if method == 'multitaskSVM':
 
@@ -125,7 +124,7 @@ def main(
                 param_grid, estimator = configurator(
                     combination=combination,
                     identifier=kernel_identifier,
-                    kernel_dir=os.path.join(kernel_dir, f"{time}"),
+                    kernel_dir=kernel_dir,
                 )
             else:
                 raise ValueError(
@@ -133,8 +132,6 @@ def main(
                     "must be of type str if `method`='multitaskSVM'."
                 )
 
-            y = y_all
-            groups = groups_all
             # initialize running index array for DataSelector
             if not y.size * y.size < np.iinfo(np.uint32).max:
                 raise ValueError(f"y is to large: y.size * y.size >= {np.iinfo(np.uint32).max}")
@@ -146,15 +143,9 @@ def main(
 
         else:
 
-            data_at_timePoint = pd.read_csv(
-                os.path.join(data_dir, f'{data_file_id}_{time}.csv'),
-                header=0,
-            )
-            X = data_at_timePoint.drop(
-                columns=['Patient', 'group', 'Protection', 'TimePointOrder']
-            ).to_numpy()  # including dose
-            groups = data_at_timePoint.loc[:, 'group'].to_numpy()
-            y = data_at_timePoint.loc[:, 'Protection'].to_numpy()
+            X = data.drop(
+                columns=['Patient', 'group', 'Protection']
+            ).to_numpy()  # including dose AND timepoints
 
         print(f'estimator: {type(estimator)}')
         print(f'parameter grid: {param_grid}\n')
@@ -170,8 +161,8 @@ def main(
         for rep in range(Nexp2):
             print(f'CV folds for repetition {rep}:')
             test_fold, train_fold = assign_folds(
-                labels=y_all,
-                groups=groups_all,
+                labels=y,
+                groups=groups,
                 delta=40,
                 step=step,
                 n_splits=5,
@@ -179,11 +170,6 @@ def main(
                 print_info=False,
                 random_state=rep,
             )
-            if method != 'multitaskSVM':
-                test_fold = test_fold[40 * step: 40 * (step + 1)]
-                train_fold = train_fold[40 * step: 40 * (step + 1)]
-                if not np.all(test_fold == train_fold):
-                    raise ValueError(f"test_fold != train_fold: {test_fold} != {train_fold}")
             outer_cv.append(CustomPredefinedSplit(test_fold, train_fold))
             print(
                 f"train_fold: {train_fold} "
@@ -566,16 +552,8 @@ if __name__ == "__main__":
         help='Path to the directory were the analysis shall be performed and stored.'
     )
     parser.add_argument(
-        '--data-dir', dest='data_dir', metavar='DIR', required=True,
-        help='Path to the directory were the data is located.'
-    )
-    parser.add_argument(
-        '--data-file-id', dest='data_file_id', required=True,
-        help=(
-            "String identifying the data file (located in the directory given via --data-dir)."
-            "This string will be appended by the time point and '.csv'. If you pass, for example, "
-            "'--data-file-id preprocessed_whole_data', the resulting file name at time point "
-            "'III14' will be 'preprocessed_whole_data_III14.csv'.")
+        '--data-file', dest='PATH', required=True,
+        help="Full path to the data file."
     )
     parser.add_argument(
         '--method', dest='method', required=True,
@@ -646,8 +624,7 @@ if __name__ == "__main__":
     try:
         main(
             ana_dir=args.analysis_dir,
-            data_dir=args.data_dir,
-            data_file_id=args.data_file_id,
+            data_file=args.data_file,
             method=method,
             param_grid=param_grid,
             estimator=estimator,

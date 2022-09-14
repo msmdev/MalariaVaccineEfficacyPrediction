@@ -27,7 +27,7 @@ cd "${topdir}/bin" || { echo "Couldn't cd into ${topdir}/bin directory."; exit 1
 data_dir="${topdir}/data/proteome_data/correlationFiltering"
 combinations=('RPP' 'RPR' 'RRP' 'RRR' 'SPP' 'SPR' 'SRP' 'SRR')
 
-for threshold in '0.7' '0.75' '0.8' '0.85' '0.9' '0.95' '1.0'; do
+for threshold in '1.0' '0.8' '0.95' '0.7' '0.75' '0.85' '0.9'; do
 
     for method in 'multitaskSVM' 'RLR' 'RF' 'SVM'; do
         maindir="${topdir}/results/threshold${threshold}/${method}"
@@ -55,7 +55,7 @@ for threshold in '0.7' '0.75' '0.8' '0.85' '0.9' '0.95' '1.0'; do
                 ana_dir="${maindir}/${dataset}"
                 cd "$ana_dir" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
                 cp "${topdir}/bin/run_rgscv_BINAC.sh" . || { echo "cp ${topdir}/bin/run_rgscv_BINAC.sh . failed"; exit 1; }
-                qsub -v "ANA_DIR"="${ana_dir}","DATA_DIR"="${data_dir}","DATA_FILE_ID"="preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}","METHOD"="${method}","NJOBS"=28,"KERNEL_DIR"="$kernel_dir","IDENTIFIER"="$identifier" -N "$jobname" -q short -l walltime=48:00:00,mem=125gb,nodes=1:ppn=28 "run_rgscv_BINAC.sh"
+                qsub -v "ANA_DIR"="${ana_dir}","DATA_FILE"="${data_dir}/preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}.csv","METHOD"="${method}","NJOBS"=28,"KERNEL_DIR"="$kernel_dir","IDENTIFIER"="$identifier" -N "$jobname" -q short -l walltime=48:00:00,mem=125gb,nodes=1:ppn=28 "run_rgscv_BINAC.sh"
 
             else
 
@@ -69,9 +69,9 @@ for threshold in '0.7' '0.75' '0.8' '0.85' '0.9' '0.95' '1.0'; do
                 cp "${topdir}/bin/run_rgscv_BINAC.sh" . || { echo "cp ${topdir}/bin/run_rgscv_BINAC.sh . failed"; exit 1; }
                 cp "${topdir}/source/${method}_config.py" . || { echo "cp ${topdir}/source/${method}_config.py . failed"; exit 1; }
                 if [ "$method" = 'RLR' ]; then
-                    qsub -v "ANA_DIR"="${ana_dir}","DATA_DIR"="${data_dir}","DATA_FILE_ID"="preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}","METHOD"="${method}","NJOBS"=28 -N "$jobname" -q short -l walltime=48:00:00,mem=125gb,nodes=1:ppn=28 "run_rgscv_BINAC.sh"
+                    qsub -v "ANA_DIR"="${ana_dir}","DATA_FILE"="${data_dir}/preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}.csv","METHOD"="${method}","NJOBS"=28 -N "$jobname" -q short -l walltime=48:00:00,mem=125gb,nodes=1:ppn=28 "run_rgscv_BINAC.sh"
                 else
-		    qsub -v "ANA_DIR"="${ana_dir}","DATA_DIR"="${data_dir}","DATA_FILE_ID"="preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}","METHOD"="${method}","NJOBS"=4 -N "$jobname" -q short -l walltime=48:00:00,mem=17gb,nodes=1:ppn=4 "run_rgscv_BINAC.sh"
+                    qsub -v "ANA_DIR"="${ana_dir}","DATA_FILE"="${data_dir}/preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}.csv","METHOD"="${method}","NJOBS"=4 -N "$jobname" -q short -l walltime=48:00:00,mem=17gb,nodes=1:ppn=4 "run_rgscv_BINAC.sh"
                 fi
 
             fi
