@@ -551,7 +551,7 @@ if __name__ == "__main__":
         help='Path to the directory were the analysis shall be performed and stored.'
     )
     parser.add_argument(
-        '--data-file', dest='PATH', required=True,
+        '--data-file', dest='data_file', matavar='PATH', required=True,
         help="Full path to the data file."
     )
     parser.add_argument(
