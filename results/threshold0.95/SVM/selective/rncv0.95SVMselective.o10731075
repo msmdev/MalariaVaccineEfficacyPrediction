@@ -1,0 +1,17 @@
+------------------------------------------------------
+Job is running on node node018
+node018
+node018
+node018
+------------------------------------------------------
+PBS: qsub is running on login02
+PBS: originating queue is short
+PBS: executing queue is short
+PBS: working directory is /beegfs/work/tu_iizre01/MalariaVaccineEfficacyPrediction/results/threshold0.95/SVM/selective
+PBS: execution mode is PBS_BATCH
+PBS: job identifier is 10731075
+PBS: job name is rncv0.95SVMselective
+PBS: node file is /var/spool/torque/aux//10731075
+PBS: current home directory is /home/tu/tu_tu/tu_iizre01
+PBS: PATH = /home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/bin:/home/tu/tu_tu/tu_iizre01/miniconda3/condabin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/home/tu/tu_tu/tu_iizre01/.local/bin:/home/tu/tu_tu/tu_iizre01/bin
+------------------------------------------------------

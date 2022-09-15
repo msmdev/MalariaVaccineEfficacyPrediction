@@ -1,0 +1,45 @@
+#================================================
+# FEEDBACK, job 10731066
+#================================================
+
+Job ID                                      | 10731066
+Job name                                    | rncv0.8SVMwhole
+Job state                                   | Completed
+TimeSubmit                                  | 2022-09-14  12:49:14
+TimeStart                                   | 2022-09-14  12:49:31
+TimeQueued                                  | 00:00:17    [elig.    00:00:17]
+WallTime                                    | 00:11:34 of 2:00:00:00
+Queue                                       | short
+Nodes:ppn                                   | 1:4
+Tasks                                       | 4
+PE, processor equivalent                    | 4.00
+Core hours                                  | 0.77        [PE hours  0.77]
+CPU load task max, 0-1.00                   | 0.78
+CPU load job avg, 0-1.00*tasks              | 2.57
+CPU efficiency, 0-100%                      | 71.12
+Memory task, MB                             | 144         [req.      4352]
+Memory job, MB                              | 576         [req.     17408]
+Scratch task-job, GB                        | 0           [job:         0]
+Host list                                   | node012:4
+#================================================
+# JOB ANALYSIS: notes, problems and solutions
+#================================================
+* NOTE:     walltime usage/request ratio is under "0":
+            ->  694 sec / 172800 sec = 0 
+            ->  0 < 0
+  Advice:   request less walltime, it could force the job's start.
+#================================================
+# SUPPORT info
+#================================================
+
+  Wiki:
+    http://www.bwhpc-c5.de/wiki/index.php/Category:BwForCluster_BinAC
+  Queuing system:
+    http://www.bwhpc-c5.de/wiki/index.php/BwForCluster_BinAC:_Quickstart_Guide
+  E-mail:
+    hpcmaster@uni-tuebingen.de  
+
+  Detailed information about the job:
+    checkjob -v 10731066
+    checkjob -v -v 10731066
+

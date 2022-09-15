@@ -1,0 +1,28 @@
+/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/site-packages/joblib/externals/loky/process_executor.py:705: UserWarning: A worker stopped while some jobs were given to the executor. This can be caused by a too short worker timeout or by a memory leak.
+  "timeout or by a memory leak.", UserWarning
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/threading.py", line 890, in _bootstrap
+    self._bootstrap_inner()
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/threading.py", line 926, in _bootstrap_inner
+    self.run()
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/site-packages/joblib/externals/loky/process_executor.py", line 569, in run
+    self.process_result_item(result_item)
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/site-packages/joblib/externals/loky/process_executor.py", line 705, in process_result_item
+    "timeout or by a memory leak.", UserWarning
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/warnings.py", line 110, in _showwarnmsg
+    msg.file, msg.line)
+  File "rncv.py", line 513, in warn_with_traceback
+    traceback.print_stack(file=warning_file)
+/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/site-packages/joblib/externals/loky/process_executor.py:705: UserWarning: A worker stopped while some jobs were given to the executor. This can be caused by a too short worker timeout or by a memory leak.
+  "timeout or by a memory leak.", UserWarning
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/threading.py", line 890, in _bootstrap
+    self._bootstrap_inner()
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/threading.py", line 926, in _bootstrap_inner
+    self.run()
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/site-packages/joblib/externals/loky/process_executor.py", line 569, in run
+    self.process_result_item(result_item)
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/site-packages/joblib/externals/loky/process_executor.py", line 705, in process_result_item
+    "timeout or by a memory leak.", UserWarning
+  File "/home/tu/tu_tu/tu_iizre01/miniconda3/envs/malaria_env/lib/python3.7/warnings.py", line 110, in _showwarnmsg
+    msg.file, msg.line)
+  File "rncv.py", line 513, in warn_with_traceback
+    traceback.print_stack(file=warning_file)

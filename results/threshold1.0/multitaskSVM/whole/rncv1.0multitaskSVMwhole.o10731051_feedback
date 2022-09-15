@@ -1,0 +1,38 @@
+#================================================
+# FEEDBACK, job 10731051
+#================================================
+
+Job ID                                      | 10731051
+Job name                                    | rncv1.0multitaskSVMwhole
+Job state                                   | Completed
+TimeSubmit                                  | 2022-09-14  12:09:38
+TimeStart                                   | 2022-09-14  12:09:45
+TimeQueued                                  | 00:00:07    [elig.    00:00:07]
+WallTime                                    | 11:52:19 of 2:00:00:00
+Queue                                       | short
+Nodes:ppn                                   | 1:28
+Tasks                                       | 28
+PE, processor equivalent                    | 28.00
+Core hours                                  | 332.41      [PE hours 332.41]
+CPU load task max, 0-1.00                   | 0.21
+CPU load job avg, 0-1.00*tasks              | 5.57
+CPU efficiency, 0-100%                      | 19.93
+Memory task, MB                             | 142         [req.      4571]
+Memory job, MB                              | 3976        [req.    127988]
+Scratch task-job, GB                        | 0           [job:         0]
+Host list                                   | node027:28
+#================================================
+# SUPPORT info
+#================================================
+
+  Wiki:
+    http://www.bwhpc-c5.de/wiki/index.php/Category:BwForCluster_BinAC
+  Queuing system:
+    http://www.bwhpc-c5.de/wiki/index.php/BwForCluster_BinAC:_Quickstart_Guide
+  E-mail:
+    hpcmaster@uni-tuebingen.de  
+
+  Detailed information about the job:
+    checkjob -v 10731051
+    checkjob -v -v 10731051
+

@@ -1,0 +1,38 @@
+#================================================
+# FEEDBACK, job 10731081
+#================================================
+
+Job ID                                      | 10731081
+Job name                                    | rncv0.7RFselective
+Job state                                   | Completed
+TimeSubmit                                  | 2022-09-14  12:49:15
+TimeStart                                   | 2022-09-14  12:49:31
+TimeQueued                                  | 00:00:16    [elig.    00:00:16]
+WallTime                                    | 00:50:41 of 2:00:00:00
+Queue                                       | short
+Nodes:ppn                                   | 1:4
+Tasks                                       | 4
+PE, processor equivalent                    | 4.00
+Core hours                                  | 3.38        [PE hours  3.38]
+CPU load task max, 0-1.00                   | 0.60
+CPU load job avg, 0-1.00*tasks              | 2.27
+CPU efficiency, 0-100%                      | 57.91
+Memory task, MB                             | 153         [req.      4352]
+Memory job, MB                              | 612         [req.     17408]
+Scratch task-job, GB                        | 0           [job:         0]
+Host list                                   | node018:4
+#================================================
+# SUPPORT info
+#================================================
+
+  Wiki:
+    http://www.bwhpc-c5.de/wiki/index.php/Category:BwForCluster_BinAC
+  Queuing system:
+    http://www.bwhpc-c5.de/wiki/index.php/BwForCluster_BinAC:_Quickstart_Guide
+  E-mail:
+    hpcmaster@uni-tuebingen.de  
+
+  Detailed information about the job:
+    checkjob -v 10731081
+    checkjob -v -v 10731081
+
