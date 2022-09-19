@@ -220,7 +220,7 @@ def make_symmetric_matrix_psd(
                     "Couldn't make matrix positive semi-definite by adding "
                     f"sum_c={np.sum(c_list)} in {counter} steps to its diagonal.\n"
                     f"Damped {n_negative} times for negative eigenvalues "
-                    f"and {n_imaginary} times for imaginary parts."
+                    f"and {n_imaginary} times for imaginary parts.\n"
                     "CAUTION: The returned matrix has negative eigenvalues."
                 )
         else:
