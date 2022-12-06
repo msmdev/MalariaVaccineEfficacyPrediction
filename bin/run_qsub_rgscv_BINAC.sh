@@ -27,7 +27,7 @@ cd "${topdir}/bin" || { echo "Couldn't cd into ${topdir}/bin directory."; exit 1
 data_dir="${topdir}/data/proteome_data/correlationFiltering"
 combinations=('RPP' 'RPR' 'RRP' 'RRR' 'SPP' 'SPR' 'SRP' 'SRR')
 
-for threshold in '1.0' '0.8' '0.95' '0.7' '0.75' '0.85' '0.9'; do
+for threshold in '0.1' '0.2' '0.3' '0.4' '0.5' '0.6' '0.7' '0.8' '0.9' '1.0'; do
 
     for method in 'multitaskSVM' 'RLR' 'RF' 'SVM'; do
         maindir="${topdir}/results/threshold${threshold}/${method}"

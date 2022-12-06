@@ -38,7 +38,7 @@ if [ ! -d "$maindir" ]; then
 fi
 identifier='kernel_matrix'
 
-for threshold in '0.7' '0.75' '0.8' '0.85' '0.9' '0.95' '1.0'; do
+for threshold in '0.1' '0.2' '0.3' '0.4' '0.5' '0.6' '0.7' '0.8' '0.9' '1.0'; do
 
     for dataset in 'whole' 'selective'; do
 

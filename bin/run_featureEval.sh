@@ -28,7 +28,7 @@
 
 # This is intended to run in the bin folder of the MalariaVaccineEfficacyPrediction package.
 # The MalariaVaccineEfficacyPrediction package should be situated in the users home directory.
-threshold='0.95'
+threshold='0.2'
 combination='RPR'
 topdir="${HOME}/MalariaVaccineEfficacyPrediction"
 if [ ! -d "$topdir" ]; then
