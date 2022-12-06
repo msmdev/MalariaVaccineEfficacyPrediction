@@ -25,22 +25,21 @@ using both the ESPY and the SHAP (SHapley Additive exPlanations) framework.
 
 """
 
-from datetime import datetime
-import numpy as np
-import pandas as pd
+import argparse
 import os
 import pathlib
-from sklearn.model_selection import train_test_split
-from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import StratifiedKFold
-from sklearn.svm import SVC
-from sklearn.metrics import roc_auc_score
-import matplotlib.pyplot as plt
-import shap
 import warnings
-import argparse
-from source.featureEvaluation import featureEvaluationESPY, make_plot
+from datetime import datetime
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import shap
+from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
+from sklearn.svm import SVC
 from source.config import seed
+from source.featureEvaluation import featureEvaluationESPY, make_plot
 
 
 def optimize_svm_model(
@@ -50,7 +49,7 @@ def optimize_svm_model(
     X_test_data: np.ndarray,
     y_test_data: np.ndarray,
 ) -> SVC:
-    """ Initialize SVM model on simulated data.
+    """Initialize SVM model on simulated data.
 
     Initialize SVM model with a RBF kernel on simulated data and
     perform a grid-search for kernel parameter evaluation.
@@ -78,24 +77,22 @@ def optimize_svm_model(
 
     # grid-search on simulated data
     clf = GridSearchCV(
-        SVC(kernel='rbf', probability=True, random_state=seed),
+        SVC(kernel="rbf", probability=True, random_state=seed),
         param_grid,
-        scoring='roc_auc',
+        scoring="roc_auc",
         refit=True,
         cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=seed),
     )
     clf.fit(X_train_data, y_train_data)
 
-    print(
-        f"The best parameters are {clf.best_params_} with a mean AUC score of {clf.best_score_}."
-    )
+    print(f"The best parameters are {clf.best_params_} with a mean AUC score of {clf.best_score_}.")
 
     # run RBF SVM with best parameters from grid-search,
     # probability has to be TRUE to evaluate features via SHAP
     svm = SVC(
-        kernel='rbf',
-        gamma=clf.best_params_.get('gamma'),
-        C=clf.best_params_.get('C'),
+        kernel="rbf",
+        gamma=clf.best_params_.get("gamma"),
+        C=clf.best_params_.get("C"),
         probability=True,
         random_state=seed,
     )
@@ -127,10 +124,10 @@ def main(
         random_state=seed,
     )
     rbf_SVM_model = optimize_svm_model(
-        X_train_data=X_train,
-        y_train_data=y_train,
-        X_test_data=X_test,
-        y_test_data=y_test,
+        X_train_data=np.array(X_train),
+        y_train_data=np.array(y_train),
+        X_test_data=np.array(X_test),
+        y_test_data=np.array(y_test),
     )
 
     timestamp = datetime.now().strftime("%d.%m.%Y_%H-%M-%S")
@@ -154,54 +151,59 @@ def main(
 
     distance_result.to_csv(
         os.path.join(out_dir, f"{output_filename}.tsv"),
-        sep='\t',
-        na_rep='nan',
+        sep="\t",
+        na_rep="nan",
     )
     timestamp = datetime.now().strftime("%d.%m.%Y_%H-%M-%S")
-    print(
-        f"ESPY evaluation has terminated at {timestamp} and results are saved in {out_dir}\n"
-    )
+    print(f"ESPY evaluation has terminated at {timestamp} and results are saved in {out_dir}\n")
 
     timestamp = datetime.now().strftime("%d.%m.%Y_%H-%M-%S")
-    print(
-        f"Evaluation of informative features based on SHAP values started at {timestamp}."
-    )
+    print(f"Evaluation of informative features based on SHAP values started at {timestamp}.")
 
     explainer = shap.KernelExplainer(rbf_SVM_model.predict_proba, X_train)
     # Shap_values returns a list of two arrays:
     # the first for the negative class probabilities and
     # the second for the positive class probabilties.
-    shap_values = explainer.shap_values(X_test, l1_reg='num_features(25)')
+    shap_values = explainer.shap_values(X_test, l1_reg="num_features(25)")
+
+    if shap_values is None:
+        raise ValueError("Can't proceed since shap_values=None.")
 
     # Plot shap values for the positive class probabilities:
     shap.initjs()
-    shap.summary_plot(shap_values[1], X_test, max_display=25, plot_type='dot', show=False)
-    plt.savefig(os.path.join(out_dir, f"SHAP_values_simulated_data_dot_{timestamp}.pdf"),
-                format="pdf", bbox_inches="tight")
+    shap.summary_plot(shap_values[1], X_test, max_display=25, plot_type="dot", show=False)
+    plt.savefig(
+        os.path.join(out_dir, f"SHAP_values_simulated_data_dot_{timestamp}.pdf"),
+        format="pdf",
+        bbox_inches="tight",
+    )
     plt.close()
-    shap.summary_plot(shap_values[1], X_test, max_display=25, plot_type='bar', show=False)
-    plt.savefig(os.path.join(out_dir, f"SHAP_values_simulated_data_bar_{timestamp}.pdf"),
-                format="pdf", bbox_inches="tight")
+    shap.summary_plot(shap_values[1], X_test, max_display=25, plot_type="bar", show=False)
+    plt.savefig(
+        os.path.join(out_dir, f"SHAP_values_simulated_data_bar_{timestamp}.pdf"),
+        format="pdf",
+        bbox_inches="tight",
+    )
     plt.close()
-    shap.summary_plot(shap_values[1], X_test, max_display=25, plot_type='violin', show=False)
-    plt.savefig(os.path.join(out_dir, f"SHAP_values_simulated_data_violin_{timestamp}.pdf"),
-                format="pdf", bbox_inches="tight")
+    shap.summary_plot(shap_values[1], X_test, max_display=25, plot_type="violin", show=False)
+    plt.savefig(
+        os.path.join(out_dir, f"SHAP_values_simulated_data_violin_{timestamp}.pdf"),
+        format="pdf",
+        bbox_inches="tight",
+    )
     plt.close()
 
     if isinstance(shap_values, np.ndarray):
-        np.save(os.path.join(out_dir, f"SHAP_values_simulated_data_{timestamp}.npy"),
-                shap_values)
+        np.save(os.path.join(out_dir, f"SHAP_values_simulated_data_{timestamp}.npy"), shap_values)
     elif isinstance(shap_values, list):
-        np.savez(os.path.join(out_dir, f"SHAP_values_simulated_data_{timestamp}.npz"),
-                 *shap_values)
+        np.savez(os.path.join(out_dir, f"SHAP_values_simulated_data_{timestamp}.npz"), *shap_values)
     else:
-        warnings.warn("Couldn't save shap values, since they were of "
-                      f"unexpected type {type(shap_values)}.")
+        warnings.warn(
+            "Couldn't save shap values, since they were of " f"unexpected type {type(shap_values)}."
+        )
 
     timestamp = datetime.now().strftime("%d.%m.%Y_%H-%M-%S")
-    print(
-        f"SHAP evaluation has terminated at {timestamp} and results are saved in {out_dir}.\n"
-    )
+    print(f"SHAP evaluation has terminated at {timestamp} and results are saved in {out_dir}.\n")
 
 
 if __name__ == "__main__":
@@ -209,26 +211,28 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        '--data-dir',
-        dest='data_dir',
-        metavar='DIR',
+        "--data-dir",
+        dest="data_dir",
+        metavar="DIR",
         required=True,
-        help=('Path to the directory were the simulated data or '
-              'preprocessed proteome data is located.'),
+        help=(
+            "Path to the directory were the simulated data or "
+            "preprocessed proteome data is located."
+        ),
     )
     parser.add_argument(
-        '--data-file',
-        dest='data_file',
-        metavar='FILE',
+        "--data-file",
+        dest="data_file",
+        metavar="FILE",
         required=True,
-        help=("Full name of the data file (located in the directory given via --data-dir).")
+        help=("Full name of the data file (located in the directory given via --data-dir)."),
     )
     parser.add_argument(
-        '--out-dir',
-        dest='out_dir',
-        metavar='DIR',
+        "--out-dir",
+        dest="out_dir",
+        metavar="DIR",
         required=True,
-        help='Path to the directory were the results shall be saved.',
+        help="Path to the directory were the results shall be saved.",
     )
     args = parser.parse_args()
 

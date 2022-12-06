@@ -22,19 +22,20 @@
 
 """
 
-import numpy as np
-from typing import Any, Dict, Union, Optional, Tuple, List
-from sklearn.utils import check_X_y
-from sklearn.utils.multiclass import unique_labels
-from sklearn.model_selection._split import BaseCrossValidator
-from sklearn.utils.validation import column_or_1d
-from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics.pairwise import rbf_kernel, sigmoid_kernel, polynomial_kernel
-from sklearn.preprocessing import KernelCenterer
-import pandas as pd
+import ast
 import os
 import warnings
-import ast
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
+import pandas as pd
+from sklearn.metrics.pairwise import polynomial_kernel, rbf_kernel, sigmoid_kernel
+from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection._split import BaseCrossValidator
+from sklearn.preprocessing import KernelCenterer
+from sklearn.utils import check_X_y
+from sklearn.utils.multiclass import unique_labels
+from sklearn.utils.validation import column_or_1d
 
 
 def normalize(
@@ -65,9 +66,7 @@ def normalize(
             raise ValueError("Matrix isn't symmetric.")
     # check, if all diagonal elements are positive:
     if np.any(np.diag(X) <= 0.0):
-        raise ValueError(
-            "Some diagonal elements of the matrix are <=0. Can't normalize."
-        )
+        raise ValueError("Some diagonal elements of the matrix are <=0. Can't normalize.")
     X_norm = np.zeros(X.shape, dtype=np.double)
     for i in range(X.shape[0]):
         for j in range(i, X.shape[1]):
@@ -86,26 +85,23 @@ def check_complex_or_negative(
         if np.max(np.abs(ev.imag)) > np.finfo(ev.dtype).eps:
             if warn:
                 print(
-                    'Complex eigenvalues with significant imaginary part found:\n'
-                    f'{ev[np.abs(ev.imag) > np.finfo(ev.dtype).eps]}'
+                    "Complex eigenvalues with significant imaginary part found:\n"
+                    f"{ev[np.abs(ev.imag) > np.finfo(ev.dtype).eps]}"
                 )
             complex = True
     if np.any(ev.real < 0.0):
         if warn:
-            print(
-                'Eigenvalues with negative real parts found:\n'
-                f'{ev[ev.real < 0.0]}'
-            )
+            print("Eigenvalues with negative real parts found:\n" f"{ev[ev.real < 0.0]}")
         negative = True
     return complex, negative
 
 
 def make_symmetric_matrix_psd(
     X: np.ndarray,
-    epsilon_factor: float = 1.e3,
+    epsilon_factor: float = 1.0e3,
     iterations: int = 1000,
 ) -> Tuple[np.ndarray, List[float], List[str], str]:
-    """ Spectral Translation approach
+    """Spectral Translation approach
     Tests, if a given symmetric matrix is positive semi-definite (psd) and, if not,
     a damping value `c` is iteratively (up to `iterations + 1` iterations) added to the matrix
     diagonal, i.e., `X = X + c * I`, until the kernel matrix becomes positive semi-definite.
@@ -147,7 +143,7 @@ def make_symmetric_matrix_psd(
     epsilon = epsilon_factor * np.finfo(X.dtype).eps
     c_list = []
     info_list = []
-    warning = ''
+    warning = ""
 
     # check, if X is square
     if X.shape[0] != X.shape[1]:
@@ -164,8 +160,7 @@ def make_symmetric_matrix_psd(
 
     if complex or negative:
         print(
-            "Matrix is not positive semi-definite.\n"
-            "Will try to make it positive semi-definite."
+            "Matrix is not positive semi-definite.\n" "Will try to make it positive semi-definite."
         )
 
         n_negative = 0
@@ -175,14 +170,14 @@ def make_symmetric_matrix_psd(
             counter += 1
             if negative:
                 n_negative += 1
-                info = 'negative'
+                info = "negative"
                 c = np.abs(np.min(eigenvalues).real)
             else:
                 n_imaginary += 1
-                info = 'imaginary'
+                info = "imaginary"
                 c = np.max(np.abs(eigenvalues.imag))
             if c < epsilon:
-                info += '_epsilon'
+                info += "_epsilon"
                 c = epsilon
             info_list.append(info)
             c_list.append(c)
@@ -304,8 +299,8 @@ def assign_folds(
         raise ValueError("len(labels) % delta = 0 must be ensured.")
     if not delta + delta * step <= len(labels):
         raise ValueError("delta + delta * step <= len(labels) must be ensured")
-    labels_slice = labels[delta * step: delta + delta * step]
-    groups_slice = groups[delta * step: delta + delta * step]
+    labels_slice = labels[delta * step : delta + delta * step]
+    groups_slice = groups[delta * step : delta + delta * step]
     skf = StratifiedKFold(n_splits, shuffle=shuffle, random_state=random_state)
     test_fold = np.array([-1 for i in range(len(labels))])
     train_fold = np.array([-1 for i in range(len(labels))])
@@ -319,17 +314,17 @@ def assign_folds(
         train_fold = np.where(np.isin(groups, exclude_groups), i, train_fold)
         if print_info:
             print("TEST:", test_index + delta * step)
-            print('exclude groups:', exclude_groups)
-            print('train_fold:', train_fold)
+            print("exclude groups:", exclude_groups)
+            print("train_fold:", train_fold)
     if print_info:
-        print('test_fold:', test_fold)
+        print("test_fold:", test_fold)
         cps = CustomPredefinedSplit(test_fold, train_fold)
         for i, (train_index, test_index) in enumerate(cps.split()):
             print(
                 f"TRAIN (len={len(train_index)}): {train_index} "
                 f"TEST (len={len(test_index)}): {test_index}"
             )
-        print('')
+        print("")
     return test_fold, train_fold
 
 
@@ -418,19 +413,18 @@ class CustomPredefinedSplit(BaseCrossValidator):
 
 
 class DataSelector:
-
     def __init__(
         self,
         *,
         kernel_directory: str,
         identifier: str,
-        SA: Union[float, str] = 'X',
-        SO: Union[float, str] = 'X',
-        R0: Union[float, str] = 'X',
-        R1: Union[float, str] = 'X',
-        R2: Union[float, str] = 'X',
-        P1: Union[int, str] = 'X',
-        P2: Union[int, str] = 'X',
+        SA: Union[float, str] = "X",
+        SO: Union[float, str] = "X",
+        R0: Union[float, str] = "X",
+        R1: Union[float, str] = "X",
+        R2: Union[float, str] = "X",
+        P1: Union[int, str] = "X",
+        P2: Union[int, str] = "X",
     ) -> None:
         self.kernel_directory = kernel_directory
         self.identifier = identifier
@@ -442,11 +436,7 @@ class DataSelector:
         self.P1 = P1
         self.P2 = P2
 
-    def fit(
-        self,
-        X: np.ndarray,
-        y: np.ndarray
-    ) -> "DataSelector":
+    def fit(self, X: np.ndarray, y: np.ndarray) -> "DataSelector":
         # Check that X and y have correct shape
         X, y = check_X_y(X, y)
         # Store the classes seen during fit
@@ -461,30 +451,46 @@ class DataSelector:
 
         if isinstance(self.R0, float):
             if isinstance(self.R1, float) and isinstance(self.R2, float):
-                fn = (f"{self.identifier}_SA_{self.SA}_SO_{self.SO}_R0_{self.R0:.1E}_"
-                      f"R1_{self.R1:.1E}_R2_{self.R2:.1E}_P1_{self.P1}_P2_{self.P2}.npy")
+                fn = (
+                    f"{self.identifier}_SA_{self.SA}_SO_{self.SO}_R0_{self.R0:.1E}_"
+                    f"R1_{self.R1:.1E}_R2_{self.R2:.1E}_P1_{self.P1}_P2_{self.P2}.npy"
+                )
             elif isinstance(self.R1, float) and not isinstance(self.R2, float):
-                fn = (f"{self.identifier}_SA_{self.SA}_SO_{self.SO}_R0_{self.R0:.1E}_"
-                      f"R1_{self.R1:.1E}_R2_{self.R2}_P1_{self.P1}_P2_{self.P2}.npy")
+                fn = (
+                    f"{self.identifier}_SA_{self.SA}_SO_{self.SO}_R0_{self.R0:.1E}_"
+                    f"R1_{self.R1:.1E}_R2_{self.R2}_P1_{self.P1}_P2_{self.P2}.npy"
+                )
             elif not isinstance(self.R1, float) and isinstance(self.R2, float):
-                fn = (f"{self.identifier}_SA_{self.SA}_SO_{self.SO}_R0_{self.R0:.1E}_"
-                      f"R1_{self.R1}_R2_{self.R2:.1E}_P1_{self.P1}_P2_{self.P2}.npy")
+                fn = (
+                    f"{self.identifier}_SA_{self.SA}_SO_{self.SO}_R0_{self.R0:.1E}_"
+                    f"R1_{self.R1}_R2_{self.R2:.1E}_P1_{self.P1}_P2_{self.P2}.npy"
+                )
             else:
-                fn = (f"{self.identifier}_SA_{self.SA}_SO_{self.SO}_R0_{self.R0:.1E}_"
-                      f"R1_{self.R1}_R2_{self.R2}_P1_{self.P1}_P2_{self.P2}.npy")
+                fn = (
+                    f"{self.identifier}_SA_{self.SA}_SO_{self.SO}_R0_{self.R0:.1E}_"
+                    f"R1_{self.R1}_R2_{self.R2}_P1_{self.P1}_P2_{self.P2}.npy"
+                )
         else:
             if isinstance(self.R1, float) and isinstance(self.R2, float):
-                fn = (f"{self.identifier}_SA_{self.SA}_SO_{self.SO}_R0_{self.R0}_"
-                      f"R1_{self.R1:.1E}_R2_{self.R2:.1E}_P1_{self.P1}_P2_{self.P2}.npy")
+                fn = (
+                    f"{self.identifier}_SA_{self.SA}_SO_{self.SO}_R0_{self.R0}_"
+                    f"R1_{self.R1:.1E}_R2_{self.R2:.1E}_P1_{self.P1}_P2_{self.P2}.npy"
+                )
             elif isinstance(self.R1, float) and not isinstance(self.R2, float):
-                fn = (f"{self.identifier}_SA_{self.SA}_SO_{self.SO}_R0_{self.R0}_"
-                      f"R1_{self.R1:.1E}_R2_{self.R2}_P1_{self.P1}_P2_{self.P2}.npy")
+                fn = (
+                    f"{self.identifier}_SA_{self.SA}_SO_{self.SO}_R0_{self.R0}_"
+                    f"R1_{self.R1:.1E}_R2_{self.R2}_P1_{self.P1}_P2_{self.P2}.npy"
+                )
             elif not isinstance(self.R1, float) and isinstance(self.R2, float):
-                fn = (f"{self.identifier}_SA_{self.SA}_SO_{self.SO}_R0_{self.R0}_"
-                      f"R1_{self.R1}_R2_{self.R2:.1E}_P1_{self.P1}_P2_{self.P2}.npy")
+                fn = (
+                    f"{self.identifier}_SA_{self.SA}_SO_{self.SO}_R0_{self.R0}_"
+                    f"R1_{self.R1}_R2_{self.R2:.1E}_P1_{self.P1}_P2_{self.P2}.npy"
+                )
             else:
-                fn = (f"{self.identifier}_SA_{self.SA}_SO_{self.SO}_R0_{self.R0}_"
-                      f"R1_{self.R1}_R2_{self.R2}_P1_{self.P1}_P2_{self.P2}.npy")
+                fn = (
+                    f"{self.identifier}_SA_{self.SA}_SO_{self.SO}_R0_{self.R0}_"
+                    f"R1_{self.R1}_R2_{self.R2}_P1_{self.P1}_P2_{self.P2}.npy"
+                )
 
         kernel = np.load(os.path.join(self.kernel_directory, fn))
 
@@ -492,22 +498,19 @@ class DataSelector:
         if kernel.shape[0] != kernel.shape[1]:
             raise ValueError("Oligo kernel should be a square kernel matrix")
 
-        return np.ascontiguousarray(kernel.flatten('C')[X.flatten('C')].reshape(X.shape))
+        return np.ascontiguousarray(kernel.flatten("C")[X.flatten("C")].reshape(X.shape))
 
-    def get_params(
-        self,
-        deep: bool = True
-    ) -> Dict[str, Any]:
+    def get_params(self, deep: bool = True) -> Dict[str, Any]:
         return {
-            'kernel_directory': self.kernel_directory,
-            'identifier': self.identifier,
-            'SA': self.SA,
-            'SO': self.SO,
-            'R0': self.R0,
-            'R1': self.R1,
-            'R2': self.R2,
-            'P1': self.P1,
-            'P2': self.P2,
+            "kernel_directory": self.kernel_directory,
+            "identifier": self.identifier,
+            "SA": self.SA,
+            "SO": self.SO,
+            "R0": self.R0,
+            "R1": self.R1,
+            "R2": self.R2,
+            "P1": self.P1,
+            "P2": self.P2,
         }
 
     def set_params(
@@ -538,35 +541,38 @@ def get_parameters(
     params : dict
         Parameter dictionary.
     """
-    roc_results = timepoint_results[timepoint_results['scoring'].isin(['roc_auc'])]
+    roc_results = timepoint_results[timepoint_results["scoring"].isin(["roc_auc"])]
     if not roc_results.shape == (1, 4):
         raise ValueError(f"roc_results.shape != (1, 4): {roc_results.shape} != (1, 4)")
-    params_string = roc_results['best_params'].iloc[0]
+    params_string = roc_results["best_params"].iloc[0]
     if not type(params_string) == str:
         raise ValueError(f"type(params_string) != str: {type(params_string)} != str")
     params = ast.literal_eval(params_string)
-    if model == 'RLR':
+    if model == "RLR":
         from source.RLR_config import param_grid
+
         keys = param_grid.keys()
         if not set(params.keys()) == keys:
             raise ValueError(
                 f"Expected RLR parameters but set(params.keys()) != {keys}: "
                 f"{set(params.keys())} != {keys}"
             )
-    elif model == 'RF':
+    elif model == "RF":
         from source.RF_config import param_grid
+
         keys = param_grid.keys()
         if not set(params.keys()) == keys:
             raise ValueError(
                 f"Expected RF parameters but set(params.keys()) != {keys}: "
                 f"{set(params.keys())} != {keys}"
             )
-    elif model == 'multitaskSVM':
+    elif model == "multitaskSVM":
         from source.multitaskSVM_config import configurator
+
         param_grid, _ = configurator(
-            combination='RPR',  # see *
-            identifier='',
-            kernel_dir='',
+            combination="RPR",  # see *
+            identifier="",
+            kernel_dir="",
         )
         # *You can supply any legal combination here,
         # since the returned param_grid isn't actually used (only the keys are used).
@@ -581,11 +587,8 @@ def get_parameters(
     return params
 
 
-def select_timepoint(
-    rgscv_results: pd.DataFrame,
-    timepoint: str
-) -> pd.DataFrame:
-    """ Select time point to evaluate informative features from RLR.
+def select_timepoint(rgscv_results: pd.DataFrame, timepoint: str) -> pd.DataFrame:
+    """Select time point to evaluate informative features from RLR.
 
     Parameter
     ---------
@@ -602,7 +605,7 @@ def select_timepoint(
         DataFrame containing optimal parameters and mean AUROC values
         for the selected time point as found via Repeated Grid-Search CV (RGSCV).
     """
-    timepoint_results = rgscv_results[rgscv_results['time'].isin([timepoint])]
+    timepoint_results = rgscv_results[rgscv_results["time"].isin([timepoint])]
     return timepoint_results
 
 
@@ -611,7 +614,7 @@ def make_kernel_combinations(
     kernel_params: Dict[str, np.ndarray],
     kernel_time_series: str,
     kernel_dosage: str,
-    kernel_abSignal: str
+    kernel_abSignal: str,
 ) -> Dict[str, List[Union[float, int, str]]]:
     """Make dictionary of kernel combination values
 
@@ -675,94 +678,120 @@ def make_kernel_combinations(
             )
 
     kernel_comb_param: Dict[str, np.ndarray]
-    if (kernel_time_series == "sigmoid_kernel" and kernel_dosage == "rbf_kernel"
-            and kernel_abSignal == "rbf_kernel"):
+    if (
+        kernel_time_series == "sigmoid_kernel"
+        and kernel_dosage == "rbf_kernel"
+        and kernel_abSignal == "rbf_kernel"
+    ):
         kernel_comb_param = {
-            "SA": kernel_params['SA'],
-            "SO": kernel_params['SO'],
-            "R0": np.array(['X']),
-            "R1": kernel_params['R1'],
-            "R2": kernel_params['R2'],
-            "P1": np.array(['X']),
-            "P2": np.array(['X']),
+            "SA": kernel_params["SA"],
+            "SO": kernel_params["SO"],
+            "R0": np.array(["X"]),
+            "R1": kernel_params["R1"],
+            "R2": kernel_params["R2"],
+            "P1": np.array(["X"]),
+            "P2": np.array(["X"]),
         }
-    elif (kernel_time_series == "sigmoid_kernel" and kernel_dosage == "poly_kernel"
-            and kernel_abSignal == "poly_kernel"):
+    elif (
+        kernel_time_series == "sigmoid_kernel"
+        and kernel_dosage == "poly_kernel"
+        and kernel_abSignal == "poly_kernel"
+    ):
         kernel_comb_param = {
-            "SA": kernel_params['SA'],
-            "SO": kernel_params['SO'],
-            "R0": np.array(['X']),
-            "R1": np.array(['X']),
-            "R2": np.array(['X']),
-            "P1": kernel_params['P1'],
-            "P2": kernel_params['P2'],
+            "SA": kernel_params["SA"],
+            "SO": kernel_params["SO"],
+            "R0": np.array(["X"]),
+            "R1": np.array(["X"]),
+            "R2": np.array(["X"]),
+            "P1": kernel_params["P1"],
+            "P2": kernel_params["P2"],
         }
-    elif (kernel_time_series == "sigmoid_kernel" and kernel_dosage == "poly_kernel"
-            and kernel_abSignal == "rbf_kernel"):
+    elif (
+        kernel_time_series == "sigmoid_kernel"
+        and kernel_dosage == "poly_kernel"
+        and kernel_abSignal == "rbf_kernel"
+    ):
         kernel_comb_param = {
-            "SA": kernel_params['SA'],
-            "SO": kernel_params['SO'],
-            "R0": np.array(['X']),
-            "R1": np.array(['X']),
-            "R2": kernel_params['R2'],
-            "P1": kernel_params['P1'],
-            "P2": np.array(['X']),
+            "SA": kernel_params["SA"],
+            "SO": kernel_params["SO"],
+            "R0": np.array(["X"]),
+            "R1": np.array(["X"]),
+            "R2": kernel_params["R2"],
+            "P1": kernel_params["P1"],
+            "P2": np.array(["X"]),
         }
-    elif (kernel_time_series == "sigmoid_kernel" and kernel_dosage == "rbf_kernel"
-            and kernel_abSignal == "poly_kernel"):
+    elif (
+        kernel_time_series == "sigmoid_kernel"
+        and kernel_dosage == "rbf_kernel"
+        and kernel_abSignal == "poly_kernel"
+    ):
         kernel_comb_param = {
-            "SA": kernel_params['SA'],
-            "SO": kernel_params['SO'],
-            "R0": np.array(['X']),
-            "R1": kernel_params['R1'],
-            "R2": np.array(['X']),
-            "P1": np.array(['X']),
-            "P2": kernel_params['P2'],
+            "SA": kernel_params["SA"],
+            "SO": kernel_params["SO"],
+            "R0": np.array(["X"]),
+            "R1": kernel_params["R1"],
+            "R2": np.array(["X"]),
+            "P1": np.array(["X"]),
+            "P2": kernel_params["P2"],
         }
-    elif (kernel_time_series == "rbf_kernel" and kernel_dosage == "rbf_kernel"
-            and kernel_abSignal == "rbf_kernel"):
+    elif (
+        kernel_time_series == "rbf_kernel"
+        and kernel_dosage == "rbf_kernel"
+        and kernel_abSignal == "rbf_kernel"
+    ):
         kernel_comb_param = {
-            "SA": np.array(['X']),
-            "SO": np.array(['X']),
-            "R0": kernel_params['R0'],
-            "R1": kernel_params['R1'],
-            "R2": kernel_params['R2'],
-            "P1": np.array(['X']),
-            "P2": np.array(['X']),
+            "SA": np.array(["X"]),
+            "SO": np.array(["X"]),
+            "R0": kernel_params["R0"],
+            "R1": kernel_params["R1"],
+            "R2": kernel_params["R2"],
+            "P1": np.array(["X"]),
+            "P2": np.array(["X"]),
         }
-    elif (kernel_time_series == "rbf_kernel" and kernel_dosage == "poly_kernel"
-            and kernel_abSignal == "poly_kernel"):
+    elif (
+        kernel_time_series == "rbf_kernel"
+        and kernel_dosage == "poly_kernel"
+        and kernel_abSignal == "poly_kernel"
+    ):
         kernel_comb_param = {
-            "SA": np.array(['X']),
-            "SO": np.array(['X']),
-            "R0": kernel_params['R0'],
-            "R1": np.array(['X']),
-            "R2": np.array(['X']),
-            "P1": kernel_params['P1'],
-            "P2": kernel_params['P2'],
+            "SA": np.array(["X"]),
+            "SO": np.array(["X"]),
+            "R0": kernel_params["R0"],
+            "R1": np.array(["X"]),
+            "R2": np.array(["X"]),
+            "P1": kernel_params["P1"],
+            "P2": kernel_params["P2"],
         }
-    elif (kernel_time_series == "rbf_kernel" and kernel_dosage == "poly_kernel"
-            and kernel_abSignal == "rbf_kernel"):
+    elif (
+        kernel_time_series == "rbf_kernel"
+        and kernel_dosage == "poly_kernel"
+        and kernel_abSignal == "rbf_kernel"
+    ):
         kernel_comb_param = {
-            "SA": np.array(['X']),
-            "SO": np.array(['X']),
-            "R0": kernel_params['R0'],
-            "R1": np.array(['X']),
-            "R2": kernel_params['R2'],
-            "P1": kernel_params['P1'],
-            "P2": np.array(['X'])
+            "SA": np.array(["X"]),
+            "SO": np.array(["X"]),
+            "R0": kernel_params["R0"],
+            "R1": np.array(["X"]),
+            "R2": kernel_params["R2"],
+            "P1": kernel_params["P1"],
+            "P2": np.array(["X"]),
         }
-    elif (kernel_time_series == "rbf_kernel" and kernel_dosage == "rbf_kernel"
-            and kernel_abSignal == "poly_kernel"):
+    elif (
+        kernel_time_series == "rbf_kernel"
+        and kernel_dosage == "rbf_kernel"
+        and kernel_abSignal == "poly_kernel"
+    ):
         kernel_comb_param = {
-            "SA": np.array(['X']),
-            "SO": np.array(['X']),
-            "R0": kernel_params['R0'],
-            "R1": kernel_params['R1'],
-            "R2": np.array(['X']),
-            "P1": np.array(['X']),
-            "P2": kernel_params['P2'],
+            "SA": np.array(["X"]),
+            "SO": np.array(["X"]),
+            "R0": kernel_params["R0"],
+            "R1": kernel_params["R1"],
+            "R2": np.array(["X"]),
+            "P1": np.array(["X"]),
+            "P2": kernel_params["P2"],
         }
+    else:
+        raise ValueError("Illegal input.")
 
     return {k: v.tolist() for k, v in kernel_comb_param.items()}
 
@@ -771,7 +800,7 @@ def multitask(
     a: np.ndarray,
     b: np.ndarray,
 ) -> np.ndarray:
-    """ Multitask approach
+    """Multitask approach
 
     Combination of two kernel matrices are combined by
     element-wise multiplication to one kernel matrix.
@@ -802,7 +831,7 @@ def make_kernel_matrix(
     kernel_abSignals: str,
     scale: bool = False,
 ) -> Tuple[np.ndarray, List[float], List[str]]:
-    """ Compute combined kernel matrix.
+    """Compute combined kernel matrix.
 
     for each task, time, PfSPZ dose and antibody signal intensity a kernel matrix
     is pre-computed given the pre-defined kernel function and combined to one
@@ -863,40 +892,51 @@ def make_kernel_matrix(
         )
     for key in ["SA", "SO", "R0", "R1", "R2"]:
         if not isinstance(model[key], (float, str)):
-            raise ValueError(
-                f"model[{key}] must be either of type str or float."
-            )
+            raise ValueError(f"model[{key}] must be either of type str or float.")
     for key in ["P1", "P2"]:
         if not isinstance(model[key], (int, str)):
-            raise ValueError(
-                f"model[{key}] must be either of type str or int."
-            )
+            raise ValueError(f"model[{key}] must be either of type str or int.")
 
     # pre-compute kernel matrix of time points K(n_t,n_t')
-    if kernel_time_series == 'sigmoid_kernel':
-        time_series_kernel_matrix = sigmoid_kernel(
-                time_series.values.reshape(len(time_series), 1),
-                gamma=model['SA'],
-                coef0=model['SO'],
-        )
-    elif kernel_time_series == 'rbf_kernel':
+    if kernel_time_series == "sigmoid_kernel":
+        if isinstance(model["SO"], float):
+            time_series_kernel_matrix = sigmoid_kernel(
+                time_series.to_numpy().reshape(len(time_series), 1),
+                gamma=model["SA"],
+                coef0=model["SO"],
+            )
+        else:
+            raise ValueError("Illegal input.")
+    elif kernel_time_series == "rbf_kernel":
         time_series_kernel_matrix = rbf_kernel(
-            time_series.values.reshape(len(time_series), 1), gamma=model['R0']
+            time_series.to_numpy().reshape(len(time_series), 1), gamma=model["R0"]
         )
+    else:
+        raise ValueError("Illegal input.")
 
     # pre-compute kernel matrix of dosage K(n_d,n_d')
     if kernel_dosage == "rbf_kernel":
-        dose_kernel_matrix = rbf_kernel(dose.values.reshape(len(dose), 1), gamma=model['R1'])
+        dose_kernel_matrix = rbf_kernel(dose.to_numpy().reshape(len(dose), 1), gamma=model["R1"])
     elif kernel_dosage == "poly_kernel":
-        dose_kernel_matrix = polynomial_kernel(
-            dose.values.reshape(len(dose), 1), degree=model['P1']
-        )
+        if isinstance(model["P1"], int):
+            dose_kernel_matrix = polynomial_kernel(
+                dose.to_numpy().reshape(len(dose), 1), degree=model["P1"]
+            )
+        else:
+            raise ValueError("Illegal input.")
+    else:
+        raise ValueError("Illegal input.")
 
     # pre-compute kernel matrix of antibody reactivity K(n_p,n_p')
     if kernel_abSignals == "rbf_kernel":
-        AB_signals_kernel_matrix = rbf_kernel(AB_signals, gamma=model['R2'])
+        AB_signals_kernel_matrix = rbf_kernel(AB_signals, gamma=model["R2"])
     elif kernel_abSignals == "poly_kernel":
-        AB_signals_kernel_matrix = polynomial_kernel(AB_signals, degree=model['P2'])
+        if isinstance(model["P2"], int):
+            AB_signals_kernel_matrix = polynomial_kernel(AB_signals, degree=model["P2"])
+        else:
+            raise ValueError("Illegal input.")
+    else:
+        raise ValueError("Illegal input.")
 
     # pre-compute multitask kernel matrix K((np, nt),(np', nt'))
     multi_AB_signals_time_series_kernel_matrix = multitask(
@@ -912,11 +952,8 @@ def make_kernel_matrix(
         )
     )
     if c_list:
-        print(
-            "multitask Gram matrix had to be corrected.\n"
-            f"model: {model}"
-        )
-    if len(message) > 0 and kernel_time_series != 'sigmoid_kernel':
+        print("multitask Gram matrix had to be corrected.\n" f"model: {model}")
+    if len(message) > 0 and kernel_time_series != "sigmoid_kernel":
         warnings.warn(
             "Correction failed for a multitask Gram matrix with non-sigmoid "
             f"time-series kernel (model: {model}):\n{message}"
@@ -924,22 +961,17 @@ def make_kernel_matrix(
 
     if scale:
         multitaskMatrix, warn, _, message = make_symmetric_matrix_psd(
-            normalize(
-                KernelCenterer().fit_transform(multitaskMatrix)
-            )
+            normalize(KernelCenterer().fit_transform(multitaskMatrix))
         )
         if warn:
-            print(
-                "Scaled multitask Gram matrix had to be corrected.\n"
-                f"model: {model}"
-            )
+            print("Scaled multitask Gram matrix had to be corrected.\n" f"model: {model}")
         if np.max(np.diag(multitaskMatrix)) > 1.1:
             warnings.warn(
                 "Scaled multitask Gram matrix "
                 "kernel had diagonal elements > 1.1.\n"
                 f"model: {model}"
             )
-        if len(message) > 0 and kernel_time_series != 'sigmoid_kernel':
+        if len(message) > 0 and kernel_time_series != "sigmoid_kernel":
             warnings.warn(
                 "Correction failed for a scaled multitask Gram matrix with non-sigmoid "
                 f"time-series kernel (model: {model}):\n{message}"
@@ -956,6 +988,6 @@ def make_kernel_matrix(
         "close to another column of M.):"
     )
     print(np.linalg.matrix_rank(multitaskMatrix))
-    print('\n\n')
+    print("\n\n")
 
     return multitaskMatrix, c_list, info_list

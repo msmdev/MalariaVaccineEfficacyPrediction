@@ -26,15 +26,20 @@ Will save the results.
 
 """
 
+import argparse
+import os
+from typing import Optional
+
 import numpy as np
 import pandas as pd
-import os
-import argparse
-from source.featureEvaluation import featureEvaluationRF, featureEvaluationRLR
-from source.featureEvaluation import featureEvaluationESPY, make_plot
-from source.utils import select_timepoint, get_parameters
-from typing import Optional
 from nestedcv import save_model
+from source.featureEvaluation import (
+    featureEvaluationESPY,
+    featureEvaluationRF,
+    featureEvaluationRLR,
+    make_plot,
+)
+from source.utils import get_parameters, select_timepoint
 
 
 def main(
@@ -53,55 +58,55 @@ def main(
     Evaluation of informative features.
     """
 
-    if timepoint not in ['III14', 'C-1', 'C28']:
+    if timepoint not in ["III14", "C-1", "C28"]:
         raise ValueError("timepoint must be one of 'III14', 'C-1' or 'C28'.")
 
     data_at_timePoint = pd.read_csv(
-        os.path.join(data_dir, f'{data_file_id}_{timepoint}.csv'),
+        os.path.join(data_dir, f"{data_file_id}_{timepoint}.csv"),
         header=0,
     )
     X = data_at_timePoint.drop(
-        columns=['Patient', 'group', 'Protection', 'TimePointOrder']
+        columns=["Patient", "group", "Protection", "TimePointOrder"]
     )  # including dose
-    y = data_at_timePoint.loc[:, 'Protection'].to_numpy()
+    y = data_at_timePoint.loc[:, "Protection"].to_numpy()
     rgscv_results = pd.read_csv(rgscv_path, sep="\t", header=0, index_col=0)
 
-    timepoint_results = select_timepoint(
-        rgscv_results=rgscv_results,
-        timepoint=timepoint
-    )
+    timepoint_results = select_timepoint(rgscv_results=rgscv_results, timepoint=timepoint)
 
     # Initialize, fit, and evaluate
-    if method == 'RF':
+    if method == "RF":
 
         from source.RF_config import estimator
 
         params = get_parameters(
             timepoint_results=timepoint_results,
-            model='RF',
+            model="RF",
         )
         estimator.set_params(**params)
 
         importances, model = featureEvaluationRF(estimator, X, y)
 
-    elif method == 'RLR':
+    elif method == "RLR":
 
         from source.RLR_config import estimator
 
         params = get_parameters(
             timepoint_results=timepoint_results,
-            model='RLR',
+            model="RLR",
         )
         estimator.set_params(**params)
 
         importances, model = featureEvaluationRLR(estimator, X, y)
 
-    elif method == 'multitaskSVM':
+    elif method == "multitaskSVM":
 
         from source.multitaskSVM_config import configurator
 
-        if not (isinstance(kernel_dir, str) and isinstance(kernel_identifier, str) and
-                isinstance(combination, str)):
+        if not (
+            isinstance(kernel_dir, str)
+            and isinstance(kernel_identifier, str)
+            and isinstance(combination, str)
+        ):
             raise ValueError(
                 "`kernel_dir`, `kernel_identifier` and `combination` must be given "
                 "if `method`='multitaskSVM'."
@@ -115,34 +120,31 @@ def main(
 
         params = get_parameters(
             timepoint_results=timepoint_results,
-            model='multitaskSVM',
+            model="multitaskSVM",
         )
 
         # initialize running index array for DataSelector
         data = pd.read_csv(
-            os.path.join(data_dir, f'{data_file_id}_all.csv'),
+            os.path.join(data_dir, f"{data_file_id}_all.csv"),
             header=0,
         )
-        y = data.loc[:, 'Protection'].to_numpy()
+        y = data.loc[:, "Protection"].to_numpy()
         if not y.size * y.size < np.iinfo(np.uint32).max:
             raise ValueError(f"y is to large: y.size * y.size >= {np.iinfo(np.uint32).max}")
-        X = np.array(
-            [x for x in range(y.size * y.size)],
-            dtype=np.uint32
-        ).reshape((y.size, y.size))
+        X = np.array([x for x in range(y.size * y.size)], dtype=np.uint32).reshape((y.size, y.size))
 
         model.set_params(**params)
         model.fit(X, y)
 
         importances = featureEvaluationESPY(
             eval_data=data_at_timePoint.drop(
-                columns=['Patient', 'group', 'Protection']
+                columns=["Patient", "group", "Protection"]
             ),  # including dose AND timepoint
             model=model,
             lq=25,
             up=75,
             basis_data=data.drop(
-                columns=['Patient', 'group', 'Protection']
+                columns=["Patient", "group", "Protection"]
             ),  # including dose AND timepoint,
             kernel_parameters=params,
             multitask=True,
@@ -153,8 +155,10 @@ def main(
             name=f"top50_informative_features_{timepoint}",
             outputdir=out_dir,
         )
+    else:
+        raise ValueError(f"Illegal input: unknown method {method}.")
 
-    fn = f'best_{method}_model_'
+    fn = f"best_{method}_model_"
     for key in params.keys():
         fn = fn + f"_{key.split('__')[-1]}_{params[key]}"
     save_model(
@@ -163,15 +167,15 @@ def main(
         fn,
         timestamp=True,
         compress=False,
-        method='joblib',
+        method="joblib",
     )
 
     print(f"Parameter combination for best mean AUROC at time point {timepoint} :")
     print(params)
-    print('')
+    print("")
 
     fn = os.path.join(out_dir, f"informative_features_{timepoint}.tsv")
-    pd.DataFrame(data=importances).to_csv(fn, sep='\t', na_rep='nan')
+    pd.DataFrame(data=importances).to_csv(fn, sep="\t", na_rep="nan")
 
     print(f"Results are saved in: {fn}")
 
@@ -179,69 +183,73 @@ def main(
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
-        description=('Function to run an analysis of informative features from RF.')
+        description=("Function to run an analysis of informative features from RF.")
     )
     parser.add_argument(
-        '--data-dir',
-        dest='data_dir',
-        metavar='DIR',
+        "--data-dir",
+        dest="data_dir",
+        metavar="DIR",
         required=True,
-        help='Path to the directory were the data is located.'
+        help="Path to the directory were the data is located.",
     )
     parser.add_argument(
-        '--data-file-id',
-        dest='data_file_id',
+        "--data-file-id",
+        dest="data_file_id",
         required=True,
         help=(
             "String identifying the data file (located in the directory given via --data-dir)."
             "This string will be appended by the time point and '.csv'. If you pass, for example, "
             "'--timepoint III14' and '--data-file-id preprocessed_whole_data', the resulting file "
-            "name will be 'preprocessed_whole_data_III14.csv'.")
+            "name will be 'preprocessed_whole_data_III14.csv'."
+        ),
     )
     parser.add_argument(
-        '--rgscv-path',
-        dest='rgscv_path',
-        metavar='FILE',
+        "--rgscv-path",
+        dest="rgscv_path",
+        metavar="FILE",
         required=True,
-        help='Path to the File were the RGSCV results are stored.'
+        help="Path to the File were the RGSCV results are stored.",
     )
     parser.add_argument(
-        '--out-dir',
-        dest='out_dir',
-        metavar='DIR',
+        "--out-dir",
+        dest="out_dir",
+        metavar="DIR",
         required=True,
-        help='Path to the directory to wihich the output shall be written.'
+        help="Path to the directory to wihich the output shall be written.",
     )
     parser.add_argument(
-        '--timepoint',
-        dest='timepoint',
+        "--timepoint",
+        dest="timepoint",
         type=str,
         required=True,
         help=(
             "Time point for which the analysis shall be performed. "
-            "Must be one of 'III14', 'C-1' or 'C28'.")
+            "Must be one of 'III14', 'C-1' or 'C28'."
+        ),
     )
     parser.add_argument(
-        '--method', dest='method', required=True,
-        help="Choose the method (either 'RF', 'RLR' or 'multitaskSVM') used to model the data."
+        "--method",
+        dest="method",
+        required=True,
+        help="Choose the method (either 'RF', 'RLR' or 'multitaskSVM') used to model the data.",
     )
     parser.add_argument(
-        '--kernel-dir',
-        dest='kernel_dir',
-        metavar='DIR',
-        help='Path to the directory were the precomputed kernel matrix is stored.',
+        "--kernel-dir",
+        dest="kernel_dir",
+        metavar="DIR",
+        help="Path to the directory were the precomputed kernel matrix is stored.",
     )
     parser.add_argument(
-        '--kernel-identifier',
-        dest='kernel_identifier',
-        help='Filename prefix of the precomputed kernel matrix.',
+        "--kernel-identifier",
+        dest="kernel_identifier",
+        help="Filename prefix of the precomputed kernel matrix.",
     )
     parser.add_argument(
-        '--combination',
-        dest='combination',
+        "--combination",
+        dest="combination",
         help=(
             "Kernel combination. Supply 'RPP', 'RPR', 'RRP', 'RRR', 'SPP', 'SPR', 'SRP', or 'SRR'."
-        )
+        ),
     )
     args = parser.parse_args()
 
