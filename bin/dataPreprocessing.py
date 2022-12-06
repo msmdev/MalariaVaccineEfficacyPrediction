@@ -24,9 +24,10 @@ This script performs the preprocessing of the raw proteome array data.
 
 """
 
-import pandas as pd
-import os
 import argparse
+import os
+
+import pandas as pd
 from source.preprocessing import preprocessing
 
 
@@ -42,7 +43,7 @@ def main(
     preprocessed_data = preprocessing(data)
 
     preprocessed_data.to_csv(
-        os.path.join(data_dir, f'{out_name}.csv'),
+        os.path.join(data_dir, f"{out_name}.csv"),
         index=False,
     )
 
@@ -51,34 +52,32 @@ def main(
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(
-        description=('Script to preprocess the raw proteome data.')
-    )
+    parser = argparse.ArgumentParser(description=("Script to preprocess the raw proteome data."))
     parser.add_argument(
-        '--data-dir',
-        dest='data_dir',
-        metavar='DIR',
+        "--data-dir",
+        dest="data_dir",
+        metavar="DIR",
         required=True,
         help=(
-            'Path to the directory were the proteome data is located. '
-            'The preprocessed data will be also stored here.'
-        )
+            "Path to the directory were the proteome data is located. "
+            "The preprocessed data will be also stored here."
+        ),
     )
     parser.add_argument(
-        '--data-file',
-        dest='data_file',
-        metavar='FILE',
+        "--data-file",
+        dest="data_file",
+        metavar="FILE",
         required=True,
-        help=('Name of the file were the raw proteome data is stored.')
+        help=("Name of the file were the raw proteome data is stored."),
     )
     parser.add_argument(
-        '--out-name',
-        dest='out_name',
+        "--out-name",
+        dest="out_name",
         required=True,
         help=(
             "Identifier to use when naming the file were the preprocessed proteome data "
             "is stored (WITHOUT a file ending like '.csv'!)."
-        )
+        ),
     )
     args = parser.parse_args()
 
