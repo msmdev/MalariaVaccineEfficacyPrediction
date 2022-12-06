@@ -52,7 +52,7 @@ for dataset in 'whole' 'selective'; do
     cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
     cp "${topdir}/bin/groupCorrelatedFeatures.py" . || { echo "cp ${topdir}/bin/groupCorrelatedFeatures.py . failed"; exit 1; }
 
-    for threshold in '0.7' '0.75' '0.8' '0.85' '0.9' '0.95' '1.0'; do
+    for threshold in '0.1' '0.2' '0.3' '0.4' '0.5' '0.6' '0.7' '0.8' '0.9' '1.0'; do
 
         err="run_groupCorrelatedFeatures_${dataset}_${method}_threshold${threshold}.err"
         out="run_groupCorrelatedFeatures_${dataset}_${method}_threshold${threshold}.out"
