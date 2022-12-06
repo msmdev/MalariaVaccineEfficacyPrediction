@@ -58,6 +58,7 @@ def main(
     Evaluation of informative features.
     """
 
+    # TODO: remove C28
     if timepoint not in ["III14", "C-1", "C28"]:
         raise ValueError("timepoint must be one of 'III14', 'C-1' or 'C28'.")
 

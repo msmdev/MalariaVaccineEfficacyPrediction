@@ -107,6 +107,7 @@ def main(
     groups = data.loc[:, "group"].to_numpy()
     y = data.loc[:, "Protection"].to_numpy()
 
+    # TODO: remove C28
     for step, time in enumerate(["III14", "C-1", "C28"]):
 
         print("++++++++++++++++++++++++++++++++++++++++")
@@ -117,6 +118,7 @@ def main(
 
         rng = np.random.RandomState(seed)
 
+        # TODO: reduce dataset to single timepoints for standard models
         if method == "multitaskSVM":
 
             if combination is not None and kernel_identifier is not None and kernel_dir is not None:
@@ -152,6 +154,7 @@ def main(
         print("number of positives divided by total number of samples:", np.sum(y) / y.size)
         print("")
 
+        # TODO: update fold generation for standard datasets
         # initialize test folds and CV splitters for outer CV
         outer_cv = []
         print("----------------------------------------")
