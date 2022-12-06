@@ -140,8 +140,6 @@ def main(
             if i not in group:
                 raise ValueError(f"{i} is not contained in its own group.")
             groups[i] = sorted(group & all_features)
-            if i not in groups[i]:
-                raise ValueError(f"{i} is not contained in groups[{i}].")
             all_features = all_features - group
         groups_values_set = set()
         for i in groups.values():
