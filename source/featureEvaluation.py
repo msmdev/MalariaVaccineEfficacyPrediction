@@ -24,18 +24,21 @@ This module contains the main functionality of the ESPY approach.
 
 """
 
-import pandas as pd
-import numpy as np
-from sklearn.svm import SVC
-from typing import Dict, List, Optional, Tuple, Union
-import time
-import matplotlib.pyplot as plt
 import os
-from source.utils import make_kernel_matrix
+import time
+from typing import Dict, List, Optional, Tuple, Union
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.inspection import permutation_importance
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.pipeline import Pipeline
+from sklearn.svm import SVC
+
 from source.config import seed
+from source.utils import make_kernel_matrix
 
 
 def make_feature_combination(
@@ -72,14 +75,18 @@ def make_feature_combination(
         with `combinations["upper_combinations"][i]` equal the median vector
         but having the i-th element `m[i]` replaced by the upper percentile.
     """
-    assert isinstance(upperValue, int), "`upperValue` must be int"
-    assert isinstance(lowerValue, int), "`lowerValue` must be int"
-    assert 0 <= upperValue <= 100, "`upperValue` must be in [0, 100]"
-    assert 0 <= lowerValue <= upperValue, "`lowerValue` must be in [0, upperValue]"
+    if not isinstance(upperValue, int):
+        raise ValueError("`upperValue` must be int")
+    if not isinstance(lowerValue, int):
+        raise ValueError("`lowerValue` must be int")
+    if not (0 <= upperValue <= 100):
+        raise ValueError("`upperValue` must be in [0, 100]")
+    if not (0 <= lowerValue <= upperValue):
+        raise ValueError("`lowerValue` must be in [0, upperValue]")
 
     statistics = X.median(axis=0).to_frame(name="Median")
-    statistics["UpperQuantile"] = X.quantile(float(upperValue) / 100.)
-    statistics["LowerQuantile"] = X.quantile(float(lowerValue) / 100.)
+    statistics["UpperQuantile"] = X.quantile(float(upperValue) / 100.0)
+    statistics["LowerQuantile"] = X.quantile(float(lowerValue) / 100.0)
     statistics = statistics.T
 
     median = statistics.loc["Median", :].to_numpy().copy()
@@ -113,7 +120,7 @@ def compute_distance_hyper(
     model: SVC,
     labels: List[str],
     data: Optional[pd.DataFrame] = None,
-    kernel_parameters: Optional[Dict[str, Union[float, str]]] = None,
+    kernel_parameters: Optional[Dict[str, Union[float, int, str]]] = None,
     multitask: bool = False,
 ) -> pd.DataFrame:
     """Evaluate distance of each single feature to the classification boundary.
@@ -171,12 +178,12 @@ def compute_distance_hyper(
 
                 expected_keys = {"SA", "SO", "R0", "R1", "R2", "P1", "P2"}
                 actual_keys = set()
-                prefix = ''
+                prefix = ""
                 for key in kernel_parameters.keys():
-                    actual_keys.add(key.split('__')[-1])
-                    if key.split('__')[-1] == 'SA' and len(key.split('__')[-1]) > 1:
-                        prefix = key.split('__')[0]
-                        prefix = prefix + '__'
+                    actual_keys.add(key.split("__")[-1])
+                    if key.split("__")[-1] == "SA" and len(key.split("__")[-1]) > 1:
+                        prefix = key.split("__")[0]
+                        prefix = prefix + "__"
 
                 if not expected_keys.issubset(actual_keys):
                     raise ValueError(
@@ -185,56 +192,56 @@ def compute_distance_hyper(
                     )
 
                 params = (
-                    kernel_parameters[f'{prefix}SA'],
-                    kernel_parameters[f'{prefix}SO'],
-                    kernel_parameters[f'{prefix}R0'],
-                    kernel_parameters[f'{prefix}R1'],
-                    kernel_parameters[f'{prefix}R2'],
-                    kernel_parameters[f'{prefix}P1'],
-                    kernel_parameters[f'{prefix}P2'],
+                    kernel_parameters[f"{prefix}SA"],
+                    kernel_parameters[f"{prefix}SO"],
+                    kernel_parameters[f"{prefix}R0"],
+                    kernel_parameters[f"{prefix}R1"],
+                    kernel_parameters[f"{prefix}R2"],
+                    kernel_parameters[f"{prefix}P1"],
+                    kernel_parameters[f"{prefix}P2"],
                 )
 
-                if (params[0] == 'X' or params[1] == 'X') and params[2] != 'X':
+                if (params[0] == "X" or params[1] == "X") and params[2] != "X":
                     if params[0] == params[1]:
-                        kernel_time_series = 'rbf_kernel'
+                        kernel_time_series = "rbf_kernel"
                     else:
                         raise ValueError("Time series kernel is neither rbf nor sigmoid.")
-                elif params[0] != 'X' and params[1] != 'X' and params[2] == 'X':
-                    kernel_time_series = 'sigmoid_kernel'
+                elif params[0] != "X" and params[1] != "X" and params[2] == "X":
+                    kernel_time_series = "sigmoid_kernel"
                 else:
                     raise ValueError("Time series kernel is neither rbf nor sigmoid.")
 
-                if params[3] != 'X' and params[5] == 'X':
-                    kernel_dosage = 'rbf_kernel'
-                elif params[3] == 'X' and params[5] != 'X':
-                    kernel_dosage = 'poly_kernel'
+                if params[3] != "X" and params[5] == "X":
+                    kernel_dosage = "rbf_kernel"
+                elif params[3] == "X" and params[5] != "X":
+                    kernel_dosage = "poly_kernel"
                 else:
                     raise ValueError("Dosage kernel is neither rbf nor polynomial.")
 
-                if params[4] != 'X' and params[6] == 'X':
-                    kernel_abSignals = 'rbf_kernel'
-                elif params[4] == 'X' and params[6] != 'X':
-                    kernel_abSignals = 'poly_kernel'
+                if params[4] != "X" and params[6] == "X":
+                    kernel_abSignals = "rbf_kernel"
+                elif params[4] == "X" and params[6] != "X":
+                    kernel_abSignals = "poly_kernel"
                 else:
                     raise ValueError("Antibody signal kernel is neither rbf nor polynomial.")
 
                 # for lower quantile combination:
                 # add test combination as new sample to data
                 data.loc["eval_feature", :] = combinations["lower_combinations"][m]
-                if data.index.get_loc('eval_feature') != data.shape[0] - 1:
+                if data.index.get_loc("eval_feature") != data.shape[0] - 1:
                     raise ValueError("eval_feature is not at the end of the DataFrame.")
                 # TODO: Implement function to only calculate the single actually needed row of
                 # the kernel matrix instead of calculating the full matrix every single time.
                 gram_matrix = make_kernel_matrix(
-                    AB_signals=data.drop(columns=['TimePointOrder', 'Dose']),
-                    time_series=data['TimePointOrder'],
-                    dose=data['Dose'],
-                    model=params,
+                    AB_signals=data.drop(columns=["TimePointOrder", "Dose"]),
+                    time_series=data["TimePointOrder"],
+                    dose=data["Dose"],
+                    model=kernel_parameters,
                     kernel_time_series=kernel_time_series,
                     kernel_dosage=kernel_dosage,
                     kernel_abSignals=kernel_abSignals,
                 )
-                single_feature_sample = gram_matrix[0][-1, :len(gram_matrix[0])-1]
+                single_feature_sample = gram_matrix[0][-1, : len(gram_matrix[0]) - 1]
                 # TODO: Consider using SVC(decision_function_shape='ovo') and dividing distance by
                 # |coeff_| to get the exact distances. Currently distance is just proportional to
                 # the actual (exact) distance. This is unproblematic, since the proportions
@@ -246,20 +253,20 @@ def compute_distance_hyper(
                 # for upper quantile combination:
                 # add test combination as new sample to data
                 data.loc["eval_feature", :] = combinations["upper_combinations"][m]
-                if data.index.get_loc('eval_feature') != data.shape[0] - 1:
+                if data.index.get_loc("eval_feature") != data.shape[0] - 1:
                     raise ValueError("eval_feature is not at the end of the DataFrame.")
                 # TODO: Implement function to only calculate the single actually needed row of
                 # the kernel matrix instead of calculating the full matrix every single time.
                 gram_matrix = make_kernel_matrix(
-                    AB_signals=data.drop(columns=['TimePointOrder', 'Dose']),
-                    time_series=data['TimePointOrder'],
-                    dose=data['Dose'],
-                    model=params,
+                    AB_signals=data.drop(columns=["TimePointOrder", "Dose"]),
+                    time_series=data["TimePointOrder"],
+                    dose=data["Dose"],
+                    model=kernel_parameters,
                     kernel_time_series=kernel_time_series,
                     kernel_dosage=kernel_dosage,
                     kernel_abSignals=kernel_abSignals,
                 )
-                single_feature_sample = gram_matrix[0][-1, :len(gram_matrix[0])-1]
+                single_feature_sample = gram_matrix[0][-1, : len(gram_matrix[0]) - 1]
                 # TODO: Consider using SVC(decision_function_shape='ovo') and dividing distance by
                 # |coeff_| to get the exact distances. Currently distance is just proportional to
                 # the actual (exact) distance. This is unproblematic, since the proportions
@@ -271,20 +278,20 @@ def compute_distance_hyper(
                 # for consensus sample:
                 # add median as new sample to data
                 data.loc["eval_feature", :] = median
-                if data.index.get_loc('eval_feature') != data.shape[0] - 1:
+                if data.index.get_loc("eval_feature") != data.shape[0] - 1:
                     raise ValueError("eval_feature is not at the end of the DataFrame.")
                 # TODO: Implement function to only calculate the single actually needed row of
                 # the kernel matrix instead of calculating the full matrix every single time.
                 gram_matrix = make_kernel_matrix(
-                    dAB_signals=data.drop(columns=['TimePointOrder', 'Dose']),
-                    time_series=data['TimePointOrder'],
-                    dose=data['Dose'],
-                    model=params,
+                    AB_signals=data.drop(columns=["TimePointOrder", "Dose"]),
+                    time_series=data["TimePointOrder"],
+                    dose=data["Dose"],
+                    model=kernel_parameters,
                     kernel_time_series=kernel_time_series,
                     kernel_dosage=kernel_dosage,
                     kernel_abSignals=kernel_abSignals,
                 )
-                feature_consensus_sample = gram_matrix[0][-1, :len(gram_matrix[0])-1]
+                feature_consensus_sample = gram_matrix[0][-1, : len(gram_matrix[0]) - 1]
                 # TODO: Consider using SVC(decision_function_shape='ovo') and dividing distance by
                 # |coeff_| to get the exact distances. Currently distance is just proportional to
                 # the actual (exact) distance. This is unproblematic, since the proportions
@@ -309,24 +316,28 @@ def compute_distance_hyper(
     print(len(get_distance_df.columns))
 
     # calculate absolute distance value |d| based on lower and upper quantile
+    d_up: float
+    d_down: float
     for col in get_distance_df.columns:
         # get evaluated distance based on upper quantile minus consensus
-        d_up = (get_distance_df[col].loc["UpperQuantile [d]"] -
-                get_distance_df[col].loc["consensus [d]"])
-        get_distance_df.loc["UQ - consensus [d]", col] = d_up
+        d_up = (
+            get_distance_df.at["UpperQuantile [d]", col] - get_distance_df.at["consensus [d]", col]
+        )
+        get_distance_df.at["UQ - consensus [d]", col] = d_up
 
         # get evaluated distance based on lower quantile minus consensus
-        d_down = (get_distance_df[col].loc["LowerQuantile [d]"] -
-                  get_distance_df[col].loc["consensus [d]"])
-        get_distance_df.loc["LQ - consensus [d]", col] = d_down
+        d_down = (
+            get_distance_df.at["LowerQuantile [d]", col] - get_distance_df.at["consensus [d]", col]
+        )
+        get_distance_df.at["LQ - consensus [d]", col] = d_down
 
         # calculate maximal distance value from distance_based on lower quantile
         # and distance_based on upper quantile
         if d_up > 0 and d_down < 0:
-            direction = 1.
+            direction = 1.0
             d_value = direction * (abs(d_up) + abs(d_down))
         elif d_up < 0 and d_down > 0:
-            direction = -1.
+            direction = -1.0
             d_value = direction * (abs(d_up) + abs(d_down))
         elif d_up != 0 and d_down == 0:
             d_value = d_up
@@ -336,27 +347,28 @@ def compute_distance_hyper(
             d_value = 0.0
         else:
             d_value = np.nan
-        get_distance_df.loc['d', col] = d_value
+        get_distance_df.loc["d", col] = d_value
 
     # set up final data frame for distance evaluation
-    get_distance_df.loc['|d|'] = abs(get_distance_df.loc['d'].values)
+    get_distance_df.loc["|d|"] = np.absolute(get_distance_df.loc["d"].to_numpy())
     # sort values by abs-value of |d|
     get_distance_df = get_distance_df.T.sort_values(
-        by='|d|', axis=0, kind='stable', ascending=False, na_position='last'
+        by="|d|", axis=0, kind="stable", ascending=False, na_position="last"
     ).T
 
     # Normalize the distance values
-    bool_idx = get_distance_df.loc['d'].notna()
-    sum_of_distance = get_distance_df.loc['|d|', :].sum(skipna=True)
+    bool_idx = get_distance_df.loc["d"].notna()
+    sum_of_distance = get_distance_df.loc["|d|", :].sum(skipna=True)
     for col in get_distance_df.columns[bool_idx]:
-        get_distance_df.loc['d_norm', col] = get_distance_df.loc['d', col] / sum_of_distance
-    get_distance_df.loc['|d_norm|'] = abs(get_distance_df.loc['d_norm'].values)
-    assert np.allclose(get_distance_df.loc['|d_norm|', :].sum(skipna=True), 1.0), \
-        "np.allclose(get_distance_df.loc['|d_norm|', :].sum(skipna=True), 1.0) is False."
+        get_distance_df.at["d_norm", col] = get_distance_df.at["d", col] / sum_of_distance
+    get_distance_df.loc["|d_norm|"] = np.absolute(get_distance_df.loc["d_norm"].to_numpy())
+    assert np.allclose(
+        get_distance_df.loc["|d_norm|", :].sum(skipna=True), 1.0
+    ), "np.allclose(get_distance_df.loc['|d_norm|', :].sum(skipna=True), 1.0) is False."
 
     print("Dimension of distance matrix:")
     print(get_distance_df.shape)
-    print('')
+    print("")
 
     return get_distance_df
 
@@ -385,21 +397,21 @@ def make_plot(
     opacity = 0.6
 
     values = np.array(data.T.d_norm)
-    clrs = ['red' if (x > 0) else 'blue' for x in values]
+    clrs = ["red" if (x > 0) else "blue" for x in values]
 
     index = np.arange(len(labels))
     ax.bar(
         index,
-        abs(data.loc["|d_norm|"].values),
+        np.absolute(data.loc["|d_norm|"].to_numpy()),
         width=w,
         color=clrs,
         align="center",
-        alpha=opacity
+        alpha=opacity,
     )
     ax.xaxis_date()
 
-    plt.xlabel('number of features', fontsize=20)
-    plt.ylabel('ESPY value', fontsize=20)
+    plt.xlabel("number of features", fontsize=20)
+    plt.ylabel("ESPY value", fontsize=20)
     plt.xticks(index, labels, fontsize=10, rotation=90)
 
     plt.savefig(os.path.join(outputdir, name + ".png"), dpi=600)
@@ -414,9 +426,9 @@ def featureEvaluationESPY(
     lq: int,
     up: int,
     basis_data: Optional[pd.DataFrame] = None,
-    kernel_parameters: Optional[Dict[str, Union[str, float]]] = None,
+    kernel_parameters: Optional[Dict[str, Union[float, int, str]]] = None,
     multitask: bool = False,
- ) -> pd.DataFrame:
+) -> pd.DataFrame:
     """ESPY measurement.
 
     Calculate ESPY value for each feature on proteome or simulated data.
@@ -451,14 +463,12 @@ def featureEvaluationESPY(
     start = time.time()
 
     statistics, median, combinations = make_feature_combination(
-        X=eval_data,
-        lowerValue=lq,
-        upperValue=up
+        X=eval_data, lowerValue=lq, upperValue=up
     )
 
     print("Statistics of features:")
     print(statistics)
-    print('')
+    print("")
 
     if not multitask:
 
@@ -485,9 +495,7 @@ def featureEvaluationESPY(
 
         else:
 
-            raise ValueError(
-                "`basis_data` and `kernel_parameters` must be supplied."
-            )
+            raise ValueError("`basis_data` and `kernel_parameters` must be supplied.")
 
     end = time.time()
     print(f"end of computation after: {end - start} seconds.\n")
@@ -496,17 +504,18 @@ def featureEvaluationESPY(
 
 
 def featureEvaluationRF(
-    model: RandomForestClassifier,
+    model: Pipeline,
     X: pd.DataFrame,
     y: np.ndarray,
-) -> Tuple[pd.DataFrame, RandomForestClassifier]:
+) -> Tuple[pd.DataFrame, Pipeline]:
     """Evaluation of informative features of a given RF model.
     Feature importances are obtained via permutation importance evaluation.
     The model will be fitted on X, y before feature evaluation.
 
     Parameter
     ---------
-    model : sklearn.ensemble.RandomForestClassifier
+    model : sklearn.pipeline.Pipeline
+        Last step in pipeline must be RandomForestClassifier estimator.
     X : pd.DataFrame
         Feature matrix given as pd.DataFrame.
     y : np.ndarray
@@ -516,16 +525,18 @@ def featureEvaluationRF(
     -------
     importances : pd.Dataframe
         Dataframe of non-zero feature importances.
-    model : sklearn.ensemble.RandomForestClassifier
+    model : sklearn.pipeline.Pipeline
         Fitted model (using X, y).
     """
+    if not isinstance(model[-1], RandomForestClassifier):
+        raise ValueError("Last step in pipeline must be RandomForestClassifier estimator.")
 
     model.fit(X.to_numpy(), y)
     result = permutation_importance(
         model,
         X.to_numpy(),
         y,
-        scoring='roc_auc',
+        scoring="roc_auc",
         n_repeats=100,
         n_jobs=-1,
         random_state=seed,
@@ -535,26 +546,27 @@ def featureEvaluationRF(
     importances = pd.DataFrame(
         result.importances_mean[sorted_importances_idx],
         index=X.columns[sorted_importances_idx],
-        columns=['importance'],
+        columns=["importance"],
     )
 
     # Extract non-zero importances
     print("Number of non-zero importances:", np.count_nonzero(result.importances_mean))
 
-    return importances[importances['importance'] != 0], model
+    return importances[importances["importance"] != 0], model
 
 
 def featureEvaluationRLR(
-    model: LogisticRegression,
+    model: Pipeline,
     X: pd.DataFrame,
     y: np.ndarray,
-) -> Tuple[pd.DataFrame, LogisticRegression]:
+) -> Tuple[pd.DataFrame, Pipeline]:
     """Evaluation of informative features of a given RLR model.
     The model will be fitted on X, y before feature evaluation.
 
     Parameter
     ---------
-    model : sklearn.linear_model.LogisticRegression
+    model : sklearn.pipeline.Pipeline
+        Last step in pipeline must be LogisticRegression estimator.
     X : pd.DataFrame
         Feature matrix given as pd.DataFrame.
     y : np.ndarray
@@ -564,12 +576,16 @@ def featureEvaluationRLR(
     -------
     importances : pd.Dataframe
         Dataframe of non-zero feature importances.
-    model : sklearn.linear_model.LogisticRegression
+    model : sklearn.pipeline.Pipeline
         Fitted model (using X, y).
     """
 
     model.fit(X.to_numpy(), y)
-    coefs = model['logisticregression'].coef_
+    LR = model[-1]
+    if isinstance(LR, LogisticRegression):
+        coefs = LR.coef_
+    else:
+        raise ValueError("Last step in pipeline must be LogisticRegression estimator.")
     if coefs.shape[0] == 1:
         coefs = coefs.flatten()
     else:
@@ -582,10 +598,10 @@ def featureEvaluationRLR(
     importances = pd.DataFrame(
         coefs[sorted_importances_idx],
         index=X.columns[sorted_importances_idx],
-        columns=['importance'],
+        columns=["importance"],
     )
 
     # Extract non-zero coefficients
     print("Number of non-zero importances (weights):", np.count_nonzero(coefs))
 
-    return importances[importances['importance'] != 0], model
+    return importances[importances["importance"] != 0], model
