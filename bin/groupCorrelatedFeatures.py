@@ -32,9 +32,7 @@ import pathlib
 import warnings
 from typing import Dict, List
 
-import matplotlib.pyplot as plt
 import nestedcv as ncv
-import numpy as np
 import pandas as pd
 
 
@@ -85,7 +83,7 @@ def main(
             .any()
         ):
             warnings.warn(
-                f"Dose is strongly correlated (>{correlation_threshold}) "
+                f"The Dose is threshold-exceedingly correlated (>{correlation_threshold}) "
                 "with at least one antibody signal."
             )
         del correlation
@@ -187,13 +185,14 @@ def main(
                 f"_threshold{correlation_threshold}.pdf"
             ),
         )
-        hist_max = np.amax(hist.to_numpy())
-        fig, ax = plt.subplots()
-        ax.hist(hist.to_numpy(), bins=hist_max, log=True, rwidth=1.0)
-        ax.set_xlim(0, hist_max + 1)
-        plt.title(f"Histogram of group sizes S (S_max = #bins = {hist_max})")
-        plt.savefig(fn, format="pdf")
-        plt.close()
+        # hist_max = np.amax(hist.to_numpy())
+        # fig, ax = plt.subplots()
+        # ax.hist(hist.to_numpy(), bins=hist_max, log=True, rwidth=1.0)
+        # ax.set_xlim(0, hist_max + 1)
+        # plt.title(f"Histogram of group sizes S (S_max = #bins = {hist_max})")
+        # plt.savefig(fn, format="pdf")
+        # plt.close()
+
         print(f"# of (key-)variants to keep: {len(keep)}\n")
 
         intensities = intensities.loc[:, keep]
