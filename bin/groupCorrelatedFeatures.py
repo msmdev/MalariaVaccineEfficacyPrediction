@@ -26,14 +26,16 @@ Will save the results to .csv files
 
 """
 
-import nestedcv as ncv
-import pandas as pd
-import numpy as np
-import warnings
-import pathlib
-import os
 import argparse
+import os
+import pathlib
+import warnings
+from typing import Dict, List
+
 import matplotlib.pyplot as plt
+import nestedcv as ncv
+import numpy as np
+import pandas as pd
 
 
 def main(
@@ -48,34 +50,40 @@ def main(
     # some input sanity checks:
     if not 0.0 <= correlation_threshold <= 1.0:
         raise ValueError("correlation_threshold is not in [0, 1]")
-    if correlation_method not in ['spearman', 'pearson']:
+    if correlation_method not in ["spearman", "pearson"]:
         raise ValueError("correlation_method is not in {'spearman', 'pearson'}")
 
     pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)
 
-    fn = os.path.join(data_dir, f'{identifier}.csv')
-    data = pd.read_csv(fn, sep=',')
+    fn = os.path.join(data_dir, f"{identifier}.csv")
+    data = pd.read_csv(fn, sep=",")
 
-    print(f'Shape of dataframe loaded from {fn}: {data.shape}\n')
+    print(f"Shape of dataframe loaded from {fn}: {data.shape}\n")
 
     # check, if there are NaN DF entries:
     if data.isna().sum().sum() != 0:
         raise ValueError(f"{fn} contains NaN entries.")
 
     if correlation_threshold == 1.0:
-        print(f"Correlation grouping with threshold {correlation_threshold} requested."
-              "Since 1.0 is the maximal possible correlation, the data will be saved unchanged.\n")
+        print(
+            f"Correlation grouping with threshold {correlation_threshold} requested."
+            "Since 1.0 is the maximal possible correlation, the data will be saved unchanged.\n"
+        )
     else:
-        print(f"Grouping features based on {correlation_method} correlation "
-              f"with threshold {correlation_threshold}:\n")
+        print(
+            f"Grouping features based on {correlation_method} correlation "
+            f"with threshold {correlation_threshold}:\n"
+        )
 
         # warn if 'Dose' is strongly correlated with any AB signal:
-        correlation = data.drop(
-            columns=['Patient', 'group', 'Protection', 'TimePointOrder']
-        ).corr(method=correlation_method)
-        if correlation.loc[
-            ~correlation.index.isin(['Dose']), 'Dose'
-        ].gt(correlation_threshold).any():
+        correlation = data.drop(columns=["Patient", "group", "Protection", "TimePointOrder"]).corr(
+            method=correlation_method
+        )
+        if (
+            correlation.loc[~correlation.index.isin(["Dose"]), "Dose"]
+            .gt(correlation_threshold)
+            .any()
+        ):
             warnings.warn(
                 f"Dose is strongly correlated (>{correlation_threshold}) "
                 "with at least one antibody signal."
@@ -83,10 +91,10 @@ def main(
         del correlation
 
         intensities = data.drop(
-            columns=['Patient', 'group', 'Protection', 'TimePointOrder', 'Dose']
+            columns=["Patient", "group", "Protection", "TimePointOrder", "Dose"]
         )
-        print(f'Shape of intensities dataframe: {intensities.shape}')
-        print(f'# of variants: {intensities.shape[1]}\n')
+        print(f"Shape of intensities dataframe: {intensities.shape}")
+        print(f"# of variants: {intensities.shape[1]}\n")
 
         # check if there are constant features (and drop them):
         const_features = intensities.columns[intensities.std(axis=0.0) == 0].to_list()
@@ -96,7 +104,7 @@ def main(
             print(f"{fn} contains constant features:")
             for i in const_features:
                 print(i)
-            print(f'Shape of dataframe after dropping constant features: {intensities.shape}\n')
+            print(f"Shape of dataframe after dropping constant features: {intensities.shape}\n")
 
         # calculate either pearson or spearman correlation dataframe
         correlation = intensities.corr(method=correlation_method)
@@ -119,16 +127,21 @@ def main(
         if len(correlation.index) != len(set(correlation.index)):
             raise ValueError("len(correlation.index) != len(set(correlation.index))")
         all_features = set(correlation.index)
-        groups = dict()
+        groups: Dict[str, List[str]] = dict()
         for i in correlation.index.to_list():
             group = set(
-                correlation.loc[i, ~correlation.loc[i, :].between(
-                    -correlation_threshold, correlation_threshold, inclusive='both'
-                )].index
+                correlation.loc[
+                    i,
+                    ~correlation.loc[i, :].between(
+                        -correlation_threshold, correlation_threshold, inclusive="both"
+                    ),
+                ].index
             )
             if i not in group:
-                raise ValueError(f"{i} is not contained in its group.")
+                raise ValueError(f"{i} is not contained in its own group.")
             groups[i] = sorted(group & all_features)
+            if i not in groups[i]:
+                raise ValueError(f"{i} is not contained in groups[{i}].")
             all_features = all_features - group
         groups_values_set = set()
         for i in groups.values():
@@ -143,37 +156,50 @@ def main(
         )
         ncv.save_json(groups, out_dir, fn, timestamp=False, overwrite=True)
 
-        # keep only the key(-variant)s
+        # keep only one representative per group:
+        keep = []
         keep = []
         count = []
         for key in groups.keys():
             if len(groups[key]) > 0:
-                keep.append(key)
+                if len(groups[key]) > 1:
+                    keep.append(
+                        correlation.loc[groups[key], groups[key]]
+                        .mean(axis="index", skipna=True)
+                        .idxmax(skipna=True)
+                    )
+                else:
+                    keep.append(key)
                 count.append(len(groups[key]))
         count, keep_sorted = zip(*sorted(zip(count, keep), reverse=True, key=lambda x: x[0]))
-        hist = pd.DataFrame(count, index=keep_sorted, columns=['# correlated features'])
+        hist = pd.DataFrame(list(count), index=list(keep_sorted), columns=["# correlated features"])
+
         fn = os.path.join(
             out_dir,
-            (f'{identifier}_{correlation_method}_correlated_group_sizes'
-             f'_threshold{correlation_threshold}.csv'),
+            (
+                f"{identifier}_{correlation_method}_correlated_group_sizes"
+                f"_threshold{correlation_threshold}.csv"
+            ),
         )
-        hist.to_csv(fn, sep=',')
+        hist.to_csv(fn, sep=",")
         fn = os.path.join(
             out_dir,
-            (f'{identifier}_{correlation_method}_correlated_group_sizes'
-             f'_threshold{correlation_threshold}.pdf'),
+            (
+                f"{identifier}_{correlation_method}_correlated_group_sizes"
+                f"_threshold{correlation_threshold}.pdf"
+            ),
         )
         hist_max = np.amax(hist.to_numpy())
         fig, ax = plt.subplots()
         ax.hist(hist.to_numpy(), bins=hist_max, log=True, rwidth=1.0)
         ax.set_xlim(0, hist_max + 1)
         plt.title(f"Histogram of group sizes S (S_max = #bins = {hist_max})")
-        plt.savefig(fn, format='pdf')
+        plt.savefig(fn, format="pdf")
         plt.close()
-        print(f'# of (key-)variants to keep: {len(keep)}\n')
+        print(f"# of (key-)variants to keep: {len(keep)}\n")
 
         intensities = intensities.loc[:, keep]
-        metadata = data[['Patient', 'group', 'Protection', 'TimePointOrder', 'Dose']]
+        metadata = data[["Patient", "group", "Protection", "TimePointOrder", "Dose"]]
         if intensities.index.to_list() != metadata.index.to_list():
             raise ValueError("intensities.index != data.index")
         if set(intensities.columns.to_list()) & set(metadata.columns.to_list()):
@@ -181,9 +207,10 @@ def main(
                 f"Columns overlap when joining intensities dataframe "
                 f"with metadata for {identifier} data for threshold {correlation_threshold}."
             )
-        data = metadata.join(intensities, how='left', sort=False)
-        if set(data.columns.to_list()) != \
-                set(intensities.columns.to_list()) | set(metadata.columns.to_list()):
+        data = metadata.join(intensities, how="left", sort=False)
+        if set(data.columns.to_list()) != set(intensities.columns.to_list()) | set(
+            metadata.columns.to_list()
+        ):
             raise ValueError(
                 "set(data.columns.to_list) != set(intensities.columns.to_list()) "
                 "| set(metadata.columns.to_list())"
@@ -192,10 +219,9 @@ def main(
     # save reduced DF:
     fn = os.path.join(
         out_dir,
-        (f'{identifier}_{correlation_method}_filtered'
-         f'_threshold{correlation_threshold}.csv'),
+        (f"{identifier}_{correlation_method}_filtered" f"_threshold{correlation_threshold}.csv"),
     )
-    data.to_csv(fn, sep=',', index=False)
+    data.to_csv(fn, sep=",", index=False)
 
     print(f"Shape of kept {identifier} data: {data.shape}\n")
 
@@ -203,37 +229,52 @@ def main(
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
-        description=('Function to group strongly covarying features together.')
+        description=("Function to group strongly covarying features together.")
     )
     parser.add_argument(
-        '--data-dir', dest='data_dir', metavar='DIR', required=True,
-        help='Path to the directory were the data is located.'
+        "--data-dir",
+        dest="data_dir",
+        metavar="DIR",
+        required=True,
+        help="Path to the directory were the data is located.",
     )
     parser.add_argument(
-        '--data-file-id', dest='data_file_id', required=True,
+        "--data-file-id",
+        dest="data_file_id",
+        required=True,
         help=(
             "String identifying the data file (located in the directory given via --data-dir)."
             "This string will be appended by the time point and '.csv'. If you pass, for example, "
             "'--timepoint III14' and '--data-file-id preprocessed_whole_data', the resulting file "
-            "name will be 'preprocessed_whole_data_III14.csv'.")
+            "name will be 'preprocessed_whole_data_III14.csv'."
+        ),
     )
     parser.add_argument(
-        '--out-dir', dest='out_dir', metavar='DIR', required=True,
-        help='Path to the directory to which the output shall be written.'
+        "--out-dir",
+        dest="out_dir",
+        metavar="DIR",
+        required=True,
+        help="Path to the directory to which the output shall be written.",
     )
     parser.add_argument(
-        '--correlation_threshold', dest='correlation_threshold', required=True, type=float,
+        "--correlation_threshold",
+        dest="correlation_threshold",
+        required=True,
+        type=float,
         help=(
-            'The correlation coefficient threshold t determining if two features are '
-            'grouped together: if |correlation| > t they are grouped together.'
-        )
+            "The correlation coefficient threshold t determining if two features are "
+            "grouped together: if |correlation| > t they are grouped together."
+        ),
     )
     parser.add_argument(
-        '--correlation_method', dest='correlation_method', required=True, type=str,
+        "--correlation_method",
+        dest="correlation_method",
+        required=True,
+        type=str,
         help=(
             "The method used to calculate the correlation. "
             "Use either 'spearman' (Spearman rank correlation) or 'pearson' (Pearson correlation)."
-        )
+        ),
     )
     args = parser.parse_args()
 
