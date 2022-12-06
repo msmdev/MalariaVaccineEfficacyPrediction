@@ -35,24 +35,22 @@ fi
 data_dir="${topdir}/data/proteome_data/correlationFiltering"
 combinations=('RPP' 'RPR' 'RRP' 'RRR' 'SPP' 'SPR' 'SRP' 'SRR')
 
-for threshold in '0.95' '0.98' '1.0'; do
+for threshold in '0.1' '0.2' '0.3' '0.4' '0.5' '0.6' '0.7' '0.8' '0.9' '1.0'; do
 
     for method in 'multitaskSVM' 'RF' 'RLR' 'SVM'; do
-        kernel_dir="${topdir}/data/precomputed_multitask_kernels/threshold${threshold}"
-        if [ ! -d "$kernel_dir" ]; then
-            { echo "${kernel_dir} doesn't exist"; exit 1; }
-        fi
+
         maindir="${topdir}/results/threshold${threshold}/${method}"
 
         for dataset in 'whole' 'selective'; do
+            kernel_dir="${topdir}/data/precomputed_multitask_kernels/threshold${threshold}/${dataset}"
+
+            if [ ! -d "$kernel_dir" ]; then
+                { echo "${kernel_dir} doesn't exist"; exit 1; }
+            fi
 
             if [ "$method" = 'multitaskSVM' ]; then
 
-                if [ "$dataset" = 'whole' ]; then
-                    identifier='kernel_matrix'
-                elif [ "$dataset" = 'selective' ]; then
-                    identifier='kernel_matrix_SelectiveSet'
-                fi
+                identifier='kernel_matrix'
 
                 for combination in "${combinations[@]}"; do
                     err="runRNCV.err"
@@ -64,7 +62,7 @@ for threshold in '0.95' '0.98' '1.0'; do
                     cd "$ana_dir" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
                     cp "${topdir}/bin/rncv.py" . || { echo "cp ${topdir}/bin/rncv.py . failed"; exit 1; }
                     cp "${topdir}/source/${method}_config.py" . || { echo "cp ${topdir}/source/${method}_config.py . failed"; exit 1; }
-                    python -u rncv.py --analysis-dir "$ana_dir" --data-dir "$data_dir" --data-file-id "preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}" --method "$method" --Nexp1 1 --Nexp2 10 --njobs=-1 --kernel-dir "$kernel_dir" --combination "$combination" --identifier "$identifier" 1> "${out}" 2> "${err}"
+                    python -u rncv.py --analysis-dir "$ana_dir" --data-file "${data_dir}/preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}.csv" --method "$method" --njobs=-1 --kernel-dir "$kernel_dir" --combination "$combination" --kernel-identifier "$identifier" 1> "${out}" 2> "${err}"
                 done
 
             else
@@ -78,7 +76,7 @@ for threshold in '0.95' '0.98' '1.0'; do
                 cd "$ana_dir" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
                 cp "${topdir}/bin/rncv.py" . || { echo "cp ${topdir}/bin/rncv.py . failed"; exit 1; }
                 cp "${topdir}/source/${method}_config.py" . || { echo "cp ${topdir}/source/${method}_config.py . failed"; exit 1; }
-                python -u rncv.py --analysis-dir "${ana_dir}" --data-dir "${data_dir}" --data-file-id "preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}" --method "${method}" --Nexp1 1 --Nexp2 10 --njobs=-1 1> "${out}" 2> "${err}"
+                python -u rncv.py --analysis-dir "${ana_dir}" --data-file "${data_dir}/preprocessed_${dataset}_data_spearman_filtered_threshold${threshold}.csv" --method "${method}" --njobs=-1 1> "${out}" 2> "${err}"
             fi
 
         done
