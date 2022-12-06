@@ -10,7 +10,7 @@ We adapted a multitask SVM approach to analyze time-dependent Pf-induced antibod
 The study is structured in two main parts.
 The first part is a performance assessment of the new **multitask SVM** approach in comparison to state-of-the-art methods.
 In the second part, the new **ESPY (fEature diStance exPlainabilitY)** method is used to quantify informative features from the non-linear multitask SVM model in comparison to state-of-the art methods.
-All executable code can be found in the [./bin](https://github.com/jacqui20/MalariaVaccineEfficacyPrediction/tree/main/bin) folder.
+All executable code can be found in the [bin](https://github.com/jacqui20/MalariaVaccineEfficacyPrediction/tree/main/bin) folder.
 
 ## Requirements
 **All code should always be run in a customized conda environment.**
@@ -29,6 +29,7 @@ You can install the package using pip (note: you must be inside the repository):
 ```bash
 pip install .
 ```
+Please note: The code is designed and tested for Linux or MacOS systems. In the following, we will assume that you have cloned the git repository into your home directory. If you want to locate the repository elsewhere in your filesystem, you will need to change the bash run scripts in [bin](https://github.com/jacqui20/MalariaVaccineEfficacyPrediction/tree/main/bin) accordingly.
 
 ### Developer mode
 Instead you can install in "develop" or "editable" mode using pip:
@@ -56,26 +57,26 @@ The following data table gives an overview of the data structure of the proteome
 | ......      | ....  | ..         | ..   | ..             | ...       | ... | ...       |
 
 
-Column **group** represents the ID of the patient.
+The column **group** represents the ID of the patient.
 In column **Dose** the integer values represent the respective PfSPZ dose:
 {0 : placebo; 1 : 3.2 * 10^3 PfSPZ; 2 : 1.28 * 10^4 PfSPZ; 4 : 5.12 * 10^4 PfSPZ}
 The integer values of the column **TimePointOrder** represent the day of blood serum extraction:
 {2 : III14 post-immunization; 3 : C-1 pre-CHMI; 4 : C+28 post-CHMI}.
 
-You can find the raw data of the underlying Pf-specific proteome microarray-based antibody reactivity profile containing all 7,455 Pf-specific antigens (features) and the raw data of the pre-selected Pf-specific cell surface proteins (m = 1,194) in [./data/proteome_data](https://github.com/jacqui20/MalariaVaccineEfficacyPrediction/tree/main/data/proteome_data).
-Both files contain the raw data that has to be baseline and log2-fold normalized using the Datapreprocessing.py script.
+You can find the raw data of the proteome-microarray-based antibody reactivity profile for both the whole set of 7,455 Pf-specific antigen fragments and a set of 1.194 Pf-specific cell surface antigen fragments (selected from the whole set of Pf-specific fragments of the proteome microarray) in [data/proteome_data](https://github.com/jacqui20/MalariaVaccineEfficacyPrediction/tree/main/data/proteome_data).
+Both files contain the raw data that has to be baseline and log2-fold normalized using the dataPreprocessing.py script.
 
 ### Preprocessing of the Data
-Datapreprocessing.py has to be executed in the ./bin folder.
+The dataPreprocessing.py script has to be executed in the [bin](https://github.com/jacqui20/MalariaVaccineEfficacyPrediction/tree/main/bin) folder.
+The dataPreprocessing.py script is executed for the raw data of the proteome-microarray-based antibody reactivity profile for both the whole set of 7,455 Pf-specific antigen fragments
 ```python
-python Datapreprocessing.py
+python dataPreprocessing.py --data-dir ~/MalariaVaccineEfficacyPrediction/data/proteome_data --identifier whole
 ```
-Output:
-```bash
-the preprocessed data is now saved in ./data/proteome_data as:
-
-preprocessed_whole_data.csv and preprocessed_selective_data.csv
+and the set of 1.194 Pf-specific cell surface antigen fragments
+```python
+python dataPreprocessing.py --data-dir ~/MalariaVaccineEfficacyPrediction/data/proteome_data --identifier selective
 ```
+The processed data is written to [data/proteome_data](https://github.com/jacqui20/MalariaVaccineEfficacyPrediction/tree/main/data/proteome_data).
 
 ## Prediction performance assesment of the multitask SVM in comparison to state-of-the-art methods
 Here we give a short introduction how to run the 10-times repeated nested stratified 5-fold cross-validation for the multitask SVM and two state-of-the-art-methods, namely elastic net regularized logistic regression (RLR) and single-task SVM with a RBF kernel.
@@ -96,7 +97,7 @@ pip install .
 ```
 
 ### Arguments
-If you are entirely sure that you want to run the performance assessment (Be sure to know what you are doing!), you can execute it (in ./bin) as follows:
+If you are entirely sure that you want to run the performance assessment (Be sure to know what you are doing!), you can execute it (in [bin](https://github.com/jacqui20/MalariaVaccineEfficacyPrediction/tree/main/bin)) as follows:
 
 ```bash
 # run multitask SVM performance assessment
@@ -121,11 +122,9 @@ To run ESPY on simulated data, you have to specify the following parameters:
 | --out-dir    | DIR  | Path to the directory were the results shall be saved.                                    |     
 | --identifier | str  | String to identify the dataset. <br/>Must be one of 'whole', 'selective', or 'simulated'. |    
 
-
-
 ```python
-  python ESPY.py --data-dir /Users/.../MalariaVaccineEfficacyPrediction/results/SVM/simulated/ESPY
---out-dir /Users/.../MalariaVaccineEfficacyPrediction/results/SVM/simulated/ESPY  
+  python ESPY.py --data-dir ~/MalariaVaccineEfficacyPrediction/results/SVM/simulated/ESPY
+--out-dir ~/MalariaVaccineEfficacyPrediction/results/SVM/simulated/ESPY  
 --identifier "simulated"
 ```
 Output:
