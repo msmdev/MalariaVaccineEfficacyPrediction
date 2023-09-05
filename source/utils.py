@@ -228,6 +228,7 @@ def make_symmetric_matrix_psd(
     return X, c_list, info_list, warning
 
 
+# TODO: Fix description
 def assign_folds(
     *,
     labels: np.ndarray,
@@ -448,7 +449,6 @@ class DataSelector:
         self,
         X: np.ndarray,
     ) -> np.ndarray:
-
         if isinstance(self.R0, float):
             if isinstance(self.R1, float) and isinstance(self.R2, float):
                 fn = (

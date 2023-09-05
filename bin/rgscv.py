@@ -129,17 +129,23 @@ def main(
         print("number of positives divided by total number of samples:", np.sum(y) / y.size)
         print("")
 
-        # TODO: update fold generation for standard datasets
         # initialize test folds and CV splitters for outer CV
+        delta = 40
+        if method != "multitaskSVM":
+            y_slice = y[delta * step : delta + delta * step]
+            groups_slice = groups[delta * step : delta + delta * step]
+        else:
+            y_slice = y
+            groups_slice = groups
         cv = []
         print("----------------------------------------")
         print("Predefined CV folds:\n")
         for rep in range(Nexp):
             print(f"CV folds for repetition {rep}:")
             test_fold, train_fold = assign_folds(
-                labels=y,
-                groups=groups,
-                delta=40,
+                labels=y_slice,
+                groups=groups_slice,
+                delta=delta,
                 step=step,
                 n_splits=5,
                 shuffle=True,
