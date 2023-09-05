@@ -44,7 +44,6 @@ def main(
     correlation_threshold: float,
     correlation_method: str,
 ):
-
     # some input sanity checks:
     if not 0.0 <= correlation_threshold <= 1.0:
         raise ValueError("correlation_threshold is not in [0, 1]")
@@ -64,7 +63,7 @@ def main(
 
     if correlation_threshold == 1.0:
         print(
-            f"Correlation grouping with threshold {correlation_threshold} requested."
+            f"Correlation grouping with threshold {correlation_threshold} requested. "
             "Since 1.0 is the maximal possible correlation, the data will be saved unchanged.\n"
         )
     else:
@@ -224,7 +223,6 @@ def main(
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(
         description=("Function to group strongly covarying features together.")
     )
