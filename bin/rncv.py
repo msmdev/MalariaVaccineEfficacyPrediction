@@ -44,6 +44,7 @@ import pandas as pd
 import scipy
 import sklearn
 from sklearn.model_selection import StratifiedGroupKFold
+
 from source.config import seed
 from source.utils import CustomPredefinedSplit, assign_folds
 
@@ -62,7 +63,6 @@ def main(
     kernel_identifier: Optional[str] = None,
     kernel_dir: Optional[str] = None,
 ) -> None:
-
     # Generate a timestamp
     timestamp = ncv.generate_timestamp()
 
@@ -107,9 +107,7 @@ def main(
     groups = data.loc[:, "group"].to_numpy()
     y = data.loc[:, "Protection"].to_numpy()
 
-    # TODO: remove C28
-    for step, time in enumerate(["III14", "C-1", "C28"]):
-
+    for step, time in enumerate(["III14", "C-1"]):
         print("++++++++++++++++++++++++++++++++++++++++")
         print(f"{time} start: {ncv.generate_timestamp()}\n")
 
@@ -120,7 +118,6 @@ def main(
 
         # TODO: reduce dataset to single timepoints for standard models
         if method == "multitaskSVM":
-
             if combination is not None and kernel_identifier is not None and kernel_dir is not None:
                 param_grid, estimator = configurator(
                     combination=combination,
@@ -142,7 +139,6 @@ def main(
             print(f"shape of running index array: {X.shape}\n")
 
         else:
-
             X = data.drop(
                 columns=["Patient", "group", "Protection"]
             ).to_numpy()  # including dose AND timepoints
@@ -231,7 +227,6 @@ def main(
         performances = []
         ncv_performances = []
         for scoring in scorings:
-
             performance = {}
             performance["best_inner_params"] = result[scoring]["best_inner_params"]
             scores: List[str] = []
@@ -308,7 +303,6 @@ def main(
 
         # collect and save outer cross-validation train- and test-split performance scores
         for i, scoring in enumerate(scorings):
-
             performance_mean: Dict[str, List[str]] = {}
             performance_min_max_nice: Dict[str, List[str]] = {}
             scores = []
@@ -428,7 +422,6 @@ def main(
 
         # collect and save nested cross-validation performance scores
         for i, scoring in enumerate(scorings):
-
             performance_mean = {}
             performance_min_max_nice = {}
             scores = []
@@ -516,7 +509,6 @@ def main(
 
 
 if __name__ == "__main__":
-
     warning_file = open("warnings_RNCV.log", "w")
 
     def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
@@ -654,5 +646,4 @@ if __name__ == "__main__":
             kernel_dir=args.kernel_dir,
         )
     finally:
-
         warning_file.close()

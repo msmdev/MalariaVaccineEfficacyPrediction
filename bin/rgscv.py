@@ -42,6 +42,7 @@ import numpy as np
 import pandas as pd
 import scipy
 import sklearn
+
 from source.utils import CustomPredefinedSplit, assign_folds
 
 
@@ -58,7 +59,6 @@ def main(
     kernel_identifier: Optional[str] = None,
     kernel_dir: Optional[str] = None,
 ) -> None:
-
     # Generate a timestamp
     timestamp = ncv.generate_timestamp()
 
@@ -86,11 +86,9 @@ def main(
     groups = data.loc[:, "group"].to_numpy()
     y = data.loc[:, "Protection"].to_numpy()
 
-    # TODO: remove C28
-    times = ["III14", "C-1", "C28"]
+    times = ["III14", "C-1"]
     scorings = ["mcc", "precision_recall_auc", "roc_auc"]
     for step, time in enumerate(times):
-
         print("++++++++++++++++++++++++++++++++++++++++")
         print(f"{time} start: {ncv.generate_timestamp()}\n")
 
@@ -99,7 +97,6 @@ def main(
 
         # TODO: reduce dataset to single timepoints for standard models
         if method == "multitaskSVM":
-
             if combination is not None and kernel_identifier is not None and kernel_dir is not None:
                 param_grid, estimator = configurator(
                     combination=combination,
@@ -121,7 +118,6 @@ def main(
             print(f"shape of running index array: {X.shape}\n")
 
         else:
-
             X = data.drop(
                 columns=["Patient", "group", "Protection"]
             ).to_numpy()  # including dose and timepoints
@@ -209,7 +205,6 @@ def main(
 
 
 if __name__ == "__main__":
-
     warning_file = open("warnings_RGSCV.log", "w")
 
     def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
@@ -339,5 +334,4 @@ if __name__ == "__main__":
             kernel_dir=args.kernel_dir,
         )
     finally:
-
         warning_file.close()
