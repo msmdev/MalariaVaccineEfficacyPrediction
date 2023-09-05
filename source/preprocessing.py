@@ -34,7 +34,7 @@ def substract_preimmunization_baseline(
     """Substract baseline immunity and replace negative intensities.
 
     The baseline immunity (TimePointOrder = 1) is substracted from the signal intensities measured
-    at post-immunization (TimePointOrder = 2, 3 and 4) for each sample `x_i`
+    at post-immunization (TimePointOrder = 2, 3) for each sample `x_i`
     to focus on PfSPZ-CVac induced antibody responses.
 
     Parameters
@@ -64,10 +64,6 @@ def substract_preimmunization_baseline(
     data_C1 = data.loc[data["TimePointOrder"] == 3, :].copy()
     data_C1.reset_index(inplace=True, drop=True)
 
-    # after re-infection C+ 28
-    data_C28 = data.loc[data["TimePointOrder"] == 4, :].copy()
-    data_C28.reset_index(inplace=True, drop=True)
-
     start_indx = data.columns.get_loc("TimePointOrder") + 1
 
     # substract baseline
@@ -77,11 +73,8 @@ def substract_preimmunization_baseline(
     data_C1.iloc[:, start_indx:] = data_C1.iloc[:, start_indx:].sub(
         data_baseline.iloc[:, start_indx:]
     )
-    data_C28.iloc[:, start_indx:] = data_C28.iloc[:, start_indx:].sub(
-        data_baseline.iloc[:, start_indx:]
-    )
 
-    data_minusBS = pd.concat([data_III14, data_C1, data_C28], ignore_index=True)
+    data_minusBS = pd.concat([data_III14, data_C1], ignore_index=True)
 
     return data_minusBS
 
