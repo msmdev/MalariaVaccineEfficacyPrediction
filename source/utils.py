@@ -862,7 +862,7 @@ def make_kernel_matrix(
         `model['SA']` defines the value of the factor `gamma` and `model['SO']` defines
         the value of the offset parameter `coef0` of the time-series sigmoid kernel
         `K(X, Y) = tanh(gamma <X, Y> + coef0)`;
-        `model['R1']` (`model['R2']` (`model['R3']`)) defines the power `d` of the
+        `model['R0']` (`model['R1']` (`model['R2']`)) defines the power `d` of the
         `gamma` (`gamma = 10^d`) parameter of the time-series (dosage (AB-signal)) RBF kernel
         `K(x, y) = exp(-gamma ||x-y||^2)`;
         `model['P1']` (`model['P2']`) defines the value of the degree parameter of the dosage
@@ -910,7 +910,7 @@ def make_kernel_matrix(
 
     # pre-compute kernel matrix of time points K(n_t,n_t')
     if kernel_time_series == "sigmoid_kernel":
-        if isinstance(model["SO"], float):
+        if isinstance(model["SO"], float) and isinstance(model["SA"], float):
             time_series_kernel_matrix = sigmoid_kernel(
                 time_series.to_numpy().reshape(len(time_series), 1),
                 gamma=model["SA"],
@@ -918,7 +918,7 @@ def make_kernel_matrix(
             )
         else:
             raise ValueError("Illegal input.")
-    elif kernel_time_series == "rbf_kernel":
+    elif kernel_time_series == "rbf_kernel" and isinstance(model["R0"], float):
         time_series_kernel_matrix = rbf_kernel(
             time_series.to_numpy().reshape(len(time_series), 1), gamma=model["R0"]
         )
@@ -926,26 +926,20 @@ def make_kernel_matrix(
         raise ValueError("Illegal input.")
 
     # pre-compute kernel matrix of dosage K(n_d,n_d')
-    if kernel_dosage == "rbf_kernel":
+    if kernel_dosage == "rbf_kernel" and isinstance(model["R1"], float):
         dose_kernel_matrix = rbf_kernel(dose.to_numpy().reshape(len(dose), 1), gamma=model["R1"])
-    elif kernel_dosage == "poly_kernel":
-        if isinstance(model["P1"], int):
-            dose_kernel_matrix = polynomial_kernel(
-                dose.to_numpy().reshape(len(dose), 1), degree=model["P1"]
-            )
-        else:
-            raise ValueError("Illegal input.")
+    elif kernel_dosage == "poly_kernel" and isinstance(model["P1"], int):
+        dose_kernel_matrix = polynomial_kernel(
+            dose.to_numpy().reshape(len(dose), 1), degree=model["P1"]
+        )
     else:
         raise ValueError("Illegal input.")
 
     # pre-compute kernel matrix of antibody reactivity K(n_p,n_p')
-    if kernel_abSignals == "rbf_kernel":
+    if kernel_abSignals == "rbf_kernel" and isinstance(model["R2"], float):
         AB_signals_kernel_matrix = rbf_kernel(AB_signals, gamma=model["R2"])
-    elif kernel_abSignals == "poly_kernel":
-        if isinstance(model["P2"], int):
-            AB_signals_kernel_matrix = polynomial_kernel(AB_signals, degree=model["P2"])
-        else:
-            raise ValueError("Illegal input.")
+    elif kernel_abSignals == "poly_kernel" and isinstance(model["P2"], int):
+        AB_signals_kernel_matrix = polynomial_kernel(AB_signals, degree=model["P2"])
     else:
         raise ValueError("Illegal input.")
 
