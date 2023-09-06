@@ -148,6 +148,7 @@ def make_symmetric_matrix_psd(
     info_list = []
     warning = ""
     eigenvalue_error = ""
+    eigenvalue_error1 = ""
 
     # check, if X is square
     if X.shape[0] != X.shape[1]:
@@ -161,8 +162,10 @@ def make_symmetric_matrix_psd(
         eigenvalues = np.linalg.eigvals(X)
     except np.linalg.LinAlgError as err:
         if str(err) == "Eigenvalues did not converge":
-            eigenvalue_error = "numpy.linalg.LinAlgError: Eigenvalues did not converge."
-            return X, c_list, info_list, warning, eigenvalue_error
+            eigenvalue_error1 = (
+                "numpy.linalg.LinAlgError: Eigenvalues did not converge (from the start)"
+            )
+            return X, c_list, info_list, warning, eigenvalue_error1
         else:
             raise
 
@@ -193,7 +196,24 @@ def make_symmetric_matrix_psd(
             info_list.append(info)
             c_list.append(c)
             np.fill_diagonal(X, np.diag(X) + c)
-            eigenvalues = np.linalg.eigvals(X)
+            try:
+                eigenvalues = np.linalg.eigvals(X)
+            except np.linalg.LinAlgError as err:
+                if str(err) == "Eigenvalues did not converge":
+                    if len(eigenvalue_error1) > 0:
+                        eigenvalue_error = (
+                            "numpy.linalg.LinAlgError: Eigenvalues did not converge "
+                            "(from the start and during damping)"
+                        )
+                    else:
+                        eigenvalue_error = (
+                            "numpy.linalg.LinAlgError: Eigenvalues did not converge "
+                            "(during damping)"
+                        )
+
+                    return X, c_list, info_list, warning, eigenvalue_error
+                else:
+                    raise
             complex, negative = check_complex_or_negative(eigenvalues, warn=False)
         # if counter == iterations:
         #     counter += 1
@@ -965,7 +985,7 @@ def make_kernel_matrix(
         )
     if len(eigenvalue_error) > 0:
         warnings.warn(
-            "Eigenvalues of multitask Gram matrix couldn't be derived (model: {model}):\n"
+            f"Eigenvalues of multitask Gram matrix couldn't be derived (model: {model}):\n"
             f"{eigenvalue_error}"
         )
 
@@ -988,7 +1008,7 @@ def make_kernel_matrix(
             )
         if len(eigenvalue_error) > 0:
             warnings.warn(
-                "Eigenvalues of multitask Gram matrix couldn't be derived (model: {model}):\n"
+                f"Eigenvalues of multitask Gram matrix couldn't be derived (model: {model}):\n"
                 f"{eigenvalue_error}"
             )
 
