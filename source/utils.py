@@ -100,7 +100,7 @@ def make_symmetric_matrix_psd(
     X: np.ndarray,
     epsilon_factor: float = 1.0e3,
     iterations: int = 1000,
-) -> Tuple[np.ndarray, List[float], List[str], str]:
+) -> Tuple[np.ndarray, List[float], List[str], str, str]:
     """Spectral Translation approach
     Tests, if a given symmetric matrix is positive semi-definite (psd) and, if not,
     a damping value `c` is iteratively (up to `iterations + 1` iterations) added to the matrix
@@ -139,11 +139,15 @@ def make_symmetric_matrix_psd(
     warning : str, default = ''
         If the matrix couldn't be made psd and the returned matrix has negative eigenvalues,
         a warning message will be returned. Otherwise, `warning = ''`.
+    eigenvalue_error : str, default = ''
+        If numpy.linalg.eigenvals(X) doesn't converge, i.e., LinAlgError("Eigenvalues did not
+        converge") occurs, the error message will be returned as a string to the calling routine.
     """
     epsilon = epsilon_factor * np.finfo(X.dtype).eps
     c_list = []
     info_list = []
     warning = ""
+    eigenvalue_error = ""
 
     # check, if X is square
     if X.shape[0] != X.shape[1]:
@@ -153,7 +157,14 @@ def make_symmetric_matrix_psd(
     if not np.allclose(X, X.T):
         raise ValueError("Matrix is not symmetric.")
 
-    eigenvalues = np.linalg.eigvals(X)
+    try:
+        eigenvalues = np.linalg.eigvals(X)
+    except np.linalg.LinAlgError as err:
+        if str(err) == "Eigenvalues did not converge":
+            eigenvalue_error = "numpy.linalg.LinAlgError: Eigenvalues did not converge."
+            return X, c_list, info_list, warning, eigenvalue_error
+        else:
+            raise
 
     # check, if all eigenvalues are real and non-negative
     complex, negative = check_complex_or_negative(eigenvalues)
@@ -225,7 +236,7 @@ def make_symmetric_matrix_psd(
                 f"Damped {n_negative} times for negative eigenvalues "
                 f"and {n_imaginary} times for imaginary parts."
             )
-    return X, c_list, info_list, warning
+    return X, c_list, info_list, warning, eigenvalue_error
 
 
 # TODO: Fix description
@@ -945,7 +956,7 @@ def make_kernel_matrix(
     )
 
     # pre-compute multitask kernel matrix K((np, nt, nd),(np', nt', nd'))
-    multitaskMatrix, c_list, info_list, message = make_symmetric_matrix_psd(
+    multitaskMatrix, c_list, info_list, message, eigenvalue_error = make_symmetric_matrix_psd(
         multitask(
             multi_AB_signals_time_series_kernel_matrix,
             dose_kernel_matrix,
@@ -958,9 +969,14 @@ def make_kernel_matrix(
             "Correction failed for a multitask Gram matrix with non-sigmoid "
             f"time-series kernel (model: {model}):\n{message}"
         )
+    if len(eigenvalue_error) > 0:
+        warnings.warn(
+            "Eigenvalues of multitask Gram matrix couldn't be derived (model: {model}):\n"
+            f"{eigenvalue_error}"
+        )
 
     if scale:
-        multitaskMatrix, warn, _, message = make_symmetric_matrix_psd(
+        multitaskMatrix, warn, _, message, eigenvalue_error = make_symmetric_matrix_psd(
             normalize(KernelCenterer().fit_transform(multitaskMatrix))
         )
         if warn:
@@ -975,6 +991,11 @@ def make_kernel_matrix(
             warnings.warn(
                 "Correction failed for a scaled multitask Gram matrix with non-sigmoid "
                 f"time-series kernel (model: {model}):\n{message}"
+            )
+        if len(eigenvalue_error) > 0:
+            warnings.warn(
+                "Eigenvalues of multitask Gram matrix couldn't be derived (model: {model}):\n"
+                f"{eigenvalue_error}"
             )
 
     # proof Dimension and rank of kernel matrix
