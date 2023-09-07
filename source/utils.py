@@ -145,6 +145,10 @@ def make_symmetric_matrix_psd(
     info_list = []
     warning = ""
 
+    # ensure that matrix is real
+    if np.any(np.iscomplex(X)):
+        raise ValueError("Matrix is complex.")
+
     # check, if X is square
     if X.shape[0] != X.shape[1]:
         raise ValueError("Matrix is not square.")
@@ -158,24 +162,23 @@ def make_symmetric_matrix_psd(
     # check, if all eigenvalues are real and non-negative
     complex, negative = check_complex_or_negative(eigenvalues)
 
-    if complex or negative:
+    if complex:
+        raise ValueError(
+            "Matrix has complex eigenvalues. "
+            "This is a contradiction, since a real symmetric matrix always has real eigenvalues."
+        )
+    if negative:
         print(
             "Matrix is not positive semi-definite.\n" "Will try to make it positive semi-definite."
         )
 
         n_negative = 0
-        n_imaginary = 0
         counter = 0
-        while (complex or negative) and counter <= iterations:
+        while negative and counter <= iterations:
             counter += 1
-            if negative:
-                n_negative += 1
-                info = "negative"
-                c = np.abs(np.min(eigenvalues).real)
-            else:
-                n_imaginary += 1
-                info = "imaginary"
-                c = np.max(np.abs(eigenvalues.imag))
+            n_negative += 1
+            info = "negative"
+            c = np.abs(np.min(eigenvalues).real)
             if c < epsilon:
                 info += "_epsilon"
                 c = epsilon
@@ -184,6 +187,11 @@ def make_symmetric_matrix_psd(
             np.fill_diagonal(X, np.diag(X) + c)
             eigenvalues = np.linalg.eigvalsh(X)
             complex, negative = check_complex_or_negative(eigenvalues, warn=False)
+            if complex:
+                raise ValueError(
+                    "Matrix has complex eigenvalues. This is a contradiction, "
+                    "since a real symmetric matrix always has real eigenvalues."
+                )
         # if counter == iterations:
         #     counter += 1
         #     c = 1.0
@@ -203,27 +211,25 @@ def make_symmetric_matrix_psd(
         #         eigenvalues = temp_eigenvalues
 
         complex, negative = check_complex_or_negative(eigenvalues)
-        if complex or negative:
-            print(
+
+        if complex:
+            raise ValueError(
+                "Matrix has complex eigenvalues. This is a contradiction, "
+                "since a real symmetric matrix always has real eigenvalues."
+            )
+        elif negative:
+            warning = (
                 "Couldn't make matrix positive semi-definite by adding "
                 f"sum_c={np.sum(c_list)} in {counter} steps to its diagonal.\n"
-                f"Damped {n_negative} times for negative eigenvalues "
-                f"and {n_imaginary} times for imaginary parts."
+                f"Damped {n_negative} times for negative eigenvalues.\n"
+                "CAUTION: The returned matrix has negative eigenvalues."
             )
-            if negative:
-                warning = (
-                    "Couldn't make matrix positive semi-definite by adding "
-                    f"sum_c={np.sum(c_list)} in {counter} steps to its diagonal.\n"
-                    f"Damped {n_negative} times for negative eigenvalues "
-                    f"and {n_imaginary} times for imaginary parts.\n"
-                    "CAUTION: The returned matrix has negative eigenvalues."
-                )
+            print(warning)
         else:
             print(
                 "Made matrix positive semi-definite by adding "
                 f"sum_c={np.sum(c_list)} in {counter} steps to its diagonal.\n"
-                f"Damped {n_negative} times for negative eigenvalues "
-                f"and {n_imaginary} times for imaginary parts."
+                f"Damped {n_negative} times for negative eigenvalues."
             )
     return X, c_list, info_list, warning
 
@@ -975,7 +981,7 @@ def make_kernel_matrix(
     print("Dimension of final multitask Gram matrix:")
     print(multitaskMatrix.shape)
     print(
-        "Rank of final multitask Gram matrix (Returns matrix rank of array using SVD method. "
+        "Rank of final multitask Gram matrix (Returns matrix rank of array using SVD method: "
         "Rank of the array is the number of singular values of the array that are greater than a "
         "tolerance tol. May declare a matrix M rank deficient even if the linear combination of "
         "some columns of M is not exactly equal to another column of M but only numerically very "
