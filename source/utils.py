@@ -192,23 +192,21 @@ def make_symmetric_matrix_psd(
                     "Matrix has complex eigenvalues. This is a contradiction, "
                     "since a real symmetric matrix always has real eigenvalues."
                 )
-        # if counter == iterations:
-        #     counter += 1
-        #     c = 1.0
-        #     temp = X + np.diag([c for i in range(X.shape[0])])
-        #     temp_eigenvalues = np.linalg.eigvals(temp)
-        #     temp_complex, temp_negative = check_complex_or_negative(temp_eigenvalues, warn=False)
-        #     if not (temp_complex or temp_negative):
-        #         if negative:
-        #             n_negative += 1
-        #             info = 'negative_1.0'
-        #         else:
-        #             n_imaginary += 1
-        #             info = 'imaginary_1.0'
-        #         info_list.append(info)
-        #         c_list.append(c)
-        #         X = temp
-        #         eigenvalues = temp_eigenvalues
+        if counter == iterations:
+            counter += 1
+            n_negative += 1
+            info = "negative_1.0"
+            c = 1.0
+            info_list.append(info)
+            c_list.append(c)
+            np.fill_diagonal(X, np.diag(X) + c)
+            eigenvalues = np.linalg.eigvalsh(X)
+            complex, negative = check_complex_or_negative(eigenvalues, warn=False)
+            if complex:
+                raise ValueError(
+                    "Matrix has complex eigenvalues. This is a contradiction, "
+                    "since a real symmetric matrix always has real eigenvalues."
+                )
 
         complex, negative = check_complex_or_negative(eigenvalues)
 
