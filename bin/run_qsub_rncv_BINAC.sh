@@ -25,7 +25,7 @@ cd .. || { echo "Couldn't cd into parent directory."; exit 1; }
 topdir="$PWD"
 cd "${topdir}/bin" || { echo "Couldn't cd into ${topdir}/bin directory."; exit 1; }
 data_dir="${topdir}/data/proteome_data/correlationFiltering"
-combinations=('RPP' 'RPR' 'RRP' 'RRR' 'SPP' 'SPR' 'SRP' 'SRR')
+combinations=('RPP' 'RPR' 'RRP' 'RRR')
 
 for threshold in '0.1' '0.2' '0.3' '0.4' '0.5' '0.6' '0.7' '0.8' '0.9' '1.0'; do
 

@@ -33,7 +33,7 @@ if [ ! -d "$topdir" ]; then
     { echo "${topdir} doesn't exists."; exit 1; }
 fi
 data_dir="${topdir}/data/proteome_data/correlationFiltering"
-combinations=('RPP' 'RPR' 'RRP' 'RRR' 'SPP' 'SPR' 'SRP' 'SRR')
+combinations=('RPP' 'RPR' 'RRP' 'RRR')
 
 for threshold in '0.1' '0.2' '0.3' '0.4' '0.5' '0.6' '0.7' '0.8' '0.9' '1.0'; do
 

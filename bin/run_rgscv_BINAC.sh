@@ -199,7 +199,7 @@ err="runRGSCV_${PBS_JOBNAME}_${PBS_JOBID}.err"
 out="runRGSCV_${PBS_JOBNAME}_${PBS_JOBID}.out"
 
 if [ "$METHOD" = 'multitaskSVM' ]; then
-    combinations=('RPP' 'RPR' 'RRP' 'RRR' 'SPP' 'SPR' 'SRP' 'SRR')
+    combinations=('RPP' 'RPR' 'RRP' 'RRR')
     cp -r "${KERNEL_DIR}/"* "$TMPDIR" || { echo "Couldn't copy Kernels to ${TMPDIR}"; exit 1; }
     for combination in "${combinations[@]}"; do
         ana_dir="${ANA_DIR}/${combination}"
