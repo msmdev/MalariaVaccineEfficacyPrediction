@@ -174,7 +174,7 @@ def make_symmetric_matrix_psd(
 
         n_negative = 0
         counter = 0
-        while negative and counter <= iterations:
+        while negative and counter < iterations:
             counter += 1
             n_negative += 1
             info = "negative"
