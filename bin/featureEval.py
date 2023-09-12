@@ -33,6 +33,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 from nestedcv import save_model
+
 from source.featureEvaluation import (
     featureEvaluationESPY,
     featureEvaluationRF,
@@ -58,14 +59,20 @@ def main(
     Evaluation of informative features.
     """
 
-    # TODO: remove C28
-    if timepoint not in ["III14", "C-1", "C28"]:
-        raise ValueError("timepoint must be one of 'III14', 'C-1' or 'C28'.")
-
-    data_at_timePoint = pd.read_csv(
-        os.path.join(data_dir, f"{data_file_id}_{timepoint}.csv"),
+    data = pd.read_csv(
+        os.path.join(data_dir, f"{data_file_id}.csv"),
         header=0,
     )
+
+    if timepoint == "III14":
+        # after immunization III 14
+        data_at_timePoint = data.loc[data["TimePointOrder"] == 2, :].copy()
+    elif timepoint == "C-1":
+        # before re-infection C-1
+        data_at_timePoint = data.loc[data["TimePointOrder"] == 3, :].copy()
+    else:
+        raise ValueError("timepoint must be one of 'III14' or 'C-1'")
+
     X = data_at_timePoint.drop(
         columns=["Patient", "group", "Protection", "TimePointOrder"]
     )  # including dose
@@ -76,7 +83,6 @@ def main(
 
     # Initialize, fit, and evaluate
     if method == "RF":
-
         from source.RF_config import estimator
 
         params = get_parameters(
@@ -88,7 +94,6 @@ def main(
         importances, model = featureEvaluationRF(estimator, X, y)
 
     elif method == "RLR":
-
         from source.RLR_config import estimator
 
         params = get_parameters(
@@ -100,7 +105,6 @@ def main(
         importances, model = featureEvaluationRLR(estimator, X, y)
 
     elif method == "multitaskSVM":
-
         from source.multitaskSVM_config import configurator
 
         if not (
@@ -182,7 +186,6 @@ def main(
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(
         description=("Function to run an analysis of informative features from RF.")
     )
@@ -199,9 +202,9 @@ if __name__ == "__main__":
         required=True,
         help=(
             "String identifying the data file (located in the directory given via --data-dir)."
-            "This string will be appended by the time point and '.csv'. If you pass, for example, "
-            "'--timepoint III14' and '--data-file-id preprocessed_whole_data', the resulting file "
-            "name will be 'preprocessed_whole_data_III14.csv'."
+            "This string will be appended by '.csv'. If you pass, for example, "
+            "'--data-file-id preprocessed_whole_data', the resulting file "
+            "name will be 'preprocessed_whole_data.csv'."
         ),
     )
     parser.add_argument(
@@ -225,7 +228,7 @@ if __name__ == "__main__":
         required=True,
         help=(
             "Time point for which the analysis shall be performed. "
-            "Must be one of 'III14', 'C-1' or 'C28'."
+            "Must be one of 'III14' or 'C-1'."
         ),
     )
     parser.add_argument(
