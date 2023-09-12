@@ -38,7 +38,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
 
 from source.config import seed
-from source.utils import make_kernel_matrix
+from source.utils import allclose, make_kernel_matrix
 
 
 def make_feature_combination(
@@ -96,7 +96,6 @@ def make_feature_combination(
     temp_lq = []
     temp_uq = []
     for i in range(len(median)):
-
         temp1 = median.copy()
         temp1[i] = upper_quantile[i]
         temp_uq.append(temp1)
@@ -159,10 +158,9 @@ def compute_distance_hyper(
     get_distance_upper = []
 
     # calc distances for all combinations
+    d_cons = np.ndarray
     for m in range(len(median)):
-
         if not multitask:
-
             get_distance_lower.append(
                 model.decision_function(combinations["lower_combinations"][m].reshape(1, -1))[0]
             )
@@ -173,9 +171,7 @@ def compute_distance_hyper(
             d_cons = model.decision_function(median.reshape(1, -1))
 
         else:
-
             if isinstance(data, pd.DataFrame) and isinstance(kernel_parameters, dict):
-
                 expected_keys = {"SA", "SO", "R0", "R1", "R2", "P1", "P2"}
                 actual_keys = set()
                 prefix = ""
@@ -300,7 +296,6 @@ def compute_distance_hyper(
                 d_cons = model.decision_function(feature_consensus_sample.reshape(1, -1))
 
             else:
-
                 raise ValueError("You must supply `data` and `kernel_parameters`.")
 
     # get data frame of distances values for median, lower and upper quantile
@@ -331,40 +326,47 @@ def compute_distance_hyper(
         )
         get_distance_df.at["LQ - consensus [d]", col] = d_down
 
-        # calculate maximal distance value from distance_based on lower quantile
+        # calculate importance from distance_based on lower quantile
         # and distance_based on upper quantile
-        if d_up > 0 and d_down < 0:
-            direction = 1.0
-            d_value = direction * (abs(d_up) + abs(d_down))
-        elif d_up < 0 and d_down > 0:
-            direction = -1.0
-            d_value = direction * (abs(d_up) + abs(d_down))
-        elif d_up != 0 and d_down == 0:
-            d_value = d_up
-        elif d_up == 0 and d_down != 0:
-            d_value = d_down
-        elif d_up == d_down == 0:
+        if d_up > np.finfo(d_up).eps and d_down < -np.finfo(d_down).eps:
+            effect = "+/-"
+            d_value = abs(d_up) + abs(d_down)
+        elif d_up < -np.finfo(d_up).eps and d_down > np.finfo(d_down).eps:
+            effect = "-/+"
+            d_value = abs(d_up) + abs(d_down)
+        elif (d_up > np.finfo(d_up).eps and allclose(d_down, 0.0)) or (
+            allclose(d_up, 0.0) and d_down > np.finfo(d_down).eps
+        ):
+            effect = "+"
+            d_value = abs(d_up) + abs(d_down)
+        elif (d_up < -np.finfo(d_up).eps and allclose(d_down, 0.0)) or (
+            allclose(d_up, 0.0) and d_down < -np.finfo(d_down).eps
+        ):
+            effect = "-"
+            d_value = abs(d_up) + abs(d_down)
+        elif allclose(d_up, 0.0) and allclose(d_down, 0.0):
+            effect = "0"
             d_value = 0.0
         else:
+            effect = "NAN"
             d_value = np.nan
-        get_distance_df.loc["d", col] = d_value
+        get_distance_df.loc["|d|", col] = d_value
+        get_distance_df.loc["effect", col] = effect
 
-    # set up final data frame for distance evaluation
-    get_distance_df.loc["|d|"] = np.absolute(get_distance_df.loc["d"].to_numpy())
     # sort values by abs-value of |d|
     get_distance_df = get_distance_df.T.sort_values(
         by="|d|", axis=0, kind="stable", ascending=False, na_position="last"
     ).T
 
     # Normalize the distance values
-    bool_idx = get_distance_df.loc["d"].notna()
+    bool_idx = get_distance_df.loc["|d|"].notna()
     sum_of_distance = get_distance_df.loc["|d|", :].sum(skipna=True)
     for col in get_distance_df.columns[bool_idx]:
-        get_distance_df.at["d_norm", col] = get_distance_df.at["d", col] / sum_of_distance
-    get_distance_df.loc["|d_norm|"] = np.absolute(get_distance_df.loc["d_norm"].to_numpy())
-    assert np.allclose(
-        get_distance_df.loc["|d_norm|", :].sum(skipna=True), 1.0
-    ), "np.allclose(get_distance_df.loc['|d_norm|', :].sum(skipna=True), 1.0) is False."
+        get_distance_df.at["|d_norm|", col] = get_distance_df.at["|d|", col] / sum_of_distance
+    if not np.allclose(get_distance_df.loc["|d_norm|", :].sum(skipna=True), 1.0):
+        raise ValueError(
+            "np.allclose(get_distance_df.loc['|d_norm|', :].sum(skipna=True), 1.0) is False."
+        )
 
     print("Dimension of distance matrix:")
     print(get_distance_df.shape)
@@ -456,7 +458,7 @@ def featureEvaluationESPY(
     Returns
     --------
     ESPY_importances : pd.Dataframe
-        Dataframe of ESPY values |d| for each feature in simulated data.
+        Dataframe of ESPY values |d| and effects for each feature in the data.
 
     """
 
@@ -471,7 +473,6 @@ def featureEvaluationESPY(
     print("")
 
     if not multitask:
-
         ESPY_importances = compute_distance_hyper(
             median=median,
             combinations=combinations,
@@ -480,9 +481,7 @@ def featureEvaluationESPY(
         )
 
     else:
-
         if isinstance(basis_data, pd.DataFrame) and isinstance(kernel_parameters, dict):
-
             ESPY_importances = compute_distance_hyper(
                 median=median,
                 combinations=combinations,
@@ -494,7 +493,6 @@ def featureEvaluationESPY(
             )
 
         else:
-
             raise ValueError("`basis_data` and `kernel_parameters` must be supplied.")
 
     end = time.time()
