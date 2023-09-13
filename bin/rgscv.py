@@ -73,12 +73,12 @@ def main(
     for scope in ["singleTime", "multiTime"]:
         if method == "multitaskSVM" and scope == "singleTime":
             continue
-        if method != "multtaskSVM" and scope == "multiTime":
+        if method != "multitaskSVM" and scope == "multiTime":
             continue
         print(f"{scope} start time: {timestamp}\n")
 
         # Create directories for the output files
-        maindir = os.path.join(ana_dir, "RGSCV/")
+        maindir = os.path.join(ana_dir, f"{scope}/RGSCV/")
         pathlib.Path(maindir).mkdir(parents=True, exist_ok=True)
 
         # initialize result dict
