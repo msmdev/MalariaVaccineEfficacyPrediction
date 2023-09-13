@@ -130,7 +130,7 @@ def main(
 
         # initialize running index array for DataSelector
         data = pd.read_csv(
-            os.path.join(data_dir, f"{data_file_id}_all.csv"),
+            os.path.join(data_dir, f"{data_file_id}.csv"),
             header=0,
         )
         y = data.loc[:, "Protection"].to_numpy()
