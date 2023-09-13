@@ -69,11 +69,13 @@ def main(
     print(f"scipy version: {scipy.__version__}")
     print("========================================\n")
     print(f"data file: {data_file}\n")
-    print(f"start time: {timestamp}\n")
 
     for scope in ["singleTime", "multiTime"]:
         if method == "multitaskSVM" and scope == "singleTime":
             continue
+        if method != "multtaskSVM" and scope == "multiTime":
+            continue
+        print(f"{scope} start time: {timestamp}\n")
 
         # Create directories for the output files
         maindir = os.path.join(ana_dir, "RGSCV/")
@@ -99,7 +101,6 @@ def main(
             # define prefix for filenames:
             prefix = f"{time}"
 
-            # TODO: reduce dataset to single timepoints for standard models
             if method == "multitaskSVM":
                 if (
                     combination is not None
@@ -140,6 +141,7 @@ def main(
             # initialize test folds and CV splitters for outer CV
             delta = 40
             if method == "singleTime":
+                # CAUTION: this only works if data is sorted by timepoints
                 y_slice = y[delta * step : delta + delta * step]
                 groups_slice = groups[delta * step : delta + delta * step]
             else:
