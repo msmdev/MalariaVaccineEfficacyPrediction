@@ -38,6 +38,44 @@ from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import column_or_1d
 
 
+def allclose(
+    a: Union[np.ndarray, float],
+    b: Union[np.ndarray, float],
+    rtol: float = 0.0,
+    atol: Union[str, float] = "eps",
+    equal_nan: bool = False,
+):
+    """Convenience wrapper of numpy.allclose(a, b, rtol=rtol, atol=abstol, equal_nan=False).
+
+    Parameters
+    ----------
+    a, b : Union[np.ndarray, float]
+        Input arrays or values to compare.
+    rtol : float, default = 0.0
+        The relative tolerance parameter.
+    atol : Union[str, float], default = 'eps'
+        The absolute tolerance parameter, if a float is given.
+        If atol='eps', indicates to use the maximum of the machine precisions
+        np.max([np.finfo(a).eps, np.finfo(b).eps] of the given input arrays or values.
+    equal_nan: bool
+        Whether to compare NaN's as equal.
+        If True, NaN's in a will be considered equal to NaN's in b in the output array.
+
+    Returns
+    -------
+    allclose : bool
+        Returns True if the two arrays are equal within the given tolerance; False otherwise.
+    """
+    if atol == "eps":
+        abstol = np.max([np.finfo(a).eps, np.finfo(b).eps])
+    elif isinstance(atol, float):
+        abstol = atol
+    else:
+        raise ValueError("atol must be either of type float or atol='eps'")
+
+    return np.allclose(a, b, rtol=rtol, atol=abstol, equal_nan=equal_nan)
+
+
 def normalize(
     X: np.ndarray,
     assert_sym: bool = False,

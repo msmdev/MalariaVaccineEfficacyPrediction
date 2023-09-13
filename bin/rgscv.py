@@ -71,143 +71,151 @@ def main(
     print(f"data file: {data_file}\n")
     print(f"start time: {timestamp}\n")
 
-    # Create directories for the output files
-    maindir = os.path.join(ana_dir, "RGSCV/")
-    pathlib.Path(maindir).mkdir(parents=True, exist_ok=True)
+    for scope in ["singleTime", "multiTime"]:
+        if method == "multitaskSVM" and scope == "singleTime":
+            continue
 
-    # initialize result dict
-    results: Dict[str, List[Any]] = dict()
-    results["time"] = []
-    results["scoring"] = []
-    results["best_params"] = []
-    results["best_score"] = []
+        # Create directories for the output files
+        maindir = os.path.join(ana_dir, "RGSCV/")
+        pathlib.Path(maindir).mkdir(parents=True, exist_ok=True)
 
-    data = pd.read_csv(data_file, header=0)
-    groups = data.loc[:, "group"].to_numpy()
-    y = data.loc[:, "Protection"].to_numpy()
+        # initialize result dict
+        results: Dict[str, List[Any]] = dict()
+        results["time"] = []
+        results["scoring"] = []
+        results["best_params"] = []
+        results["best_score"] = []
 
-    times = ["III14", "C-1"]
-    scorings = ["mcc", "precision_recall_auc", "roc_auc"]
-    for step, time in enumerate(times):
-        print("++++++++++++++++++++++++++++++++++++++++")
-        print(f"{time} start: {ncv.generate_timestamp()}\n")
+        data = pd.read_csv(data_file, header=0)
+        groups = data.loc[:, "group"].to_numpy()
+        y = data.loc[:, "Protection"].to_numpy()
 
-        # define prefix for filenames:
-        prefix = f"{time}"
+        times = ["III14", "C-1"]
+        scorings = ["mcc", "precision_recall_auc", "roc_auc"]
+        for step, time in enumerate(times):
+            print("++++++++++++++++++++++++++++++++++++++++")
+            print(f"{time} start: {ncv.generate_timestamp()}\n")
 
-        # TODO: reduce dataset to single timepoints for standard models
-        if method == "multitaskSVM":
-            if combination is not None and kernel_identifier is not None and kernel_dir is not None:
-                param_grid, estimator = configurator(
-                    combination=combination,
-                    identifier=kernel_identifier,
-                    kernel_dir=kernel_dir,
+            # define prefix for filenames:
+            prefix = f"{time}"
+
+            # TODO: reduce dataset to single timepoints for standard models
+            if method == "multitaskSVM":
+                if (
+                    combination is not None
+                    and kernel_identifier is not None
+                    and kernel_dir is not None
+                ):
+                    param_grid, estimator = configurator(
+                        combination=combination,
+                        identifier=kernel_identifier,
+                        kernel_dir=kernel_dir,
+                    )
+                else:
+                    raise ValueError(
+                        "Each of `combination`, `kernel_identifier`, and `kernel_dir` "
+                        "must be of type str if `method`='multitaskSVM'."
+                    )
+
+                # initialize running index array for DataSelector
+                if not y.size * y.size < np.iinfo(np.uint32).max:
+                    raise ValueError(f"y is to large: y.size * y.size >= {np.iinfo(np.uint32).max}")
+                X = np.array([x for x in range(y.size * y.size)], dtype=np.uint32).reshape(
+                    (y.size, y.size)
                 )
+                print(f"shape of running index array: {X.shape}\n")
+
             else:
-                raise ValueError(
-                    "Each of `combination`, `kernel_identifier`, and `kernel_dir` "
-                    "must be of type str if `method`='multitaskSVM'."
-                )
+                X = data.drop(
+                    columns=["Patient", "group", "Protection"]
+                ).to_numpy()  # including dose and timepoints
 
-            # initialize running index array for DataSelector
-            if not y.size * y.size < np.iinfo(np.uint32).max:
-                raise ValueError(f"y is to large: y.size * y.size >= {np.iinfo(np.uint32).max}")
-            X = np.array([x for x in range(y.size * y.size)], dtype=np.uint32).reshape(
-                (y.size, y.size)
-            )
-            print(f"shape of running index array: {X.shape}\n")
-
-        else:
-            X = data.drop(
-                columns=["Patient", "group", "Protection"]
-            ).to_numpy()  # including dose and timepoints
-
-        print(f"estimator: {type(estimator)}")
-        print(f"parameter grid: {param_grid}\n")
-        print("shape of binary response array:", y.size)
-        print("number of positives:", np.sum(y))
-        print("number of positives divided by total number of samples:", np.sum(y) / y.size)
-        print("")
-
-        # initialize test folds and CV splitters for outer CV
-        delta = 40
-        if method != "multitaskSVM":
-            y_slice = y[delta * step : delta + delta * step]
-            groups_slice = groups[delta * step : delta + delta * step]
-        else:
-            y_slice = y
-            groups_slice = groups
-        cv = []
-        print("----------------------------------------")
-        print("Predefined CV folds:\n")
-        for rep in range(Nexp):
-            print(f"CV folds for repetition {rep}:")
-            test_fold, train_fold = assign_folds(
-                labels=y_slice,
-                groups=groups_slice,
-                delta=delta,
-                step=step,
-                n_splits=5,
-                shuffle=True,
-                print_info=False,
-                random_state=rep,
-            )
-            cv.append(CustomPredefinedSplit(test_fold, train_fold))
-            print(f"train_fold: {train_fold} " f"test_fold: {test_fold}")
-            cps = CustomPredefinedSplit(test_fold, train_fold)
-            for i, (train_index, test_index) in enumerate(cps.split()):
-                print(
-                    f"TRAIN (len={len(train_index)}): {train_index} "
-                    f"TEST (len={len(test_index)}): {test_index}"
-                )
+            print(f"estimator: {type(estimator)}")
+            print(f"parameter grid: {param_grid}\n")
+            print("shape of binary response array:", y.size)
+            print("number of positives:", np.sum(y))
+            print("number of positives divided by total number of samples:", np.sum(y) / y.size)
             print("")
-        print("----------------------------------------\n")
 
-        gs = ncv.RepeatedGridSearchCV(
-            estimator,
-            param_grid,
-            scoring=scorings,
-            cv=cv,
-            n_jobs=n_jobs,
-            Nexp=Nexp,
-            save_to=None,
-            reproducible=False,
-        )
-        gs.fit(X, y, groups)
+            # initialize test folds and CV splitters for outer CV
+            delta = 40
+            if method == "singleTime":
+                y_slice = y[delta * step : delta + delta * step]
+                groups_slice = groups[delta * step : delta + delta * step]
+            else:
+                y_slice = y
+                groups_slice = groups
+            cv = []
+            print("----------------------------------------")
+            print("Predefined CV folds:\n")
+            for rep in range(Nexp):
+                print(f"CV folds for repetition {rep}:")
+                test_fold, train_fold = assign_folds(
+                    labels=y_slice,
+                    groups=groups_slice,
+                    delta=delta,
+                    step=step,
+                    n_splits=5,
+                    shuffle=True,
+                    print_info=False,
+                    random_state=rep,
+                )
+                cv.append(CustomPredefinedSplit(test_fold, train_fold))
+                print(f"train_fold: {train_fold} " f"test_fold: {test_fold}")
+                cps = CustomPredefinedSplit(test_fold, train_fold)
+                for i, (train_index, test_index) in enumerate(cps.split()):
+                    print(
+                        f"TRAIN (len={len(train_index)}): {train_index} "
+                        f"TEST (len={len(test_index)}): {test_index}"
+                    )
+                print("")
+            print("----------------------------------------\n")
 
-        filename = f"{prefix}_RepeatedGridSearchCV_cv_results"
-        fn = ncv.filename_generator(filename, ".xlsx", directory=maindir, timestamp=False)
-        pd.DataFrame(data=gs.cv_results_).to_excel(fn, na_rep="nan")
+            gs = ncv.RepeatedGridSearchCV(
+                estimator,
+                param_grid,
+                scoring=scorings,
+                cv=cv,
+                n_jobs=n_jobs,
+                Nexp=Nexp,
+                save_to=None,
+                reproducible=False,
+            )
+            gs.fit(X, y, groups)
 
-        opt_params = gs.opt_params_
-        print(f"{time} opt_params:")
-        pprint(opt_params)
+            filename = f"{prefix}_RepeatedGridSearchCV_cv_results"
+            fn = ncv.filename_generator(filename, ".xlsx", directory=maindir, timestamp=False)
+            pd.DataFrame(data=gs.cv_results_).to_excel(fn, na_rep="nan")
+
+            opt_params = gs.opt_params_
+            print(f"{time} opt_params:")
+            pprint(opt_params)
+            print("")
+
+            opt_scores = gs.opt_scores_
+            print(f"{time} opt_scores:")
+            pprint(opt_scores)
+            print("")
+
+            for scoring in scorings:
+                results["time"].append(time)
+                results["scoring"].append(scoring)
+                results["best_params"].append(opt_params[scoring])
+                results["best_score"].append(opt_scores[scoring])
+
+            print(f"{time} end: {ncv.generate_timestamp()}")
+            print("++++++++++++++++++++++++++++++++++++++++\n")
+
+        print("results:")
+        pprint(results)
         print("")
 
-        opt_scores = gs.opt_scores_
-        print(f"{time} opt_scores:")
-        pprint(opt_scores)
-        print("")
+        filename = "RepeatedGridSearchCV_results"
+        fn = ncv.filename_generator(filename, ".tsv", directory=maindir, timestamp=False)
+        pd.DataFrame(data=results).to_csv(fn, sep="\t", na_rep="nan")
 
-        for scoring in scorings:
-            results["time"].append(time)
-            results["scoring"].append(scoring)
-            results["best_params"].append(opt_params[scoring])
-            results["best_score"].append(opt_scores[scoring])
-
-        print(f"{time} end: {ncv.generate_timestamp()}")
-        print("++++++++++++++++++++++++++++++++++++++++\n")
-
-    print("results:")
-    pprint(results)
-    print("")
-
-    filename = "RepeatedGridSearchCV_results"
-    fn = ncv.filename_generator(filename, ".tsv", directory=maindir, timestamp=False)
-    pd.DataFrame(data=results).to_csv(fn, sep="\t", na_rep="nan")
-
-    print(f"end time: {ncv.generate_timestamp()}")
-    print("========================================\n")
+        print(f"end time: {ncv.generate_timestamp()}")
+        print("========================================\n")
 
 
 if __name__ == "__main__":
