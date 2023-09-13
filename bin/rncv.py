@@ -122,7 +122,6 @@ def main(
 
             rng = np.random.RandomState(seed)
 
-            # TODO: reduce dataset to single timepoints for standard models
             if method == "multitaskSVM":
                 if (
                     combination is not None
@@ -163,6 +162,7 @@ def main(
             # initialize test folds and CV splitters for outer CV
             delta = 40
             if method == "singleTime":
+                # CAUTION: this only works if data is sorted by timepoints
                 y_slice = y[delta * step : delta + delta * step]
                 groups_slice = groups[delta * step : delta + delta * step]
             else:
