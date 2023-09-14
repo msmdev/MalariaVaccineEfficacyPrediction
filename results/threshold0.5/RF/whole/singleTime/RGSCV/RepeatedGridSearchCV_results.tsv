@@ -1,0 +1,7 @@
+	time	scoring	best_params	best_score
+0	III14	mcc	{'randomforestclassifier__max_features': 0.333, 'randomforestclassifier__n_estimators': 1000}	0.5916002126139671
+1	III14	precision_recall_auc	{'randomforestclassifier__max_features': 'sqrt', 'randomforestclassifier__n_estimators': 100}	0.8390592593141161
+2	III14	roc_auc	{'randomforestclassifier__max_features': 0.333, 'randomforestclassifier__n_estimators': 1000}	0.8512626262626263
+3	C-1	mcc	{'randomforestclassifier__max_features': 0.333, 'randomforestclassifier__n_estimators': 100}	0.6385553959077542
+4	C-1	precision_recall_auc	{'randomforestclassifier__max_features': 0.333, 'randomforestclassifier__n_estimators': 100}	0.8637841942580835
+5	C-1	roc_auc	{'randomforestclassifier__max_features': 0.333, 'randomforestclassifier__n_estimators': 100}	0.872979797979798

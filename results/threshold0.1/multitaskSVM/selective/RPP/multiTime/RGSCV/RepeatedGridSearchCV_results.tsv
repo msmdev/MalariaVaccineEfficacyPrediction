@@ -1,0 +1,7 @@
+	time	scoring	best_params	best_score
+0	III14	mcc	{'dataselector__P1': 2, 'dataselector__P2': 2, 'dataselector__R0': 1e-06, 'dataselector__R1': 'X', 'dataselector__R2': 'X', 'dataselector__SA': 'X', 'dataselector__SO': 'X', 'svc__C': 0.0001}	0.5909573458784467
+1	III14	precision_recall_auc	{'dataselector__P1': 2, 'dataselector__P2': 2, 'dataselector__R0': 10.0, 'dataselector__R1': 'X', 'dataselector__R2': 'X', 'dataselector__SA': 'X', 'dataselector__SO': 'X', 'svc__C': 0.0001}	0.8650889777309819
+2	III14	roc_auc	{'dataselector__P1': 2, 'dataselector__P2': 2, 'dataselector__R0': 10.0, 'dataselector__R1': 'X', 'dataselector__R2': 'X', 'dataselector__SA': 'X', 'dataselector__SO': 'X', 'svc__C': 0.0001}	0.8522727272727272
+3	C-1	mcc	{'dataselector__P1': 3, 'dataselector__P2': 2, 'dataselector__R0': 10.0, 'dataselector__R1': 'X', 'dataselector__R2': 'X', 'dataselector__SA': 'X', 'dataselector__SO': 'X', 'svc__C': 0.0001}	0.7491470463874945
+4	C-1	precision_recall_auc	{'dataselector__P1': 2, 'dataselector__P2': 2, 'dataselector__R0': 1e-06, 'dataselector__R1': 'X', 'dataselector__R2': 'X', 'dataselector__SA': 'X', 'dataselector__SO': 'X', 'svc__C': 0.0001}	0.9077980591792331
+5	C-1	roc_auc	{'dataselector__P1': 2, 'dataselector__P2': 2, 'dataselector__R0': 1e-06, 'dataselector__R1': 'X', 'dataselector__R2': 'X', 'dataselector__SA': 'X', 'dataselector__SO': 'X', 'svc__C': 0.0001}	0.8969696969696969
