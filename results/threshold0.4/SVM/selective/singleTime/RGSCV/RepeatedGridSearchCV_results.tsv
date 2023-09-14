@@ -1,7 +1,0 @@
-	time	scoring	best_params	best_score
-0	III14	mcc	{'svc__C': 10.0, 'svc__gamma': 0.01}	0.7739532027044709
-1	III14	precision_recall_auc	{'svc__C': 100.0, 'svc__gamma': 0.001}	0.9399915384183372
-2	III14	roc_auc	{'svc__C': 1000.0, 'svc__gamma': 0.0001}	0.9262626262626261
-3	C-1	mcc	{'svc__C': 100.0, 'svc__gamma': 0.001}	0.8294161204424493
-4	C-1	precision_recall_auc	{'svc__C': 1000.0, 'svc__gamma': 0.0001}	0.949302734297936
-5	C-1	roc_auc	{'svc__C': 10000.0, 'svc__gamma': 1e-05}	0.9361111111111111

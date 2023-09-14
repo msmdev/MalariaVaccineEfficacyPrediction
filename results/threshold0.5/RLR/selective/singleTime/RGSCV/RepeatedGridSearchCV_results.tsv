@@ -1,7 +1,0 @@
-	time	scoring	best_params	best_score
-0	III14	mcc	{'logisticregression__C': 0.1, 'logisticregression__l1_ratio': 0.4}	0.6924036610415883
-1	III14	precision_recall_auc	{'logisticregression__C': 0.1, 'logisticregression__l1_ratio': 0.5}	0.9086094614937187
-2	III14	roc_auc	{'logisticregression__C': 0.1, 'logisticregression__l1_ratio': 1.0}	0.9098484848484849
-3	C-1	mcc	{'logisticregression__C': 0.1, 'logisticregression__l1_ratio': 0.4}	0.7008096994439044
-4	C-1	precision_recall_auc	{'logisticregression__C': 0.1, 'logisticregression__l1_ratio': 0.4}	0.9313945151606372
-5	C-1	roc_auc	{'logisticregression__C': 0.1, 'logisticregression__l1_ratio': 0.7}	0.9257575757575756
