@@ -59,9 +59,6 @@ def main(
     kernel_identifier: Optional[str] = None,
     kernel_dir: Optional[str] = None,
 ) -> None:
-    # Generate a timestamp
-    timestamp = ncv.generate_timestamp()
-
     print("========================================")
     print(f"numpy version: {np.__version__}")
     print(f"pandas version: {pd.__version__}")
@@ -75,7 +72,7 @@ def main(
             continue
         if method != "multitaskSVM" and scope == "multiTime":
             continue
-        print(f"{scope} start time: {timestamp}\n")
+        print(f"{scope} start: {ncv.generate_timestamp()}\n")
 
         # Create directories for the output files
         maindir = os.path.join(ana_dir, f"{scope}/RGSCV/")
@@ -140,7 +137,7 @@ def main(
 
             # initialize test folds and CV splitters for outer CV
             delta = 40
-            if method == "singleTime":
+            if scope == "singleTime":
                 # CAUTION: this only works if data is sorted by timepoints
                 y_slice = y[delta * step : delta + delta * step]
                 groups_slice = groups[delta * step : delta + delta * step]
@@ -216,7 +213,7 @@ def main(
         fn = ncv.filename_generator(filename, ".tsv", directory=maindir, timestamp=False)
         pd.DataFrame(data=results).to_csv(fn, sep="\t", na_rep="nan")
 
-        print(f"end time: {ncv.generate_timestamp()}")
+        print(f"{scope} end: {ncv.generate_timestamp()}")
         print("========================================\n")
 
 
