@@ -130,10 +130,6 @@ def main(
 
             print(f"estimator: {type(estimator)}")
             print(f"parameter grid: {param_grid}\n")
-            print("shape of binary response array:", y.size)
-            print("number of positives:", np.sum(y))
-            print("number of positives divided by total number of samples:", np.sum(y) / y.size)
-            print("")
 
             # initialize test folds and CV splitters for outer CV
             delta = 40
@@ -145,6 +141,13 @@ def main(
             else:
                 y_slice = y
                 groups_slice = groups
+            print("shape of binary response array:", y_slice.size)
+            print("number of positives:", np.sum(y_slice))
+            print(
+                "number of positives divided by total number of samples:",
+                np.sum(y_slice) / y_slice.size,
+            )
+            print("")
             cv = []
             print("----------------------------------------")
             print("Predefined CV folds:\n")
