@@ -29,7 +29,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics.pairwise import polynomial_kernel, rbf_kernel, sigmoid_kernel
+from sklearn.metrics.pairwise import (polynomial_kernel, rbf_kernel,
+                                      sigmoid_kernel)
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection._split import BaseCrossValidator
 from sklearn.preprocessing import KernelCenterer
@@ -288,13 +289,13 @@ def assign_folds(
     This routine is designed for time-ordered data that consists of samples
     taken at several timepoints that belong to the same group (e.g. patient).
     Consider, e.g., 40 patients that underwent antibody measurements against
-    malaria at multiple (3) time-points after vaccination. Thus we have 120
-    samples at 3 timepoints in 40 groups. We now want to split the data
-    into disjunct train/test sets, such that the samples in the test sets
-    are all taken from the same time point, while the samples in the train
-    sets are taken from all timepoints under the constraint that patients
-    (groups) appearing in the respective test set don't appear in the
-    associated train set.
+    malaria at multiple time-points after vaccination. If we assume that we
+    have two timepoints, we have overall 80 samples (at 2 timepoints) in 40
+    groups (patients). We now want to split the data into disjunct train/test
+    sets, such that the samples in the test sets are all taken from the same
+    time point, while the samples in the train sets are taken from all time-
+    points under the constraint that patients (groups) appearing in the
+    respective test set don't appear in the associated train set.
 
     CAUTION: This routine is only tested for the given Malaria data.
 
@@ -347,9 +348,7 @@ def assign_folds(
     skf = StratifiedKFold(n_splits, shuffle=shuffle, random_state=random_state)
     test_fold = np.array([-1 for i in range(len(labels))])
     train_fold = np.array([-1 for i in range(len(labels))])
-    for i, (train_index, test_index) in enumerate(
-        skf.split(np.zeros((delta, delta)), labels_slice)
-    ):
+    for i, (train_index, test_index) in enumerate(skf.split(np.zeros(delta), labels_slice)):
         exclude_groups = []
         for j in test_index:
             test_fold[j + delta * step] = i
