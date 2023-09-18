@@ -37,7 +37,7 @@ combinations=('RPP' 'RPR' 'RRP' 'RRR')
 
 for threshold in '0.1' '0.2' '0.3' '0.4' '0.5' '0.6' '0.7' '0.8' '0.9' '1.0'; do
 
-    for method in 'multitaskSVM' 'RF' 'RLR' 'SVM'; do
+    for method in 'SVM' 'multitaskSVM' 'RF' 'RLR'; do
         maindir="${topdir}/results/threshold${threshold}/${method}"
 
         for dataset in 'whole' 'selective'; do
