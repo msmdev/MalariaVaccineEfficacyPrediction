@@ -162,6 +162,7 @@ def main(
                 # CAUTION: this only works if data is sorted by timepoints
                 y_slice = y[delta * step : delta + delta * step]
                 groups_slice = groups[delta * step : delta + delta * step]
+                step = 0
             else:
                 y_slice = y
                 groups_slice = groups
