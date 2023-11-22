@@ -34,11 +34,12 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.inspection import permutation_importance
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import make_scorer
 from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
 
 from source.config import seed
-from source.utils import allclose, make_kernel_matrix
+from source.utils import allclose, make_kernel_matrix, precision_recall_auc
 
 
 def make_feature_combination(
@@ -187,36 +188,36 @@ def compute_distance_hyper(
                         f"be contained in {actual_keys}."
                     )
 
-                params = (
-                    kernel_parameters[f"{prefix}SA"],
-                    kernel_parameters[f"{prefix}SO"],
-                    kernel_parameters[f"{prefix}R0"],
-                    kernel_parameters[f"{prefix}R1"],
-                    kernel_parameters[f"{prefix}R2"],
-                    kernel_parameters[f"{prefix}P1"],
-                    kernel_parameters[f"{prefix}P2"],
-                )
+                params = {
+                    "SA": kernel_parameters[f"{prefix}SA"],
+                    "SO": kernel_parameters[f"{prefix}SO"],
+                    "R0": kernel_parameters[f"{prefix}R0"],
+                    "R1": kernel_parameters[f"{prefix}R1"],
+                    "R2": kernel_parameters[f"{prefix}R2"],
+                    "P1": kernel_parameters[f"{prefix}P1"],
+                    "P2": kernel_parameters[f"{prefix}P2"],
+                }
 
-                if (params[0] == "X" or params[1] == "X") and params[2] != "X":
-                    if params[0] == params[1]:
+                if (params["SA"] == "X" or params["SO"] == "X") and params["R0"] != "X":
+                    if params["SA"] == params["SO"]:
                         kernel_time_series = "rbf_kernel"
                     else:
                         raise ValueError("Time series kernel is neither rbf nor sigmoid.")
-                elif params[0] != "X" and params[1] != "X" and params[2] == "X":
+                elif params["SA"] != "X" and params["SO"] != "X" and params["R0"] == "X":
                     kernel_time_series = "sigmoid_kernel"
                 else:
                     raise ValueError("Time series kernel is neither rbf nor sigmoid.")
 
-                if params[3] != "X" and params[5] == "X":
+                if params["R1"] != "X" and params["P1"] == "X":
                     kernel_dosage = "rbf_kernel"
-                elif params[3] == "X" and params[5] != "X":
+                elif params["R1"] == "X" and params["P1"] != "X":
                     kernel_dosage = "poly_kernel"
                 else:
                     raise ValueError("Dosage kernel is neither rbf nor polynomial.")
 
-                if params[4] != "X" and params[6] == "X":
+                if params["R2"] != "X" and params["P2"] == "X":
                     kernel_abSignals = "rbf_kernel"
-                elif params[4] == "X" and params[6] != "X":
+                elif params["R2"] == "X" and params["P2"] != "X":
                     kernel_abSignals = "poly_kernel"
                 else:
                     raise ValueError("Antibody signal kernel is neither rbf nor polynomial.")
@@ -232,7 +233,7 @@ def compute_distance_hyper(
                     AB_signals=data.drop(columns=["TimePointOrder", "Dose"]),
                     time_series=data["TimePointOrder"],
                     dose=data["Dose"],
-                    model=kernel_parameters,
+                    model=params,
                     kernel_time_series=kernel_time_series,
                     kernel_dosage=kernel_dosage,
                     kernel_abSignals=kernel_abSignals,
@@ -257,7 +258,7 @@ def compute_distance_hyper(
                     AB_signals=data.drop(columns=["TimePointOrder", "Dose"]),
                     time_series=data["TimePointOrder"],
                     dose=data["Dose"],
-                    model=kernel_parameters,
+                    model=params,
                     kernel_time_series=kernel_time_series,
                     kernel_dosage=kernel_dosage,
                     kernel_abSignals=kernel_abSignals,
@@ -282,7 +283,7 @@ def compute_distance_hyper(
                     AB_signals=data.drop(columns=["TimePointOrder", "Dose"]),
                     time_series=data["TimePointOrder"],
                     dose=data["Dose"],
-                    model=kernel_parameters,
+                    model=params,
                     kernel_time_series=kernel_time_series,
                     kernel_dosage=kernel_dosage,
                     kernel_abSignals=kernel_abSignals,
@@ -326,7 +327,7 @@ def compute_distance_hyper(
         )
         get_distance_df.at["LQ - consensus [d]", col] = d_down
 
-        # calculate importance from distance_based on lower quantile
+        # calculate importance from distance based on lower quantile
         # and distance_based on upper quantile
         if d_up > np.finfo(d_up).eps and d_down < -np.finfo(d_down).eps:
             effect = "+/-"
@@ -398,8 +399,21 @@ def make_plot(
     w = 0.3
     opacity = 0.6
 
-    values = np.array(data.T.d_norm)
-    clrs = ["red" if (x > 0) else "blue" for x in values]
+    values = np.array(data.T.effect)
+
+    def dummy(x):
+        if x == "+/-":
+            return "red"
+        elif x == "-/+":
+            return "blue"
+        elif x == "+":
+            return "orange"
+        elif x == "-":
+            return "lightblue"
+        else:
+            return "white"
+
+    clrs = [dummy(x) for x in values]
 
     index = np.arange(len(labels))
     ax.bar(
@@ -505,6 +519,7 @@ def featureEvaluationRF(
     model: Pipeline,
     X: pd.DataFrame,
     y: np.ndarray,
+    score: str = "precision_recall_auc",
 ) -> Tuple[pd.DataFrame, Pipeline]:
     """Evaluation of informative features of a given RF model.
     Feature importances are obtained via permutation importance evaluation.
@@ -518,6 +533,8 @@ def featureEvaluationRF(
         Feature matrix given as pd.DataFrame.
     y : np.ndarray
         Label vector.
+    score : str, default='precision_recall_auc'
+        Scorer to use. Can be either 'roc_auc' or 'precision_recall_auc'.
 
     Returns
     -------
@@ -528,13 +545,20 @@ def featureEvaluationRF(
     """
     if not isinstance(model[-1], RandomForestClassifier):
         raise ValueError("Last step in pipeline must be RandomForestClassifier estimator.")
+    
+    if score == "roc_auc":
+        scoring = "roc_auc"
+    elif score == "precision_recall_auc":
+        scoring = make_scorer(precision_recall_auc, greater_is_better=True, needs_proba=True)
+    else:
+        raise ValueError("score must be one of 'roc_auc', 'precision_recall_auc'")
 
     model.fit(X.to_numpy(), y)
     result = permutation_importance(
         model,
         X.to_numpy(),
         y,
-        scoring="roc_auc",
+        scoring=scoring,
         n_repeats=100,
         n_jobs=-1,
         random_state=seed,

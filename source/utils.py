@@ -29,6 +29,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
+from sklearn.metrics import auc, precision_recall_curve
 from sklearn.metrics.pairwise import (polynomial_kernel, rbf_kernel,
                                       sigmoid_kernel)
 from sklearn.model_selection import StratifiedKFold
@@ -438,6 +439,7 @@ class CustomPredefinedSplit(BaseCrossValidator):
 
     def get_n_splits(self, X=None, y=None, groups=None):
         """Returns the number of splitting iterations in the cross-validator
+
         Parameters
         ----------
         X : object
@@ -446,6 +448,7 @@ class CustomPredefinedSplit(BaseCrossValidator):
             Always ignored, exists for compatibility.
         groups : object
             Always ignored, exists for compatibility.
+
         Returns
         -------
         n_splits : int
@@ -566,26 +569,29 @@ class DataSelector:
 def get_parameters(
     timepoint_results: pd.DataFrame,
     model: str,
+    metric: str = "precision_recall_auc",
 ) -> Dict[str, Union[float, int, str]]:
     """Return combination of parameters to initialize RLR.
 
     Parameters
     ----------
     timepoint_results : pd.DataFrame
-        DataFrame containing optimal parameters and mean AUROC values
+        DataFrame containing optimal parameters and mean performance values
         for a particular time point as found via Repeated Grid-Search CV (RGSCV).
     model : str
         Model ('multitaskSVM', 'RF' or 'RLR') to select parameters for.
+    metric : str, default='precision_recall_auc'
+        Performance metric ('precision_recall_auc' or 'roc_auc') to select parameters for.
 
     Returns
     --------
     params : dict
         Parameter dictionary.
     """
-    roc_results = timepoint_results[timepoint_results["scoring"].isin(["roc_auc"])]
-    if not roc_results.shape == (1, 4):
-        raise ValueError(f"roc_results.shape != (1, 4): {roc_results.shape} != (1, 4)")
-    params_string = roc_results["best_params"].iloc[0]
+    results = timepoint_results[timepoint_results["scoring"].isin([metric])]
+    if not results.shape == (1, 4):
+        raise ValueError(f"results.shape != (1, 4): {results.shape} != (1, 4)")
+    params_string = results["best_params"].iloc[0]
     if not type(params_string) == str:
         raise ValueError(f"type(params_string) != str: {type(params_string)} != str")
     params = ast.literal_eval(params_string)
@@ -631,19 +637,19 @@ def get_parameters(
 def select_timepoint(rgscv_results: pd.DataFrame, timepoint: str) -> pd.DataFrame:
     """Select time point to evaluate informative features from RLR.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     rgscv_results : pd.DataFrame
-        DataFrame containing optimal parameters and mean AUROC values
-        per time point as found via Repeated Grid-Search CV (RGSCV).
-
+        DataFrame containing optimal parameters and mean performance values
+        (mcc/precision_recall_auc/roc_auc) per time point as found via
+        Repeated Grid-Search CV (RGSCV).
     timepoint : str
-        Time point to extract parameters and AUROC values for.
+        Time point to extract parameters and performance values for.
 
     Returns
     --------
     timepoint_results: pd.DataFrame
-        DataFrame containing optimal parameters and mean AUROC values
+        DataFrame containing optimal parameters and mean performance values
         for the selected time point as found via Repeated Grid-Search CV (RGSCV).
     """
     timepoint_results = rgscv_results[rgscv_results["time"].isin([timepoint])]
@@ -1026,3 +1032,34 @@ def make_kernel_matrix(
     print("\n\n")
 
     return multitaskMatrix, c_list, info_list
+
+
+def precision_recall_auc(
+    y_true: np.ndarray,
+    probas_pred: np.ndarray,
+    pos_label: Optional[Union[int, str]] = None,
+    sample_weight: Optional[np.ndarray] = None,
+) -> float:
+    """Compute area under the precision recall curve (AUPRC).
+
+    Parameters
+    ----------
+    y_true : ndarray of shape (n_samples,)
+        True binary labels. If labels are not either {-1, 1} or {0, 1}, then pos_label should be explicitly given.
+    probas_pred : ndarray of shape (n_samples,)
+        Estimated probabilities or output of a decision function.
+    pos_label : int or str, default=None
+        The label of the positive class. When pos_label=None, if y_true is in {-1, 1} or {0, 1}, pos_label is set to 1, otherwise an error will be raised.
+    sample_weight : array-like of shape (n_samples,), default=None
+        Sample weights.
+
+    Returns
+    -------
+    auc : float
+        Area under the precision recall curve (AUPRC) computed using the trapezoidal rule.
+    """
+
+    precision, recall, _ = precision_recall_curve(
+        y_true, probas_pred, pos_label=pos_label, sample_weight=sample_weight
+    )
+    return auc(recall, precision)

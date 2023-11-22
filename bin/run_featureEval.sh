@@ -28,8 +28,8 @@
 
 # This is intended to run in the bin folder of the MalariaVaccineEfficacyPrediction package.
 # The MalariaVaccineEfficacyPrediction package should be situated in the users home directory.
-threshold='0.2'
-combination='RPR'
+threshold='0.8'
+combination='RRR'
 topdir="${HOME}/MalariaVaccineEfficacyPrediction"
 if [ ! -d "$topdir" ]; then
     { echo "${topdir} doesn't exists."; exit 1; }
@@ -44,7 +44,7 @@ for method in 'multitaskSVM' 'RLR' 'RF'; do
     for dataset in 'whole' 'selective'; do
 
         for scope in 'singleTime' 'multiTime'; do
-            maindir="${topdir}/results/threshold${threshold}/${method}/${dataset}/${scope}"
+            maindir="${topdir}/results/threshold${threshold}/${method}/${dataset}"
             if [ ! -d "$maindir" ]; then
                 { echo "${maindir} doesn't exists."; exit 1; }
             fi
@@ -61,8 +61,8 @@ for method in 'multitaskSVM' 'RLR' 'RF'; do
                 # multitask models are only available for multiTime
                 if [ "$method" = 'multitaskSVM' ] && [ "$scope" != 'singleTime' ]; then
 
-                    rgscv_path="${maindir}/RPR/RGSCV/RepeatedGridSearchCV_results.tsv"
-                    ana_dir="${maindir}/RPR/featureEvaluation"
+                    rgscv_path="${maindir}/${combination}/${scope}/RGSCV/RepeatedGridSearchCV_results.tsv"
+                    ana_dir="${maindir}/${combination}/${scope}/featureEvaluation"
                     kernel_identifier='kernel_matrix'
 
                     if [ ! -d "$ana_dir" ]; then
@@ -75,8 +75,8 @@ for method in 'multitaskSVM' 'RLR' 'RF'; do
                 # standard model feature evaluation per timepoint is only sensible for singleTime
                 elif [ "$method" != 'multitaskSVM' ] && [ "$scope" == 'singleTime' ]; then
 
-                    rgscv_path="${maindir}/RGSCV/RepeatedGridSearchCV_results.tsv"
-                    ana_dir="${maindir}/featureEvaluation"
+                    rgscv_path="${maindir}/${scope}/RGSCV/RepeatedGridSearchCV_results.tsv"
+                    ana_dir="${maindir}/${scope}/featureEvaluation"
                     if [ ! -d "$ana_dir" ]; then
                         mkdir "$ana_dir" || { echo "mkdir ${ana_dir} failed"; exit 1; }
                     fi

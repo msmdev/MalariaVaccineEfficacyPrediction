@@ -34,12 +34,9 @@ import numpy as np
 import pandas as pd
 from nestedcv import save_model
 
-from source.featureEvaluation import (
-    featureEvaluationESPY,
-    featureEvaluationRF,
-    featureEvaluationRLR,
-    make_plot,
-)
+from source.featureEvaluation import (featureEvaluationESPY,
+                                      featureEvaluationRF,
+                                      featureEvaluationRLR, make_plot)
 from source.utils import get_parameters, select_timepoint
 
 
@@ -145,7 +142,7 @@ def main(
             eval_data=data_at_timePoint.drop(
                 columns=["Patient", "group", "Protection"]
             ),  # including dose AND timepoint
-            model=model,
+            model=model["svc"],
             lq=25,
             up=75,
             basis_data=data.drop(
@@ -175,7 +172,7 @@ def main(
         method="joblib",
     )
 
-    print(f"Parameter combination for best mean AUROC at time point {timepoint} :")
+    print(f"Parameter combination with best mean performance at time point {timepoint} :")
     print(params)
     print("")
 
