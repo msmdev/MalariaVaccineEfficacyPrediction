@@ -1,0 +1,5 @@
+Number of non-zero importances: 94
+Parameter combination with best mean performance at time point III14 :
+{'randomforestclassifier__max_features': 0.333, 'randomforestclassifier__n_estimators': 500}
+
+Results are saved in: /home/breuter/MalariaVaccineEfficacyPrediction/results/threshold0.8/RF/whole/singleTime/featureEvaluation/informative_features_III14.tsv

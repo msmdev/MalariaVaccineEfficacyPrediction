@@ -1,0 +1,5 @@
+Number of non-zero importances (weights): 1
+Parameter combination with best mean performance at time point III14 :
+{'logisticregression__C': 0.1, 'logisticregression__l1_ratio': 0.8}
+
+Results are saved in: /home/breuter/MalariaVaccineEfficacyPrediction/results/threshold0.8/RLR/selective/singleTime/featureEvaluation/informative_features_III14.tsv
