@@ -416,14 +416,10 @@ def make_plot(
     values = np.array(data.T.effect)
 
     def dummy(x):
-        if x == "+/-":
+        if x == "+":
             return "red"
-        elif x == "-/+":
-            return "blue"
-        elif x == "+":
-            return "orange"
         elif x == "-":
-            return "lightblue"
+            return "blue"
         else:
             return "white"
 
