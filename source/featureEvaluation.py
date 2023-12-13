@@ -353,23 +353,13 @@ def compute_distance_hyper(
 
         # calculate importance from distance based on lower quantile
         # and distance_based on upper quantile
-        if d_up > np.finfo(d_up).eps and d_down < -np.finfo(d_down).eps:
-            effect = "+/-"
-            d_value = abs(d_up) + abs(d_down)
-        elif d_up < -np.finfo(d_up).eps and d_down > np.finfo(d_down).eps:
-            effect = "-/+"
-            d_value = abs(d_up) + abs(d_down)
-        elif (d_up > np.finfo(d_up).eps and allclose(d_down, 0.0)) or (
-            allclose(d_up, 0.0) and d_down > np.finfo(d_down).eps
-        ):
+        if d_up >= 0.0 and d_down <= 0.0 and d_up != d_down:
             effect = "+"
             d_value = abs(d_up) + abs(d_down)
-        elif (d_up < -np.finfo(d_up).eps and allclose(d_down, 0.0)) or (
-            allclose(d_up, 0.0) and d_down < -np.finfo(d_down).eps
-        ):
+        elif d_up <= 0.0 and d_down >= 0.0 and d_up != d_down:
             effect = "-"
             d_value = abs(d_up) + abs(d_down)
-        elif allclose(d_up, 0.0) and allclose(d_down, 0.0):
+        elif d_up == 0.0 and d_down == 0.0:
             effect = "0"
             d_value = 0.0
         else:
