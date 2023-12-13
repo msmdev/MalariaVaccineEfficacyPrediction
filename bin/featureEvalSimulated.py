@@ -38,6 +38,7 @@ import shap
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
 from sklearn.svm import SVC
+
 from source.config import seed
 from source.featureEvaluation import featureEvaluationESPY, make_plot
 
@@ -207,7 +208,6 @@ def main(
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
 
     parser.add_argument(

@@ -30,8 +30,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 from sklearn.metrics import auc, precision_recall_curve
-from sklearn.metrics.pairwise import (polynomial_kernel, rbf_kernel,
-                                      sigmoid_kernel)
+from sklearn.metrics.pairwise import polynomial_kernel, rbf_kernel, sigmoid_kernel
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection._split import BaseCrossValidator
 from sklearn.preprocessing import KernelCenterer
@@ -592,7 +591,7 @@ def get_parameters(
     if not results.shape == (1, 4):
         raise ValueError(f"results.shape != (1, 4): {results.shape} != (1, 4)")
     params_string = results["best_params"].iloc[0]
-    if not type(params_string) == str:
+    if not type(params_string) is str:
         raise ValueError(f"type(params_string) != str: {type(params_string)} != str")
     params = ast.literal_eval(params_string)
     if model == "RLR":
@@ -1045,11 +1044,13 @@ def precision_recall_auc(
     Parameters
     ----------
     y_true : ndarray of shape (n_samples,)
-        True binary labels. If labels are not either {-1, 1} or {0, 1}, then pos_label should be explicitly given.
+        True binary labels. If labels are not either {-1, 1} or {0, 1},
+        then pos_label should be explicitly given.
     probas_pred : ndarray of shape (n_samples,)
         Estimated probabilities or output of a decision function.
     pos_label : int or str, default=None
-        The label of the positive class. When pos_label=None, if y_true is in {-1, 1} or {0, 1}, pos_label is set to 1, otherwise an error will be raised.
+        The label of the positive class. When pos_label=None, if y_true is in {-1, 1} or {0, 1},
+        pos_label is set to 1, otherwise an error will be raised.
     sample_weight : array-like of shape (n_samples,), default=None
         Sample weights.
 

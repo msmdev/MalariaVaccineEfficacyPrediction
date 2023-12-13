@@ -170,6 +170,12 @@ def compute_distance_hyper(
             )
 
             d_cons = model.decision_function(median.reshape(1, -1))
+            # shape of distance should always be (n_samples, n_classes * (n_classes-1) / 2) =
+            # (n_samples,) in the binary case, even if decision_function_shape=’ovr’,
+            # i.e., the documentation is wrong (at least for v1.0.2) on
+            # https://scikit-learn.org/1.0/modules/generated/sklearn.svm.SVC.html
+            if not d_cons.shape == (1,):
+                raise ValueError(f"Shape of distance is {d_cons.shape}, but should be (1,)")
 
         else:
             if isinstance(data, pd.DataFrame) and isinstance(kernel_parameters, dict):
@@ -245,6 +251,12 @@ def compute_distance_hyper(
                 # between the ESPY values aren't impaired (inverted) by this, but in the future
                 # exact distances might be preferable.
                 distance = model.decision_function(single_feature_sample.reshape(1, -1))
+                # shape of distance should always be (n_samples, n_classes * (n_classes-1) / 2) =
+                # (n_samples,) in the binary case, even if decision_function_shape=’ovr’,
+                # i.e., the documentation is wrong (at least for v1.0.2) on
+                # https://scikit-learn.org/1.0/modules/generated/sklearn.svm.SVC.html
+                if not distance.shape == (1,):
+                    raise ValueError(f"Shape of distance is {distance.shape}, but should be (1,)")
                 get_distance_lower.append(distance[0])
 
                 # for upper quantile combination:
@@ -270,6 +282,12 @@ def compute_distance_hyper(
                 # between the ESPY values aren't impaired (inverted) by this, but in the future
                 # exact distances might be preferable.
                 distance = model.decision_function(single_feature_sample.reshape(1, -1))
+                # shape of distance should always be (n_samples, n_classes * (n_classes-1) / 2) =
+                # (n_samples,) in the binary case, even if decision_function_shape=’ovr’,
+                # i.e., the documentation is wrong (at least for v1.0.2) on
+                # https://scikit-learn.org/1.0/modules/generated/sklearn.svm.SVC.html
+                if not distance.shape == (1,):
+                    raise ValueError(f"Shape of distance is {distance.shape}, but should be (1,)")
                 get_distance_upper.append(distance[0])
 
                 # for consensus sample:
@@ -295,6 +313,12 @@ def compute_distance_hyper(
                 # between the ESPY values aren't impaired (inverted) by this, but in the future
                 # exact distances might be preferable.
                 d_cons = model.decision_function(feature_consensus_sample.reshape(1, -1))
+                # shape of distance should always be (n_samples, n_classes * (n_classes-1) / 2) =
+                # (n_samples,) in the binary case, even if decision_function_shape=’ovr’,
+                # i.e., the documentation is wrong (at least for v1.0.2) on
+                # https://scikit-learn.org/1.0/modules/generated/sklearn.svm.SVC.html
+                if not d_cons.shape == (1,):
+                    raise ValueError(f"Shape of distance is {d_cons.shape}, but should be (1,)")
 
             else:
                 raise ValueError("You must supply `data` and `kernel_parameters`.")
@@ -545,7 +569,7 @@ def featureEvaluationRF(
     """
     if not isinstance(model[-1], RandomForestClassifier):
         raise ValueError("Last step in pipeline must be RandomForestClassifier estimator.")
-    
+
     if score == "roc_auc":
         scoring = "roc_auc"
     elif score == "precision_recall_auc":

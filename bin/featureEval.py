@@ -34,9 +34,12 @@ import numpy as np
 import pandas as pd
 from nestedcv import save_model
 
-from source.featureEvaluation import (featureEvaluationESPY,
-                                      featureEvaluationRF,
-                                      featureEvaluationRLR, make_plot)
+from source.featureEvaluation import (
+    featureEvaluationESPY,
+    featureEvaluationRF,
+    featureEvaluationRLR,
+    make_plot,
+)
 from source.utils import get_parameters, select_timepoint
 
 
