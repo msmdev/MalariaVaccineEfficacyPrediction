@@ -163,14 +163,14 @@ def main(
     else:
         raise ValueError(f"Illegal input: unknown method {method}.")
 
-    fn = f"best_{method}_model_"
+    fn = f"best_{method}_model_{timepoint}_"
     for key in params.keys():
         fn = fn + f"_{key.split('__')[-1]}_{params[key]}"
     save_model(
         model,
         out_dir,
         fn,
-        timestamp=True,
+        timestamp=False,
         compress=False,
         method="joblib",
     )
