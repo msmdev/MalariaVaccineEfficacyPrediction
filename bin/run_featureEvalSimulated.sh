@@ -34,7 +34,7 @@ if [ ! -d "$topdir" ]; then
 fi
 data_dir="${topdir}/data/simulated_data"
 data_file="simulated_data.csv"
-ana_dir="${topdir}/results/SVM/simulated"
+ana_dir="${topdir}/results/simulated"
 if [ ! -d "$ana_dir" ]; then
     mkdir "$ana_dir" || { echo "mkdir ${ana_dir} failed"; exit 1; }
 fi
@@ -43,4 +43,5 @@ err="run_ESPY_SHAP_simulated.err"
 out="run_ESPY_SHAP_simulated.out"
         
 cd "${ana_dir}" || { echo "Couldn't cd into ${ana_dir}"; exit 1; }
+cp "${topdir}/bin/featureEvalSimulated.py" . || { echo "cp ${topdir}/bin/featureEvalSimulated.py . failed"; exit 1; }
 python featureEvalSimulated.py --data-dir "$data_dir" --data-file "$data_file" --out-dir "$ana_dir" 1> "${out}" 2> "${err}"

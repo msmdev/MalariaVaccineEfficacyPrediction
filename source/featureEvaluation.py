@@ -39,7 +39,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
 
 from source.config import seed
-from source.utils import allclose, make_kernel_matrix, precision_recall_auc
+from source.utils import make_kernel_matrix, precision_recall_auc
 
 
 def make_feature_combination(
