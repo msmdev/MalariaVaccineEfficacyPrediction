@@ -30,3 +30,6 @@ effect                     -         +         +  ...       NAN       NAN       
 ESPY evaluation has terminated at 20.12.2023_16-44-29 and results are saved in /home/breuter/MalariaVaccineEfficacyPrediction/results/simulated
 
 Evaluation of informative features based on SHAP values started at 20.12.2023_16-44-29.
+<IPython.core.display.HTML object>
+SHAP evaluation has terminated at 21.12.2023_06-35-43 and results are saved in /home/breuter/MalariaVaccineEfficacyPrediction/results/simulated.
+
