@@ -139,7 +139,7 @@ def main(
     timestamp = datetime.now().strftime("%d.%m.%Y_%H-%M-%S")
     print(f"ESPY value measurement started at {timestamp}.")
 
-    output_filename = "ESPY_values_on_simulated_data"
+    output_filename = f"ESPY_values_on_simulated_data_{timestamp}"
 
     distance_result = featureEvaluationESPY(
         eval_data=pd.DataFrame(X_test),
