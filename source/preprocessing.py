@@ -3,7 +3,7 @@
 # If you use this code or parts of it, cite the following reference:
 # ------------------------------------------------------------------------------------------------
 # Jacqueline Wistuba-Hamprecht and Bernhard Reuter (2022)
-# https://github.com/jacqui20/MalariaVaccineEfficacyPrediction
+# https://github.com/msmdev/MalariaVaccineEfficacyPrediction
 # ------------------------------------------------------------------------------------------------
 # This is free software: you can redistribute it and/or modify it under the terms of the GNU
 # Lesser General Public License as published by the Free Software Foundation, either version 3
