@@ -1,0 +1,10 @@
+﻿Overview results;;;;;;
+;;;;;;
+Analysis method;arc_plac_46_max;;;arc_plac_46_mean;;
+Accuracy measurment ;mean test mcc;mean average precision;mean roc auc ;mean test mcc;mean average precision;mean roc auc 
+;;;;;;
+Models ;;;;;;
+Log_Reg;0.724 +/- 0.27;0.72 +/- 0.22;0.87 +/- 0.14;0.68 +/- 0.24;0.67 +/- 0.17;0.84 +/- 0.13
+XGB;0.524 +/- 0.30;0.56 +/- 0.2;0.75 +/- 0.16;0.44 +/- 0.36;0.51 +/- 0.22;0.73 +/- 0.18
+SVC;0.788 +/- 0.16;0.75 +/- 0.17;0.90 +/- 0.09;0.68 +/- 0.27;0.67 +/- 0.23;0.86 +/- 0.14
+LMM;0.74 +/- 0.3;0.75 +/- 0.25;0.86 +/- 0.15;0.62 +/- 0.29;0.63 +/- 0.22;0.8 +/- 0.16

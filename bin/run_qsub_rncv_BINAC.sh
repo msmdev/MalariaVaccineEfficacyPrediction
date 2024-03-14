@@ -5,7 +5,7 @@
 # If you use this code or parts of it, cite the following reference:
 # ------------------------------------------------------------------------------------------------
 # Jacqueline Wistuba-Hamprecht and Bernhard Reuter (2022)
-# https://github.com/jacqui20/MalariaVaccineEfficacyPrediction
+# https://github.com/msmdev/MalariaVaccineEfficacyPrediction
 # ------------------------------------------------------------------------------------------------
 # This is free software: you can redistribute it and/or modify it under the terms of the GNU
 # Lesser General Public License as published by the Free Software Foundation, either version 3
@@ -25,7 +25,7 @@ cd .. || { echo "Couldn't cd into parent directory."; exit 1; }
 topdir="$PWD"
 cd "${topdir}/bin" || { echo "Couldn't cd into ${topdir}/bin directory."; exit 1; }
 data_dir="${topdir}/data/proteome_data/correlationFiltering"
-combinations=('RPP' 'RPR' 'RRP' 'RRR' 'SPP' 'SPR' 'SRP' 'SRR')
+combinations=('RPP' 'RPR' 'RRP' 'RRR')
 
 for threshold in '0.1' '0.2' '0.3' '0.4' '0.5' '0.6' '0.7' '0.8' '0.9' '1.0'; do
 

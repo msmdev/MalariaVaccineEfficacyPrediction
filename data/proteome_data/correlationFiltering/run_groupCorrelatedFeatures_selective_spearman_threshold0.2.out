@@ -1,14 +1,14 @@
-Shape of dataframe loaded from /home/breuter/MalariaVaccineEfficacyPrediction/data/proteome_data/preprocessed_selective_data.csv: (120, 1199)
+Shape of dataframe loaded from /home/breuter/MalariaVaccineEfficacyPrediction/data/proteome_data/preprocessed_selective_data.csv: (80, 1199)
 
 Grouping features based on spearman correlation with threshold 0.2:
 
-Shape of intensities dataframe: (120, 1194)
+Shape of intensities dataframe: (80, 1194)
 # of variants: 1194
 
 correlation matrix shape: (1194, 1194)
 correlation matrix memory usage (kB): 11539.505
 
-# of (key-)variants to keep: 4
+# of (key-)variants to keep: 6
 
-Shape of kept preprocessed_selective_data data: (120, 9)
+Shape of kept preprocessed_selective_data data: (80, 11)
 

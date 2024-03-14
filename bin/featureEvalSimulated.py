@@ -3,7 +3,7 @@
 # If you use this code or parts of it, cite the following reference:
 # ------------------------------------------------------------------------------------------------
 # Jacqueline Wistuba-Hamprecht and Bernhard Reuter (2022)
-# https://github.com/jacqui20/MalariaVaccineEfficacyPrediction
+# https://github.com/msmdev/MalariaVaccineEfficacyPrediction
 # ------------------------------------------------------------------------------------------------
 # This is free software: you can redistribute it and/or modify it under the terms of the GNU
 # Lesser General Public License as published by the Free Software Foundation, either version 3
@@ -30,6 +30,7 @@ import os
 import pathlib
 import warnings
 from datetime import datetime
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -38,6 +39,7 @@ import shap
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
 from sklearn.svm import SVC
+
 from source.config import seed
 from source.featureEvaluation import featureEvaluationESPY, make_plot
 
@@ -73,11 +75,17 @@ def optimize_svm_model(
         Trained SVM model with best kernel parameters found via GridSearchCV.
     """
 
-    from source.SVM_config import param_grid
+    from source.SVM_config import estimator, param_grid
+
+    for key in param_grid.keys():
+        new_key = key.split("__")[-1]
+        param_grid[new_key] = param_grid.pop(key)
+
+    svm = estimator["svc"]
 
     # grid-search on simulated data
     clf = GridSearchCV(
-        SVC(kernel="rbf", probability=True, random_state=seed),
+        svm,
         param_grid,
         scoring="roc_auc",
         refit=True,
@@ -89,23 +97,21 @@ def optimize_svm_model(
 
     # run RBF SVM with best parameters from grid-search,
     # probability has to be TRUE to evaluate features via SHAP
-    svm = SVC(
-        kernel="rbf",
-        gamma=clf.best_params_.get("gamma"),
-        C=clf.best_params_.get("C"),
-        probability=True,
-        random_state=seed,
-    )
+    params = dict()
+    for key in param_grid.keys():
+        params[key] = clf.best_params_.get(key)
 
-    model = svm.fit(X_train_data, y_train_data)
+    svm.set_params(**params)
 
-    y_pred = model.predict(X_test_data)
+    svm.fit(X_train_data, y_train_data)
+
+    y_pred = svm.predict(X_test_data)
 
     AUC = roc_auc_score(y_test_data, y_pred)
 
     print(f"AUC score on unseen data: {AUC}")
 
-    return model
+    return svm
 
 
 def main(
@@ -123,7 +129,7 @@ def main(
         test_size=0.3,
         random_state=seed,
     )
-    rbf_SVM_model = optimize_svm_model(
+    model = optimize_svm_model(
         X_train_data=np.array(X_train),
         y_train_data=np.array(y_train),
         X_test_data=np.array(X_test),
@@ -137,7 +143,7 @@ def main(
 
     distance_result = featureEvaluationESPY(
         eval_data=pd.DataFrame(X_test),
-        model=rbf_SVM_model,
+        model=model,
         lq=25,
         up=75,
     )
@@ -160,7 +166,7 @@ def main(
     timestamp = datetime.now().strftime("%d.%m.%Y_%H-%M-%S")
     print(f"Evaluation of informative features based on SHAP values started at {timestamp}.")
 
-    explainer = shap.KernelExplainer(rbf_SVM_model.predict_proba, X_train)
+    explainer = shap.KernelExplainer(model.predict_proba, X_train)
     # Shap_values returns a list of two arrays:
     # the first for the negative class probabilities and
     # the second for the positive class probabilties.
@@ -207,7 +213,6 @@ def main(
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
 
     parser.add_argument(

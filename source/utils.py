@@ -3,7 +3,7 @@
 # If you use this code or parts of it, cite the following reference:
 # ------------------------------------------------------------------------------------------------
 # Jacqueline Wistuba-Hamprecht and Bernhard Reuter (2022)
-# https://github.com/jacqui20/MalariaVaccineEfficacyPrediction
+# https://github.com/msmdev/MalariaVaccineEfficacyPrediction
 # ------------------------------------------------------------------------------------------------
 # This is free software: you can redistribute it and/or modify it under the terms of the GNU
 # Lesser General Public License as published by the Free Software Foundation, either version 3
@@ -29,6 +29,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
+from sklearn.metrics import auc, precision_recall_curve
 from sklearn.metrics.pairwise import polynomial_kernel, rbf_kernel, sigmoid_kernel
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection._split import BaseCrossValidator
@@ -36,6 +37,44 @@ from sklearn.preprocessing import KernelCenterer
 from sklearn.utils import check_X_y
 from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import column_or_1d
+
+
+def allclose(
+    a: Union[np.ndarray, float],
+    b: Union[np.ndarray, float],
+    rtol: float = 0.0,
+    atol: Union[str, float] = "eps",
+    equal_nan: bool = False,
+):
+    """Convenience wrapper of numpy.allclose(a, b, rtol=rtol, atol=abstol, equal_nan=False).
+
+    Parameters
+    ----------
+    a, b : Union[np.ndarray, float]
+        Input arrays or values to compare.
+    rtol : float, default = 0.0
+        The relative tolerance parameter.
+    atol : Union[str, float], default = 'eps'
+        The absolute tolerance parameter, if a float is given.
+        If atol='eps', indicates to use the maximum of the machine precisions
+        np.max([np.finfo(a).eps, np.finfo(b).eps] of the given input arrays or values.
+    equal_nan: bool
+        Whether to compare NaN's as equal.
+        If True, NaN's in a will be considered equal to NaN's in b in the output array.
+
+    Returns
+    -------
+    allclose : bool
+        Returns True if the two arrays are equal within the given tolerance; False otherwise.
+    """
+    if atol == "eps":
+        abstol = np.max([np.finfo(a).eps, np.finfo(b).eps])
+    elif isinstance(atol, float):
+        abstol = atol
+    else:
+        raise ValueError("atol must be either of type float or atol='eps'")
+
+    return np.allclose(a, b, rtol=rtol, atol=abstol, equal_nan=equal_nan)
 
 
 def normalize(
@@ -108,7 +147,7 @@ def make_symmetric_matrix_psd(
     Non-positive-semi-definiteness will be tested via a spectral criterion:
     If `X` has negative or complex eigenvalues, `X` can not be psd.
     The damping value `c` is derived from the spectrum of `X`: If negative eigenvalues exist,
-    `c = max([epsilon_factor * np.finfo(X.dtype).eps, np.min(np.linalg.eigvals(X).real)])`,
+    `c = max([epsilon_factor * np.finfo(X.dtype).eps, np.min(np.linalg.eigvalsh(X).real)])`,
     else,if complex but non-negative eigenvalues exist,
     `c = max([epsilon_factor * np.finfo(X.dtype).eps, np.max(np.abs(eigenvalues.imag))])`.
 
@@ -145,6 +184,10 @@ def make_symmetric_matrix_psd(
     info_list = []
     warning = ""
 
+    # ensure that matrix is real
+    if np.any(np.iscomplex(X)):
+        raise ValueError("Matrix is complex.")
+
     # check, if X is square
     if X.shape[0] != X.shape[1]:
         raise ValueError("Matrix is not square.")
@@ -153,81 +196,82 @@ def make_symmetric_matrix_psd(
     if not np.allclose(X, X.T):
         raise ValueError("Matrix is not symmetric.")
 
-    eigenvalues = np.linalg.eigvals(X)
+    eigenvalues = np.linalg.eigvalsh(X)
 
     # check, if all eigenvalues are real and non-negative
     complex, negative = check_complex_or_negative(eigenvalues)
 
-    if complex or negative:
+    if complex:
+        raise ValueError(
+            "Matrix has complex eigenvalues. "
+            "This is a contradiction, since a real symmetric matrix always has real eigenvalues."
+        )
+    if negative:
         print(
             "Matrix is not positive semi-definite.\n" "Will try to make it positive semi-definite."
         )
 
         n_negative = 0
-        n_imaginary = 0
         counter = 0
-        while (complex or negative) and counter <= iterations:
+        while negative and counter < iterations:
             counter += 1
-            if negative:
-                n_negative += 1
-                info = "negative"
-                c = np.abs(np.min(eigenvalues).real)
-            else:
-                n_imaginary += 1
-                info = "imaginary"
-                c = np.max(np.abs(eigenvalues.imag))
+            n_negative += 1
+            info = "negative"
+            c = np.abs(np.min(eigenvalues).real)
             if c < epsilon:
                 info += "_epsilon"
                 c = epsilon
             info_list.append(info)
             c_list.append(c)
             np.fill_diagonal(X, np.diag(X) + c)
-            eigenvalues = np.linalg.eigvals(X)
+            eigenvalues = np.linalg.eigvalsh(X)
             complex, negative = check_complex_or_negative(eigenvalues, warn=False)
-        # if counter == iterations:
-        #     counter += 1
-        #     c = 1.0
-        #     temp = X + np.diag([c for i in range(X.shape[0])])
-        #     temp_eigenvalues = np.linalg.eigvals(temp)
-        #     temp_complex, temp_negative = check_complex_or_negative(temp_eigenvalues, warn=False)
-        #     if not (temp_complex or temp_negative):
-        #         if negative:
-        #             n_negative += 1
-        #             info = 'negative_1.0'
-        #         else:
-        #             n_imaginary += 1
-        #             info = 'imaginary_1.0'
-        #         info_list.append(info)
-        #         c_list.append(c)
-        #         X = temp
-        #         eigenvalues = temp_eigenvalues
+            if complex:
+                raise ValueError(
+                    "Matrix has complex eigenvalues. This is a contradiction, "
+                    "since a real symmetric matrix always has real eigenvalues."
+                )
+        if counter == iterations:
+            counter += 1
+            n_negative += 1
+            info = "negative_1.0"
+            c = 1.0
+            info_list.append(info)
+            c_list.append(c)
+            np.fill_diagonal(X, np.diag(X) + c)
+            eigenvalues = np.linalg.eigvalsh(X)
+            complex, negative = check_complex_or_negative(eigenvalues, warn=False)
+            if complex:
+                raise ValueError(
+                    "Matrix has complex eigenvalues. This is a contradiction, "
+                    "since a real symmetric matrix always has real eigenvalues."
+                )
 
         complex, negative = check_complex_or_negative(eigenvalues)
-        if complex or negative:
-            print(
+
+        if complex:
+            raise ValueError(
+                "Matrix has complex eigenvalues. This is a contradiction, "
+                "since a real symmetric matrix always has real eigenvalues."
+            )
+        elif negative:
+            warning = (
                 "Couldn't make matrix positive semi-definite by adding "
                 f"sum_c={np.sum(c_list)} in {counter} steps to its diagonal.\n"
-                f"Damped {n_negative} times for negative eigenvalues "
-                f"and {n_imaginary} times for imaginary parts."
+                f"Damped {n_negative} times for negative eigenvalues.\n"
+                "CAUTION: The returned matrix has negative eigenvalues."
             )
-            if negative:
-                warning = (
-                    "Couldn't make matrix positive semi-definite by adding "
-                    f"sum_c={np.sum(c_list)} in {counter} steps to its diagonal.\n"
-                    f"Damped {n_negative} times for negative eigenvalues "
-                    f"and {n_imaginary} times for imaginary parts.\n"
-                    "CAUTION: The returned matrix has negative eigenvalues."
-                )
+            print(warning)
         else:
             print(
                 "Made matrix positive semi-definite by adding "
                 f"sum_c={np.sum(c_list)} in {counter} steps to its diagonal.\n"
-                f"Damped {n_negative} times for negative eigenvalues "
-                f"and {n_imaginary} times for imaginary parts."
+                f"Damped {n_negative} times for negative eigenvalues."
             )
     return X, c_list, info_list, warning
 
 
+# TODO: Fix description
 def assign_folds(
     *,
     labels: np.ndarray,
@@ -245,13 +289,13 @@ def assign_folds(
     This routine is designed for time-ordered data that consists of samples
     taken at several timepoints that belong to the same group (e.g. patient).
     Consider, e.g., 40 patients that underwent antibody measurements against
-    malaria at multiple (3) time-points after vaccination. Thus we have 120
-    samples at 3 timepoints in 40 groups. We now want to split the data
-    into disjunct train/test sets, such that the samples in the test sets
-    are all taken from the same time point, while the samples in the train
-    sets are taken from all timepoints under the constraint that patients
-    (groups) appearing in the respective test set don't appear in the
-    associated train set.
+    malaria at multiple time-points after vaccination. If we assume that we
+    have two timepoints, we have overall 80 samples (at 2 timepoints) in 40
+    groups (patients). We now want to split the data into disjunct train/test
+    sets, such that the samples in the test sets are all taken from the same
+    time point, while the samples in the train sets are taken from all time-
+    points under the constraint that patients (groups) appearing in the
+    respective test set don't appear in the associated train set.
 
     CAUTION: This routine is only tested for the given Malaria data.
 
@@ -304,9 +348,7 @@ def assign_folds(
     skf = StratifiedKFold(n_splits, shuffle=shuffle, random_state=random_state)
     test_fold = np.array([-1 for i in range(len(labels))])
     train_fold = np.array([-1 for i in range(len(labels))])
-    for i, (train_index, test_index) in enumerate(
-        skf.split(np.zeros((delta, delta)), labels_slice)
-    ):
+    for i, (train_index, test_index) in enumerate(skf.split(np.zeros(delta), labels_slice)):
         exclude_groups = []
         for j in test_index:
             test_fold[j + delta * step] = i
@@ -396,6 +438,7 @@ class CustomPredefinedSplit(BaseCrossValidator):
 
     def get_n_splits(self, X=None, y=None, groups=None):
         """Returns the number of splitting iterations in the cross-validator
+
         Parameters
         ----------
         X : object
@@ -404,6 +447,7 @@ class CustomPredefinedSplit(BaseCrossValidator):
             Always ignored, exists for compatibility.
         groups : object
             Always ignored, exists for compatibility.
+
         Returns
         -------
         n_splits : int
@@ -448,7 +492,6 @@ class DataSelector:
         self,
         X: np.ndarray,
     ) -> np.ndarray:
-
         if isinstance(self.R0, float):
             if isinstance(self.R1, float) and isinstance(self.R2, float):
                 fn = (
@@ -525,27 +568,30 @@ class DataSelector:
 def get_parameters(
     timepoint_results: pd.DataFrame,
     model: str,
+    metric: str = "precision_recall_auc",
 ) -> Dict[str, Union[float, int, str]]:
     """Return combination of parameters to initialize RLR.
 
     Parameters
     ----------
     timepoint_results : pd.DataFrame
-        DataFrame containing optimal parameters and mean AUROC values
+        DataFrame containing optimal parameters and mean performance values
         for a particular time point as found via Repeated Grid-Search CV (RGSCV).
     model : str
         Model ('multitaskSVM', 'RF' or 'RLR') to select parameters for.
+    metric : str, default='precision_recall_auc'
+        Performance metric ('precision_recall_auc' or 'roc_auc') to select parameters for.
 
     Returns
     --------
     params : dict
         Parameter dictionary.
     """
-    roc_results = timepoint_results[timepoint_results["scoring"].isin(["roc_auc"])]
-    if not roc_results.shape == (1, 4):
-        raise ValueError(f"roc_results.shape != (1, 4): {roc_results.shape} != (1, 4)")
-    params_string = roc_results["best_params"].iloc[0]
-    if not type(params_string) == str:
+    results = timepoint_results[timepoint_results["scoring"].isin([metric])]
+    if not results.shape == (1, 4):
+        raise ValueError(f"results.shape != (1, 4): {results.shape} != (1, 4)")
+    params_string = results["best_params"].iloc[0]
+    if not type(params_string) is str:
         raise ValueError(f"type(params_string) != str: {type(params_string)} != str")
     params = ast.literal_eval(params_string)
     if model == "RLR":
@@ -590,19 +636,19 @@ def get_parameters(
 def select_timepoint(rgscv_results: pd.DataFrame, timepoint: str) -> pd.DataFrame:
     """Select time point to evaluate informative features from RLR.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     rgscv_results : pd.DataFrame
-        DataFrame containing optimal parameters and mean AUROC values
-        per time point as found via Repeated Grid-Search CV (RGSCV).
-
+        DataFrame containing optimal parameters and mean performance values
+        (mcc/precision_recall_auc/roc_auc) per time point as found via
+        Repeated Grid-Search CV (RGSCV).
     timepoint : str
-        Time point to extract parameters and AUROC values for.
+        Time point to extract parameters and performance values for.
 
     Returns
     --------
     timepoint_results: pd.DataFrame
-        DataFrame containing optimal parameters and mean AUROC values
+        DataFrame containing optimal parameters and mean performance values
         for the selected time point as found via Repeated Grid-Search CV (RGSCV).
     """
     timepoint_results = rgscv_results[rgscv_results["time"].isin([timepoint])]
@@ -851,7 +897,7 @@ def make_kernel_matrix(
         `model['SA']` defines the value of the factor `gamma` and `model['SO']` defines
         the value of the offset parameter `coef0` of the time-series sigmoid kernel
         `K(X, Y) = tanh(gamma <X, Y> + coef0)`;
-        `model['R1']` (`model['R2']` (`model['R3']`)) defines the power `d` of the
+        `model['R0']` (`model['R1']` (`model['R2']`)) defines the power `d` of the
         `gamma` (`gamma = 10^d`) parameter of the time-series (dosage (AB-signal)) RBF kernel
         `K(x, y) = exp(-gamma ||x-y||^2)`;
         `model['P1']` (`model['P2']`) defines the value of the degree parameter of the dosage
@@ -899,7 +945,7 @@ def make_kernel_matrix(
 
     # pre-compute kernel matrix of time points K(n_t,n_t')
     if kernel_time_series == "sigmoid_kernel":
-        if isinstance(model["SO"], float):
+        if isinstance(model["SO"], float) and isinstance(model["SA"], float):
             time_series_kernel_matrix = sigmoid_kernel(
                 time_series.to_numpy().reshape(len(time_series), 1),
                 gamma=model["SA"],
@@ -907,7 +953,7 @@ def make_kernel_matrix(
             )
         else:
             raise ValueError("Illegal input.")
-    elif kernel_time_series == "rbf_kernel":
+    elif kernel_time_series == "rbf_kernel" and isinstance(model["R0"], float):
         time_series_kernel_matrix = rbf_kernel(
             time_series.to_numpy().reshape(len(time_series), 1), gamma=model["R0"]
         )
@@ -915,26 +961,20 @@ def make_kernel_matrix(
         raise ValueError("Illegal input.")
 
     # pre-compute kernel matrix of dosage K(n_d,n_d')
-    if kernel_dosage == "rbf_kernel":
+    if kernel_dosage == "rbf_kernel" and isinstance(model["R1"], float):
         dose_kernel_matrix = rbf_kernel(dose.to_numpy().reshape(len(dose), 1), gamma=model["R1"])
-    elif kernel_dosage == "poly_kernel":
-        if isinstance(model["P1"], int):
-            dose_kernel_matrix = polynomial_kernel(
-                dose.to_numpy().reshape(len(dose), 1), degree=model["P1"]
-            )
-        else:
-            raise ValueError("Illegal input.")
+    elif kernel_dosage == "poly_kernel" and isinstance(model["P1"], int):
+        dose_kernel_matrix = polynomial_kernel(
+            dose.to_numpy().reshape(len(dose), 1), degree=model["P1"]
+        )
     else:
         raise ValueError("Illegal input.")
 
     # pre-compute kernel matrix of antibody reactivity K(n_p,n_p')
-    if kernel_abSignals == "rbf_kernel":
+    if kernel_abSignals == "rbf_kernel" and isinstance(model["R2"], float):
         AB_signals_kernel_matrix = rbf_kernel(AB_signals, gamma=model["R2"])
-    elif kernel_abSignals == "poly_kernel":
-        if isinstance(model["P2"], int):
-            AB_signals_kernel_matrix = polynomial_kernel(AB_signals, degree=model["P2"])
-        else:
-            raise ValueError("Illegal input.")
+    elif kernel_abSignals == "poly_kernel" and isinstance(model["P2"], int):
+        AB_signals_kernel_matrix = polynomial_kernel(AB_signals, degree=model["P2"])
     else:
         raise ValueError("Illegal input.")
 
@@ -981,7 +1021,7 @@ def make_kernel_matrix(
     print("Dimension of final multitask Gram matrix:")
     print(multitaskMatrix.shape)
     print(
-        "Rank of final multitask Gram matrix (Returns matrix rank of array using SVD method. "
+        "Rank of final multitask Gram matrix (Returns matrix rank of array using SVD method: "
         "Rank of the array is the number of singular values of the array that are greater than a "
         "tolerance tol. May declare a matrix M rank deficient even if the linear combination of "
         "some columns of M is not exactly equal to another column of M but only numerically very "
@@ -991,3 +1031,36 @@ def make_kernel_matrix(
     print("\n\n")
 
     return multitaskMatrix, c_list, info_list
+
+
+def precision_recall_auc(
+    y_true: np.ndarray,
+    probas_pred: np.ndarray,
+    pos_label: Optional[Union[int, str]] = None,
+    sample_weight: Optional[np.ndarray] = None,
+) -> float:
+    """Compute area under the precision recall curve (AUPRC).
+
+    Parameters
+    ----------
+    y_true : ndarray of shape (n_samples,)
+        True binary labels. If labels are not either {-1, 1} or {0, 1},
+        then pos_label should be explicitly given.
+    probas_pred : ndarray of shape (n_samples,)
+        Estimated probabilities or output of a decision function.
+    pos_label : int or str, default=None
+        The label of the positive class. When pos_label=None, if y_true is in {-1, 1} or {0, 1},
+        pos_label is set to 1, otherwise an error will be raised.
+    sample_weight : array-like of shape (n_samples,), default=None
+        Sample weights.
+
+    Returns
+    -------
+    auc : float
+        Area under the precision recall curve (AUPRC) computed using the trapezoidal rule.
+    """
+
+    precision, recall, _ = precision_recall_curve(
+        y_true, probas_pred, pos_label=pos_label, sample_weight=sample_weight
+    )
+    return auc(recall, precision)

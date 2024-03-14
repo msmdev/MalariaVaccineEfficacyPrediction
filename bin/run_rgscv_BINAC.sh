@@ -5,7 +5,7 @@
 # If you use this code or parts of it, cite the following reference:
 # ------------------------------------------------------------------------------------------------
 # Jacqueline Wistuba-Hamprecht and Bernhard Reuter (2022)
-# https://github.com/jacqui20/MalariaVaccineEfficacyPrediction
+# https://github.com/msmdev/MalariaVaccineEfficacyPrediction
 # ------------------------------------------------------------------------------------------------
 # This is free software: you can redistribute it and/or modify it under the terms of the GNU
 # Lesser General Public License as published by the Free Software Foundation, either version 3
@@ -199,7 +199,7 @@ err="runRGSCV_${PBS_JOBNAME}_${PBS_JOBID}.err"
 out="runRGSCV_${PBS_JOBNAME}_${PBS_JOBID}.out"
 
 if [ "$METHOD" = 'multitaskSVM' ]; then
-    combinations=('RPP' 'RPR' 'RRP' 'RRR' 'SPP' 'SPR' 'SRP' 'SRR')
+    combinations=('RPP' 'RPR' 'RRP' 'RRR')
     cp -r "${KERNEL_DIR}/"* "$TMPDIR" || { echo "Couldn't copy Kernels to ${TMPDIR}"; exit 1; }
     for combination in "${combinations[@]}"; do
         ana_dir="${ANA_DIR}/${combination}"

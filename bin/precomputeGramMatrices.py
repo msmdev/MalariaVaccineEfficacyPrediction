@@ -3,7 +3,7 @@
 # If you use this code or parts of it, cite the following reference:
 # ------------------------------------------------------------------------------------------------
 # Jacqueline Wistuba-Hamprecht and Bernhard Reuter (2022)
-# https://github.com/jacqui20/MalariaVaccineEfficacyPrediction
+# https://github.com/msmdev/MalariaVaccineEfficacyPrediction
 # ------------------------------------------------------------------------------------------------
 # This is free software: you can redistribute it and/or modify it under the terms of the GNU
 # Lesser General Public License as published by the Free Software Foundation, either version 3
@@ -34,13 +34,13 @@ from typing import Any, Dict, List, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
 from source.utils import make_kernel_combinations, make_kernel_matrix
 
 
 def helper(
     m: Tuple[Any, ...],
 ) -> Dict[str, Union[float, int, str]]:
-
     # input sanity checks:
     if not isinstance(m, tuple):
         raise ValueError("The model must be given as a tuple of kernel parameters.")
@@ -75,7 +75,6 @@ def calc_and_save_GramMatrices(
     save_to_dir: str,
     scale: bool = False,
 ) -> Dict[str, List[Union[np.ndarray, List[str], List[float], Tuple[Any, ...]]]]:
-
     # check for correct parameter keys:
     keys = {"SA", "SO", "R0", "R1", "R2", "P1", "P2"}
     if not set(kernel_param.keys()) == keys:
@@ -441,9 +440,7 @@ def looper(
     out_dir: str,
     combinations: List[str],
 ) -> None:
-
     for id in combinations:
-
         if id == "SRR":
             kernel_for_time_series = "sigmoid_kernel"
             kernel_for_dosage = "rbf_kernel"
@@ -513,10 +510,9 @@ def main(
     out_dir: str,
     identifier: str,
 ) -> None:
-
     from source.multitaskSVM_config import kernel_params as params
 
-    combinations = ["SRR", "SPR", "SRP", "SPP", "RRR", "RPR", "RRP", "RPP"]
+    combinations = ["RRR", "RPR", "RRP", "RPP"]
 
     fn = os.path.join(data_file)
     data = pd.read_csv(fn)
@@ -529,7 +525,6 @@ def main(
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(
         description=(
             "Script to precompute multitask Gram matrices from preprocessed proteome data."
