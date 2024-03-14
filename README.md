@@ -59,7 +59,7 @@ The following data table gives an overview of the data structure of the proteome
 
 The column **group** represents the ID of the patient.
 In column **Dose** the integer values represent the respective PfSPZ dose:
-{0 : placebo; 1 : 3.2 * 10^3 PfSPZ; 2 : 1.28 * 10^4 PfSPZ; 4 : 5.12 * 10^4 PfSPZ}
+{0 : placebo; 1 : 3.2 * 10^3 PfSPZ; 2 : 1.28 * 10^4 PfSPZ; 4 : 5.12 * 10^4 PfSPZ}.
 The integer values of the column **TimePointOrder** represent the day of blood serum extraction:
 {2 : III14 post-immunization; 3 : C-1 pre-CHMI; 4 : C+28 post-CHMI}.
 
